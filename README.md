@@ -7,4 +7,4 @@ Repo to maintain codebase for the CNN model we're developing.
 
 * Output layer - Output(2) is not being computed here
 
-* The `1/2` notation means the feature map is reduced by half. But there is no indication as to how this is done.
+* The `1/2` notation means the feature map is reduced by half. But there is no indication as to how this is done. Assuming some pooling here.
