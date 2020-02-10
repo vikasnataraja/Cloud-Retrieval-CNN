@@ -1,3 +1,6 @@
 *.webp
 /.ipynb_checkpoints
+/__pycache__
 temp.ipynb
+temp.py
+
