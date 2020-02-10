@@ -5,7 +5,7 @@ import tensorflow as tf
 def generate_color_map(N=256, normalized=False):
     """from https://gist.github.com/wllhf/a4533e0adebe57e3ed06d4b50c8419ae ."""
   def bitget(byteval, idx):
-      return ((byteval & (1 << idx)) != 0)
+  	return ((byteval & (1 << idx)) != 0)
 
   dtype = 'float32' if normalized else 'uint8'
   cmap = np.zeros((N, 3), dtype=dtype)
