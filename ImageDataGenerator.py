@@ -1,6 +1,7 @@
 """ 
-Modified from source: 
+Modified from sources: 
 https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
+https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
 """
 from collections import defaultdict
 import random
@@ -67,7 +68,7 @@ class ImageGenerator(Sequence):
             return self.__generate(values[self.n_test:], self.n_classes, 
                                    self.batch_size, self.resize_shape_tuple, 
                                    self.image_dir, self.anno_dir)
-        elif mode == 'valid':
+        elif mode == 'validation':
             return self.__generate(values[:self.n_test], self.n_classes, 
                                    self.batch_size, self.resize_shape_tuple, 
                                    self.image_dir, self.anno_dir)
