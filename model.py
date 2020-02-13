@@ -43,8 +43,8 @@ def spp_block(prev_layer, pool_size, feature_map_shape):
 
     return prev_layer
 
-def common_skip(prev, num_filters, atrous_rate, 
-                kernel_size, stride_tuple, name):
+def common_skip(prev, num_filters, kernel_size, 
+                stride_tuple, atrous_rate, name):
     """
     The common ResNet block shared by the identity block
     and the convolutional block. Both of those blocks share
@@ -95,9 +95,13 @@ def empty_branch(prev):
 
 def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
                                stride_tuple,atrous_rate=1):
-   
+
+    """common_skip(prev, num_filters, kernel_size, 
+                stride_tuple, atrous_rate, name
+    """
     prev_layer = Activation('relu')(prev_layer)
-    block_1 = common_skip(prev_layer, num_filters, name, kernel_size=kernel_size, 
+    block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
+                          name=name, kernel_size=kernel_size, 
                           stride_tuple=stride_tuple,
                           atrous_rate=atrous_rate)
 
@@ -114,7 +118,8 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
     
     prev_layer = Activation('relu')(prev_layer)
 
-    block_1 = common_skip(prev_layer, num_filters, name, kernel_size=kernel_size, 
+    block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
+                          name=name, kernel_size=kernel_size, 
                           stride_tuple=stride_tuple,
                           atrous_rate=atrous_rate)
     
