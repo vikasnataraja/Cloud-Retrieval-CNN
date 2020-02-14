@@ -2,10 +2,10 @@ import tensorflow as tf
 import keras
 import numpy as np
 from keras import layers
-from keras.layers import MaxPooling2D, AveragePooling2D, UpSampling2D
+from keras.layers import MaxPooling2D, AveragePooling2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
-from keras.layers import ZeroPadding2D, Lambda
+from keras.layers import Lambda
 from keras.layers import Concatenate, Add
 from keras.models import Model
 
@@ -211,7 +211,7 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
 
     return upsampled_layer
 
-def build_pyramid_pooling_module(resnet_last):
+def pyramid_pooling_module(resnet_last):
     """Build the Pyramid Pooling Module."""
     
     # feature map size to be used for interpolation
@@ -241,7 +241,7 @@ From the paper:
 "Finally, multi-scale features are fused to obtain an image with 
 the same size as the input image by the transposed convolution"
 """
-def deconvolution_layer(concat_layer, num_classes, output_shape):
+def deconvolution_module(concat_layer, num_classes, output_shape):
     
     deconv_layer = Conv2DTranspose(filters=num_classes, kernel_size=(16,16),
                                    strides=(1,1),padding='same')(concat_layer)

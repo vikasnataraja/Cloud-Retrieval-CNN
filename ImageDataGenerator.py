@@ -1,9 +1,8 @@
 """ 
-Modified from sources: 
+Adapted from sources: 
 https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
 https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
 """
-from collections import defaultdict
 import random
 from skimage.io import imread
 from skimage.transform import resize
