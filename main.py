@@ -25,7 +25,7 @@ def args_checks_reports(args):
               ' creating one instead ...'.format(args.model_dir))
         os.makedirs(args.model_dir)
     
-    print('Input dimensions are ({},{})\n'.format(args.input_dims,args.num_channels))
+    print('Input dimensions are ({},{})\n'.format(args.input_dims,args.input_channels))
     print('Output dimensions are ({},{})\n'.format(args.output_dims,args.num_classes))
     print('Batch size is {}, learning rate is set'\
           'to {}'.format(args.batch_size,args.learning_rate))
@@ -74,7 +74,7 @@ if __name__=='__main__':
     
     # build the model
     model = PSPNet(input_shape=args.input_dims, 
-                   num_channels=args.num_channels,
+                   num_channels=args.input_channels,
                    out_shape=args.output_dims,
                    num_classes=args.num_classes, 
                    learn_rate=args.learning_rate,

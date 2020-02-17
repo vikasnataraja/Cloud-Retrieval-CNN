@@ -23,7 +23,7 @@ def train_val_generator(args, val_size=0.25):
                                      image_dir=args.train_dir,
                                      anno_dir=args.label_dir,
                                      resize_shape_tuple=args.input_dims,
-                                     num_channels=args.num_channels,
+                                     num_channels=args.input_channels,
                                      num_classes=args.num_classes,
                                      batch_size=args.batch_size)
     
@@ -32,7 +32,7 @@ def train_val_generator(args, val_size=0.25):
                                    image_dir=args.train_dir,
                                    anno_dir=args.label_dir,
                                    resize_shape_tuple=args.input_dims,
-                                   num_channels=args.num_channels,
+                                   num_channels=args.input_channels,
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size)
     

@@ -21,17 +21,8 @@ def common_skip(prev, num_filters, kernel_size,
     """
 
     prev = BatchNorm()(prev)
-    #print('bn',prev.shape)
     prev = Activation('relu')(prev)
-    #print('type',type(prev))
-    #print('actv',prev.shape)
-    # prev = ZeroPadding2D(padding=(pad, pad))(prev)
-    
-    """Syntax:
-    keras.layers.Conv2D(filters, kernel_size, strides=(1, 1), 
-                    padding='valid', data_format=None, dilation_rate=(1, 1),
-                    activation=None, use_bias=True)
-    """
+
     x1 = Conv2D(filters=num_filters, kernel_size=kernel_size, 
                 strides=stride_tuple, dilation_rate=atrous_rate,
                 padding=pad_type, use_bias=False)(prev)

@@ -15,7 +15,7 @@ class ImageGenerator(Sequence):
     def __init__(self, image_list, label_list, 
                  image_dir, anno_dir, num_classes, 
                  batch_size, resize_shape_tuple, num_channels,
-                 separator='.',shuffle=True):
+                 shuffle=True):
         
         self.image_list = image_list
         self.label_list = label_list
@@ -24,7 +24,6 @@ class ImageGenerator(Sequence):
         self.num_classes = num_classes
         self.batch_size = batch_size
         self.resize_shape_tuple = resize_shape_tuple
-        self.separator = separator
         self.num_channels = num_channels
         self.shuffle = shuffle
         self.on_epoch_end()
@@ -41,10 +40,12 @@ class ImageGenerator(Sequence):
         y = np.zeros([self.batch_size, self.resize_shape_tuple[0], 
                       self.resize_shape_tuple[1], self.num_classes])
         
-        for i, vals in enumerate(batch_IDs):
-            img = resize(imread(os.path.join(self.image_dir, self.image_list[i])), 
-                         self.resize_shape_tuple)
-            label = resize(imread(os.path.join(self.anno_dir, self.label_list[i])),
+        for i, val in enumerate(batch_IDs):
+            
+            img = resize(imread(os.path.join(self.image_dir, val)), self.resize_shape_tuple)
+
+            # VOC labels are in png format
+            label = resize(imread(os.path.join(self.anno_dir, (os.path.splitext(val)[0]+'.png'))),
                        self.resize_shape_tuple)
             #print(y.shape,n_classes)
             label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
@@ -68,6 +69,7 @@ class ImageGenerator(Sequence):
         indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
         
         batch_IDs = [self.image_list[k] for k in indices]
+        #print(batch_IDs)
         # Generate data
         X, y = self.__data_generator(batch_IDs)
 
