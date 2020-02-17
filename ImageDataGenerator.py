@@ -12,9 +12,9 @@ import numpy as np
 
 class ImageGenerator(Sequence):
     
-    def __init__(self, image_list=None, label_list=None, 
-                 image_dir='./train_images', anno_dir='./labels',num_classes = 50, 
-                 batch_size = 16, resize_shape_tuple=(128,128), num_channels=3,
+    def __init__(self, image_list, label_list, 
+                 image_dir, anno_dir, num_classes, 
+                 batch_size, resize_shape_tuple, num_channels,
                  separator='.',shuffle=True):
         
         self.image_list = image_list
