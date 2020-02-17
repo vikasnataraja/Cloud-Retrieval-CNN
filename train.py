@@ -1,51 +1,77 @@
 import numpy as np
-import keras
-import tensorflow as tf
+import os
 from keras.models import Model
-import model as mod
 from keras.layers import Input
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
-import os,sys
 from ImageDataGenerator import ImageGenerator
+from model import ResNet, pyramid_pooling_module, deconvolution_module
+from sklearn.model_selection import train_test_split
 
-lr = 1e-4
-def build_PSPNet_model(input_shape,num_channels,loss_function='mean_squared_error'):
+
+def train_val_generator(args, val_size=0.25):
     
+    
+    X_train,X_val,y_train,y_val = train_test_split(os.listdir(args.train_dir),
+                                                   os.listdir(args.label_dir),
+                                                   shuffle=False,
+                                                   test_size=val_size)
+    assert len(X_train)==len(y_train),'Number of images is not equal to number of labels'
+    
+    train_generator = ImageGenerator(image_list=X_train,
+                                     label_list=y_train,
+                                     image_dir=args.train_dir,
+                                     anno_dir=args.label_dir,
+                                     resize_shape_tuple=args.input_dims,
+                                     num_channels=args.num_channels,
+                                     num_classes=args.num_classes,
+                                     batch_size=args.batch_size)
+    
+    val_generator = ImageGenerator(image_list=X_val,
+                                   label_list=y_val,
+                                   image_dir=args.train_dir,
+                                   anno_dir=args.label_dir,
+                                   resize_shape_tuple=args.input_dims,
+                                   num_channels=args.num_channels,
+                                   num_classes=args.num_classes,
+                                   batch_size=args.batch_size)
+    
+    return (train_generator,val_generator)
+
+
+def PSPNet(input_shape, num_channels, out_shape,
+           num_classes, learn_rate, loss_function):
+    
+    print('Started building PSPNet\n')
     input_layer = Input((input_shape[0],input_shape[1],num_channels))
-    resnet_block = mod.ResNet(input_layer)
-    spp_block = mod.build_pyramid_pooling_module(resnet_block)
-    deconv_layer = mod.add_deconvolution_layer(concat_layer=spp_block)
-    model = Model(inputs=input_layer,outputs=deconv_layer)
+    resnet_block = ResNet(input_layer)
+    spp_block = pyramid_pooling_module(resnet_block)
+    out_layer = deconvolution_module(concat_layer=spp_block,
+                                    num_classes=num_classes,
+                                    output_shape=out_shape)
     
-    adam = Adam(learning_rate=lr)
+    model = Model(inputs=input_layer,outputs=out_layer)
+    
+    adam = Adam(learning_rate=learn_rate)
     
     model.compile(optimizer=adam,
                   loss=loss_function,
                   metrics=['accuracy'])
+    
+    print('Model has compiled\n')
+    print('The input shape will be {} and the output of'
+          ' the model will be {}'.format(model.input_shape[1:],model.output_shape[1:]))
     return model
 
-def train_val_generator(train_dir, label_dir, batch_size, test_size):
-    
-    train_generator = ImageGenerator(image_dir=train_dir,
-                                     anno_dir=label_dir,
-                                     batch_size=batch_size,
-                                     n_test=test_size, mode='train')
-    
-    val_generator = ImageGenerator(image_dir=train_dir,
-                                   anno_dir=label_dir,
-                                   batch_size=batch_size,
-                                   n_test=test_size, mode='valid')
-    
-    return (train_generator,val_generator)
 
-def train_model(model, filepath, train_generator, val_generator,
-                epochs=25, steps_per_epoch=50):
+def train_model(model, model_dir, filename, train_generator, val_generator,
+                epochs, steps_per_epoch):
     
-    checkpoint = ModelCheckpoint(filepath,save_best_only=False, verbose=1, period=1)
+    checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
+                                 save_best_only=False, verbose=1)
     
     print('Model will be saved in' 
-          ' directory: {} as {}\n'.format(os.path.split(filepath)[0],os.path.split(filepath)[1]))
+          ' directory: {} as {}\n'.format(model_dir, filename))
     
     model.fit_generator(train_generator,
                         validation_data=val_generator,
@@ -55,4 +81,4 @@ def train_model(model, filepath, train_generator, val_generator,
     
     print('Finished training model. Exiting function ...\n')
     
-
+    return model
