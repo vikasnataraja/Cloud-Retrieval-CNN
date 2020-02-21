@@ -22,7 +22,7 @@ def args_checks_reports(args):
     
     if not os.path.isdir(args.model_dir):
         print('Model directory {} does not exist,'\
-              ' creating one instead ...'.format(args.model_dir))
+              ' creating it now ...'.format(args.model_dir))
         os.makedirs(args.model_dir)
     
     print('Input dimensions are ({},{})\n'.format(args.input_dims,args.input_channels))

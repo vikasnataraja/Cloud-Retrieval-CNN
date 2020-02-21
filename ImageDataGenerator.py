@@ -29,7 +29,7 @@ class ImageGenerator(Sequence):
         self.on_epoch_end()
 
 
-    def __data_generator(self, batch_IDs):
+    def __data_generator(self, batch_images):
         
         if not os.path.exists(self.image_dir):
             raise FileNotFoundError('ERROR! The folder {} does not'
@@ -40,23 +40,20 @@ class ImageGenerator(Sequence):
         y = np.zeros([self.batch_size, self.resize_shape_tuple[0], 
                       self.resize_shape_tuple[1], self.num_classes])
         
-        for i, val in enumerate(batch_IDs):
+        for i, val in enumerate(batch_images):
             
             img = resize(imread(os.path.join(self.image_dir, val)), self.resize_shape_tuple)
 
             # VOC labels are in png format
             label = resize(imread(os.path.join(self.anno_dir, (os.path.splitext(val)[0]+'.png'))),
                        self.resize_shape_tuple)
-            #print(y.shape,n_classes)
             label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
-            #print(y.shape,n_classes)
             assert label.shape[2] == self.num_classes,"Error, dimensions do not match"
             
             X[i,] = img
             
             y[i] = label
             
-            #print(X.shape,y.shape)
             return X, y
                     
     
@@ -68,10 +65,9 @@ class ImageGenerator(Sequence):
         
         indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
         
-        batch_IDs = [self.image_list[k] for k in indices]
-        #print(batch_IDs)
+        batch_images = [self.image_list[k] for k in indices]
         # Generate data
-        X, y = self.__data_generator(batch_IDs)
+        X, y = self.__data_generator(batch_images)
 
         return X, y
     
