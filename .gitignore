@@ -4,4 +4,6 @@
 *.ipynb
 *.png
 /gitstuff
-
+/old_files
+/data
+/extras
