@@ -56,7 +56,7 @@ def PSPNet(input_shape, num_channels, out_shape,
     
     model.compile(optimizer=adam,
                   loss=loss_function,
-                  metrics=['accuracy'])
+                  metrics=['mse'])
     
     print('Model has compiled\n')
     print('The input shape will be {} and the output of'
