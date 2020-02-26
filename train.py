@@ -40,7 +40,7 @@ def train_val_generator(args, val_size=0.25):
 
 
 def PSPNet(input_shape, num_channels, out_shape,
-           num_classes, learn_rate, loss_function):
+           num_classes, learn_rate):
     
     print('Started building PSPNet\n')
     input_layer = Input((input_shape[0],input_shape[1],num_channels))
@@ -55,8 +55,8 @@ def PSPNet(input_shape, num_channels, out_shape,
     adam = Adam(learning_rate=learn_rate)
     
     model.compile(optimizer=adam,
-                  loss=loss_function,
-                  metrics=['mse'])
+                  loss=,
+                  metrics=['accuracy'])
     
     print('Model has compiled\n')
     print('The input shape will be {} and the output of'
@@ -65,7 +65,7 @@ def PSPNet(input_shape, num_channels, out_shape,
 
 
 def train_model(model, model_dir, filename, train_generator, val_generator,
-                epochs, steps_per_epoch):
+                batch_size, epochs):
     
     checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
                                  save_best_only=False, verbose=1)
@@ -77,7 +77,7 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
                         validation_data=val_generator,
                         callbacks=[checkpoint],
                         epochs=epochs,verbose=1,
-                        steps_per_epoch=steps_per_epoch)
+                        steps_per_epoch=np.ceil(len(train_generator)/batch_size))
     
     print('Finished training model. Exiting function ...\n')
     
