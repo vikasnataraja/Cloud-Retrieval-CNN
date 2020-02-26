@@ -55,7 +55,7 @@ def PSPNet(input_shape, num_channels, out_shape,
     adam = Adam(learning_rate=learn_rate)
     
     model.compile(optimizer=adam,
-                  loss=,
+                  loss='categorical_crossentropy',
                   metrics=['accuracy'])
     
     print('Model has compiled\n')
