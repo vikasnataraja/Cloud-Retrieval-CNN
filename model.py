@@ -237,16 +237,13 @@ def deconvolution_module(concat_layer, num_classes, output_shape):
     deconv_layer = Conv2DTranspose(filters=num_classes, kernel_size=(16,16),
                                    strides=(1,1),padding='same')(concat_layer)
     
+        # output shape needs to be 128,128, so upsample from 16x16
+    deconv_layer = Lambda(upsample_bilinear,
+                          arguments={'new_size':output_shape})(deconv_layer)
     
     #deconv_layer.set_shape((None,128,128,1))
     deconv_layer = BatchNorm()(deconv_layer)
-    """
-    Might have to change this activation to linear since we are regressing
-    """
+
     deconv_layer = Activation('softmax')(deconv_layer)
-    
-    # output shape needs to be 128,128, so upsample from 16x16
-    output_layer = Lambda(upsample_bilinear,
-                          arguments={'new_size':output_shape})(deconv_layer)
                           
-    return output_layer
+    return deconv_layer

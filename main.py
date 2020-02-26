@@ -20,6 +20,8 @@ def args_checks_reports(args):
     else:
         print('Number of labels in {} is {}'.format(args.label_dir,len(label_list)))
     
+    assert len(im_list)==len(label_list),"Number of training images is not equal to number of corresponding labels"
+
     if not os.path.isdir(args.model_dir):
         print('Model directory {} does not exist,'\
               ' creating it now ...'.format(args.model_dir))
@@ -47,7 +49,7 @@ if __name__=='__main__':
                         help="File Name of .h5 file which will contain the weights and saved in model_dir")
     parser.add_argument('--input_dims', default=(64,64), type=tuple, 
                         help="Tuple for input dimensions width x height")
-    parser.add_argument('--input_channels', default=3, type=int, 
+    parser.add_argument('--input_channels', default=1, type=int, 
                         help="Number of channels in input images")
     parser.add_argument('--output_dims', default=(64,64), type=tuple, 
                         help="Tuple for output dimensions width x height")
@@ -55,7 +57,7 @@ if __name__=='__main__':
                         help="Number of classes")
     parser.add_argument('--batch_size', default=16, type=int, 
                         help="Batch size for the model")
-    parser.add_argument('--learning_rate', default=1e-4, type=float, 
+    parser.add_argument('--learning_rate', default=1e-3, type=float, 
                         help="Learning rate for the model")
     parser.add_argument('--epochs', default=100000, type=int, 
                         help="Number of epochs to train the model")
