@@ -15,9 +15,10 @@ def convert_h5_img(args):
 	    rad = f['rad_mca_3d'][...][:, :, 0, 2]
 
 	    # normalize
-	    rad_norm = (rad - rad.min())/(rad.max()-rad.min())
+	    rad_norm *= 1./rad.max() 
+	    
 	    # stack to 3d grayscale
-	    rad_norm = np.dstack([rad_norm,rad_norm,rad_norm])
+	    # rad_norm = np.dstack([rad_norm,rad_norm,rad_norm])
 	    
 	    plt.imsave(os.path.join(args.save_images_dir,\
 	    			args.fname_prefix)+'_0{}.{}'.format(i,args.file_format),rad_norm)

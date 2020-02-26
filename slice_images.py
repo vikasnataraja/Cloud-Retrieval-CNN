@@ -17,17 +17,18 @@ def crop_and_save(img, fname_count, args):
     else:
         imgwidth, imgheight, _ = img.shape
     
-    for i in range(0,imgwidth,int(args.crop_dims[0]/2)):
-        for j in range(0, imgheight,int(args.crop_dims[1]/2)):
+    for i in range(0,imgwidth,int(args.crop_dims/2)):
+        for j in range(0, imgheight,int(args.crop_dims/2)):
             if len(img.shape)==2:
-                cropped_img = img[i:i+args.crop_dims[0],j:j+args.crop_dims[1]]  
+                cropped_img = img[i:i+args.crop_dims,j:j+args.crop_dims]
             else:
-                cropped_img = img[i:i+args.crop_dims[0],j:j+args.crop_dims[1],:]
+                cropped_img = img[i:i+args.crop_dims,j:j+args.crop_dims,:]
             #print(cropped_img.shape[:2],args.crop_dims[:2])
-            if cropped_img.shape[:2] == args.crop_dims[:2]:
+            print(cropped_img.shape)
+            if cropped_img.shape[:2] == (args.crop_dims,args.crop_dims):
                 save_name = os.path.join(args.output_dir,args.fname_prefix)+'_000{}.{}'.format(fname_count,args.file_format)
                 #print(save_name)
-                imwrite(uri=save_name, im=cropped_img, format=args.file_format)
+                #imwrite(uri=save_name, im=cropped_img, format=args.file_format)
                 fname_count += 1
     if not len(os.listdir(args.output_dir)):
         print('Something went wrong, try again\n')
@@ -45,7 +46,7 @@ if __name__ == '__main__':
                         help="Path to original images directory")
     parser.add_argument('--output_dir', default='train_images', type=str, 
                         help="Path to the output directory where images will be saved")
-    parser.add_argument('--crop_dims', default=(64,64), type=tuple, 
+    parser.add_argument('--crop_dims', default=64, type=int, 
                         help="Crop dimensions tuple of width x height")
     parser.add_argument('--fname_prefix', default='image', type=str, 
                         help="Prefix for the name of the saved images. E.g: 'prefix_0.png'")
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         os.makedirs(args.output_dir)
     
     print('Images will be saved as {}.{} and will be of' \
-          ' size {}'.format(os.path.join(args.output_dir,args.fname_prefix)+'_xxx',args.file_format, args.crop_dims))
+          ' size {}x{}'.format(os.path.join(args.output_dir,args.fname_prefix)+'_xxx',args.file_format, args.crop_dims, args.crop_dims))
     if __yes_or_no('Continue?') is True: 
         fname_count = 0
         for imagepath in os.listdir(args.image_dir):

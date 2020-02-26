@@ -243,7 +243,7 @@ def deconvolution_module(concat_layer, num_classes, output_shape):
     """
     Might have to change this activation to linear since we are regressing
     """
-    deconv_layer = Activation('linear')(deconv_layer)
+    deconv_layer = Activation('softmax')(deconv_layer)
     
     # output shape needs to be 128,128, so upsample from 16x16
     output_layer = Lambda(upsample_bilinear,
