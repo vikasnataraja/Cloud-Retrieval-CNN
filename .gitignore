@@ -1,9 +1,9 @@
 *.webp
-/.ipynb_checkpoints
-/__pycache__
+.ipynb_checkpoints/
+__pycache__/
 *.ipynb
 *.png
-/gitstuff
-/old_files
-/data
-/extras
+gitstuff/
+old_files/
+data/
+extras/
