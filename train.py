@@ -3,7 +3,7 @@ import os
 from keras.models import Model
 from keras.layers import Input
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
@@ -57,7 +57,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   print('Started building PSPNet\n')
   input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
-  spp_block = pyramid_pooling_module(resnet_block)
+  spp_block = pyramid_pooling_module(resnet_block, out_shape)
   out_layer = deconvolution_module(concat_layer=spp_block,
                                   num_classes=num_classes,
                                   output_shape=(out_shape,out_shape))
@@ -67,7 +67,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   optimizer = Adam(learning_rate=learn_rate)
   
   model.compile(optimizer=optimizer,
-                loss='categorical_crossentropy',
+                loss='sparse_categorical_crossentropy',
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
@@ -80,14 +80,15 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
                 batch_size, epochs):
   
   checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
-                               save_best_only=False, verbose=1)
+                               save_best_only=True, verbose=1)
 
+  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=10, verbose=1)
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
   
   model.fit_generator(train_generator,
                       validation_data=val_generator,
-                      callbacks=[checkpoint],
+                      callbacks=[checkpoint, lr],
                       epochs=epochs,verbose=1,
                       steps_per_epoch=np.ceil(len(train_generator)/batch_size))
   

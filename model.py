@@ -196,13 +196,13 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   #print('upsampled layer end of spp shape before concat',upsampled_layer.shape)
   return upsampled_layer
 
-def pyramid_pooling_module(resnet_last):
+def pyramid_pooling_module(resnet_last, output_shape):
   """Build the Pyramid Pooling Module."""
   
   # feature map size to be used for interpolation
   # for 128x128 image, this will need to be doubled to (16,16)
   # need to automate this with a ratio
-  feature_map_size = (8,8) # (height, width) not (width, height)
+  feature_map_size = (int(output_shape/8),int(output_shape/8)) # (height, width) not (width, height)
   pool_sizes = [1,2,4,8]
 
   pool_block1 = spp_block(resnet_last, pool_sizes[0], feature_map_size)

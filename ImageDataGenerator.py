@@ -50,8 +50,9 @@ class ImageGenerator(Sequence):
                   self.output_shape, self.num_classes))
     print('output list:',batch_images)
     for i, val in enumerate(batch_images):
-      
-      y[i] = self.label_dict[val]
+      label = self.label_dict[val]
+      label = np.reshape(label,(label.shape[0],label.shape[1],self.num_channels))
+      y[i] = label
       
       return y
               
