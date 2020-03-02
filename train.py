@@ -9,19 +9,17 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 
 
-def train_val_generator(args, val_size=0.25):
+def train_val_generator(args):
     
   
   X_train,X_val,y_train,y_val = train_test_split(os.listdir(args.train_dir),
                                                  os.listdir(args.label_dir),
                                                  shuffle=False,
-                                                 test_size=val_size)
+                                                 test_size=args.test_size)
   assert len(X_train)==len(y_train),'Number of images is not equal to number of labels'
   
   train_generator = ImageGenerator(image_list=X_train,
                                    label_list=y_train,
-                                   image_dir=args.train_dir,
-                                   anno_dir=args.label_dir,
                                    resize_shape_tuple=args.input_dims,
                                    num_channels=args.input_channels,
                                    num_classes=args.num_classes,
@@ -29,8 +27,6 @@ def train_val_generator(args, val_size=0.25):
   
   val_generator = ImageGenerator(image_list=X_val,
                                  label_list=y_val,
-                                 image_dir=args.train_dir,
-                                 anno_dir=args.label_dir,
                                  resize_shape_tuple=args.input_dims,
                                  num_channels=args.input_channels,
                                  num_classes=args.num_classes,

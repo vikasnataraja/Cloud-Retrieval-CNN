@@ -14,16 +14,16 @@ import numpy as np
 class ImageGenerator(Sequence):
   
   def __init__(self, image_list, label_list, 
-               num_classes, batch_size, resize_shape_tuple, num_channels,
+               num_classes, batch_size, shape_tuple, num_channels,
                to_fit=True, shuffle=False):
       
     self.image_list = image_list
     self.label_list = label_list
-    #self.image_dir = image_dir
-    #self.anno_dir = anno_dir
+    self.image_dict = image_dict
+    self.label_dict = label_dict
     self.num_classes = num_classes
     self.batch_size = batch_size
-    self.resize_shape_tuple = resize_shape_tuple
+    self.shape_tuple = shape_tuple
     self.num_channels = num_channels
     self.to_fit = to_fit
     self.shuffle = shuffle
@@ -32,29 +32,22 @@ class ImageGenerator(Sequence):
 
   def _data_generator_X(self, batch_images):
       
-    X = np.zeros([self.batch_size, self.resize_shape_tuple[0], 
-                  self.resize_shape_tuple[1], self.num_channels])
+    X = np.zeros((self.batch_size, self.shape_tuple[0],
+                  self.shape_tuple[1], self.num_channels))
     for i, val in enumerate(batch_images):
-      
-      img = cv2.resize(cv2.imread(os.path.join(self.image_dir, val)), self.resize_shape_tuple)
 
-      X[i,] = img
+      X[i,] = self.image_dict[val]
       
       return X
 
   def _data_generator_y(self, batch_images):
 
-    y = np.zeros([self.batch_size, self.resize_shape_tuple[0], 
-                  self.resize_shape_tuple[1], self.num_classes])
+    y = np.zeros((self.batch_size, self.shape_tuple[0], 
+                  self.shape_tuple[1], self.num_classes))
     
     for i, val in enumerate(batch_images):
-
-      # VOC labels are in png format
-      label = cv2.resize(cv2.imread(os.path.join(self.anno_dir, val)),self.resize_shape_tuple)
-      label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
-      assert label.shape[2] == self.num_classes,"Error, dimensions do not match"
       
-      y[i] = label
+      y[i] = self.label_dict[val]
       
       return y
               

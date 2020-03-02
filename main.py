@@ -61,7 +61,8 @@ if __name__=='__main__':
                       help="Learning rate for the model")
   parser.add_argument('--epochs', default=100000, type=int, 
                       help="Number of epochs to train the model")
-
+  parser.add_argument('--test_size', default=0.20, type=float, 
+                      help="Fraction of training image to use for validation during training")
 
   args = parser.parse_args()
   
