@@ -7,30 +7,44 @@ from keras.callbacks import ModelCheckpoint
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
-
+from h5_to_img import get_optical_thickness, get_radiances
+from slice_images import crop_images
 
 def train_val_generator(args):
-    
   
-  X_train,X_val,y_train,y_val = train_test_split(os.listdir(args.train_dir),
-                                                 os.listdir(args.label_dir),
-                                                 shuffle=False,
-                                                 test_size=args.test_size)
-  assert len(X_train)==len(y_train),'Number of images is not equal to number of labels'
+  files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
+  original_X = get_radiances(args.h5_dir, fnames)
+  original_y = get_optical_thickness(args.h5_dir, fnames)
+
+  X_dict = crop_images(original_X, args.input_dims)
+  y_dict = crop_images(original_y, args.output_dims)
+
+  X_train_list,X_val_list,y_train_list,y_val_list = train_test_split(list(X_dict.keys()),
+                                                                     list(y_dict.keys()),
+                                                                     shuffle=False,
+                                                                     test_size=args.test_size)
   
-  train_generator = ImageGenerator(image_list=X_train,
-                                   label_list=y_train,
-                                   resize_shape_tuple=args.input_dims,
+  assert len(X_train_list)==len(y_train_list),'Number of images is not equal to number of labels'
+  
+  train_generator = ImageGenerator(image_list=X_train_list,
+                                   label_list=y_train_list,
+                                   image_dict=X_dict,
+                                   label_dict=y_dict,
+                                   shape_tuple=args.input_dims,
                                    num_channels=args.input_channels,
                                    num_classes=args.num_classes,
-                                   batch_size=args.batch_size)
+                                   batch_size=args.batch_size,
+                                   to_fit=True)
   
-  val_generator = ImageGenerator(image_list=X_val,
-                                 label_list=y_val,
-                                 resize_shape_tuple=args.input_dims,
+  val_generator = ImageGenerator(image_list=X_val_list,
+                                 label_list=y_val_list,
+                                 image_dict=X_dict,
+                                 label_dict=y_dict,
+                                 hape_tuple=args.input_dims,
                                  num_channels=args.input_channels,
                                  num_classes=args.num_classes,
-                                 batch_size=args.batch_size)
+                                 batch_size=args.batch_size,
+                                 to_fit=True)
   
   return (train_generator,val_generator)
 

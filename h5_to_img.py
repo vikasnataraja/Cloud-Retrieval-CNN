@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 import cv2
 
-def get_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', file_format='png',
+def get_optical_thickness(data_dir, fnames, dimensions=480, file_format='png',
                             save=False, save_labels_dir=None):
 
   # read only h5 files"
@@ -15,9 +15,7 @@ def get_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', fi
                           np.arange(50.0, 101.0, 10.0)))
 
   pxvals = [(255/cot_bins.shape[0])*i for i in range(cot_bins.shape[0])]
-  
-  print('Images will be saved as {}_0xx.{} in specified dirs\n'.format(fname_prefix,file_format))
-  
+    
   store_cots = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
@@ -48,7 +46,7 @@ def get_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', fi
   return store_cots
 
 
-def get_radiances(data_dir, fnames, dimensions, fname_prefix='image'):
+def get_radiances(data_dir, fnames, dimensions=480):
 
   # read only h5 files"
   #fnames = [file for file in os.listdir(data_dir) if file.endswith('.h5')]
@@ -56,7 +54,7 @@ def get_radiances(data_dir, fnames, dimensions, fname_prefix='image'):
   h5dict = {}  
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
-    store_rads['{}'.format(fnames[i])] = f['rad_mca_3d'][...][:, :, 0, 2]
+    store_rads['{}'.format(fnames[i])] = np.float32(f['rad_mca_3d'][...][:, :, 0, 2])
 
   return store_rads
 

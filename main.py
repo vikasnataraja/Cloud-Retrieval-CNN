@@ -36,24 +36,20 @@ if __name__=='__main__':
     
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--train_dir', default='./train_images', type=str, 
-                      help="Path to training images directory")
-  parser.add_argument('--label_dir', default='./labels', type=str, 
-                      help="Path to the labels directory")
-  parser.add_argument('--test_dir', default='./test_images', type=str, 
-                      help="Path to testing images directory")
+  parser.add_argument('--h5_dir', default='./data', type=str, 
+                      help="Path to h5 files directory")
   parser.add_argument('--model_dir', default='./model', type=str, 
                       help="Directory where model will be saved.\n" 
                       "If directory does not exist, one will be created")
   parser.add_argument('--model_name', default='pspnet.h5', type=str, 
                       help="File Name of .h5 file which will contain the weights and saved in model_dir")
-  parser.add_argument('--input_dims', default=(64,64), type=tuple, 
-                      help="Tuple for input dimensions width x height")
+  parser.add_argument('--input_dims', default=64, type=int, 
+                      help="Input dimension")
   parser.add_argument('--input_channels', default=1, type=int, 
                       help="Number of channels in input images")
-  parser.add_argument('--output_dims', default=(64,64), type=tuple, 
-                      help="Tuple for output dimensions width x height")
-  parser.add_argument('--num_classes', default=15, type=int, 
+  parser.add_argument('--output_dims', default=64, type=int, 
+                      help="Output dimension")
+  parser.add_argument('--num_classes', default=36, type=int, 
                       help="Number of classes")
   parser.add_argument('--batch_size', default=16, type=int, 
                       help="Batch size for the model")
