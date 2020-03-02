@@ -8,28 +8,15 @@ from sklearn.model_selection import train_test_split
 
 
 def args_checks_reports(args):
-  im_list = os.listdir(args.train_dir)
-  label_list = os.listdir(args.label_dir)
-  if not im_list:
-    print('Directory {} has no files'.format(args.train_dir))
-  else:
-    print('Number of training images in {} is {}'.format(args.train_dir,len(im_list)))
-
-  if not label_list:
-    print('Directory {} has no files, exiting function'.format(args.label_dir))
-  else:
-    print('Number of labels in {} is {}'.format(args.label_dir,len(label_list)))
-  
-  assert len(im_list)==len(label_list),"Number of training images is not equal to number of corresponding labels"
 
   if not os.path.isdir(args.model_dir):
     print('Model directory {} does not exist,'\
           ' creating it now ...'.format(args.model_dir))
     os.makedirs(args.model_dir)
   
-  print('Input dimensions are ({},{})\n'.format(args.input_dims,args.input_channels))
-  print('Output dimensions are ({},{})\n'.format(args.output_dims,args.num_classes))
-  print('Batch size is {}, learning rate is set'\
+  print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.input_channels))
+  print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
+  print('Batch size is {}, learning rate is set '\
         'to {}'.format(args.batch_size,args.learning_rate))
     
 if __name__=='__main__':

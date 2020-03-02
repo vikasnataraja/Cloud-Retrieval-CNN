@@ -189,20 +189,20 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   conv1 = BatchNorm()(conv1)
   conv1 = Activation('relu')(conv1)
   
-
   # upsampling
   upsampled_layer = Lambda(upsample_bilinear, 
                            arguments={'new_size':feature_map_shape})(conv1)
-  #upsampled_layer = UpSampling2D(size=(2, 2),
-  #                          interpolation='bilinear')
-
+  
+  #print('upsampled layer end of spp shape before concat',upsampled_layer.shape)
   return upsampled_layer
 
 def pyramid_pooling_module(resnet_last):
   """Build the Pyramid Pooling Module."""
   
   # feature map size to be used for interpolation
-  feature_map_size = (16,16) # (height, width) not (width, height)
+  # for 128x128 image, this will need to be doubled to (16,16)
+  # need to automate this with a ratio
+  feature_map_size = (8,8) # (height, width) not (width, height)
   pool_sizes = [1,2,4,8]
 
   pool_block1 = spp_block(resnet_last, pool_sizes[0], feature_map_size)
@@ -210,8 +210,9 @@ def pyramid_pooling_module(resnet_last):
   pool_block4 = spp_block(resnet_last, pool_sizes[2], feature_map_size)
   pool_block8 = spp_block(resnet_last, pool_sizes[3], feature_map_size)
 
-  # concat all these layers. resulted
-  # shape=(1,feature_map_size_x,feature_map_size_y,4096)
+  # concat all these layers with previous layer. resulted
+  # shape=(None,feature_map_size_x,feature_map_size_y,4096)
+  #print('shape of resnet is',resnet_last.shape)
   concat = Concatenate()([resnet_last,
                           pool_block8,
                           pool_block4,
@@ -233,7 +234,7 @@ def deconvolution_module(concat_layer, num_classes, output_shape):
   deconv_layer = Conv2DTranspose(filters=num_classes, kernel_size=(16,16),
                                  strides=(1,1),padding='same')(concat_layer)
   
-      # output shape needs to be 128,128, so upsample from 16x16
+  # output shape needs to be 128,128, so upsample from 16x16
   deconv_layer = Lambda(upsample_bilinear,
                         arguments={'new_size':output_shape})(deconv_layer)
   

@@ -13,8 +13,8 @@ from slice_images import crop_images
 def train_val_generator(args):
   
   files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
-  original_X = get_radiances(args.h5_dir, fnames)
-  original_y = get_optical_thickness(args.h5_dir, fnames)
+  original_X = get_radiances(args.h5_dir, files)
+  original_y = get_optical_thickness(args.h5_dir, files)
 
   X_dict = crop_images(original_X, args.input_dims)
   y_dict = crop_images(original_y, args.output_dims)
@@ -30,7 +30,8 @@ def train_val_generator(args):
                                    label_list=y_train_list,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
-                                   shape_tuple=args.input_dims,
+                                   input_shape=args.input_dims,
+                                   output_shape=args.output_dims,
                                    num_channels=args.input_channels,
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
@@ -40,7 +41,8 @@ def train_val_generator(args):
                                  label_list=y_val_list,
                                  image_dict=X_dict,
                                  label_dict=y_dict,
-                                 hape_tuple=args.input_dims,
+                                 input_shape=args.input_dims,
+                                 output_shape=args.output_dims,
                                  num_channels=args.input_channels,
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
@@ -53,18 +55,18 @@ def PSPNet(input_shape, num_channels, out_shape,
            num_classes, learn_rate):
     
   print('Started building PSPNet\n')
-  input_layer = Input((input_shape[0],input_shape[1],num_channels))
+  input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
   spp_block = pyramid_pooling_module(resnet_block)
   out_layer = deconvolution_module(concat_layer=spp_block,
                                   num_classes=num_classes,
-                                  output_shape=out_shape)
+                                  output_shape=(out_shape,out_shape))
   
   model = Model(inputs=input_layer,outputs=out_layer)
   
-  adam = Adam(learning_rate=learn_rate)
+  optimizer = Adam(learning_rate=learn_rate)
   
-  model.compile(optimizer=adam,
+  model.compile(optimizer=optimizer,
                 loss='categorical_crossentropy',
                 metrics=['accuracy'])
   
@@ -79,7 +81,7 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
   
   checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
                                save_best_only=False, verbose=1)
-  
+
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
   

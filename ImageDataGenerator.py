@@ -14,7 +14,7 @@ import numpy as np
 class ImageGenerator(Sequence):
   
   def __init__(self, image_list, label_list, image_dict, label_dict,
-               num_classes, batch_size, input_shape_tuple, output_shape_tuple,
+               num_classes, batch_size, input_shape, output_shape,
                num_channels, to_fit=True, shuffle=False):
       
     self.image_list = image_list
@@ -23,8 +23,8 @@ class ImageGenerator(Sequence):
     self.label_dict = label_dict
     self.num_classes = num_classes
     self.batch_size = batch_size
-    self.input_shape_tuple = input_shape_tuple
-    self.output_shape_tuple = output_shape_tuple
+    self.input_shape = input_shape
+    self.output_shape = output_shape
     self.num_channels = num_channels
     self.to_fit = to_fit
     self.shuffle = shuffle
@@ -33,19 +33,22 @@ class ImageGenerator(Sequence):
 
   def _data_generator_X(self, batch_images):
       
-    X = np.zeros((self.batch_size, self.input_shape_tuple[0],
-                  self.input_shape_tuple[1], self.num_channels))
+    X = np.zeros((self.batch_size, self.input_shape,
+                  self.input_shape, self.num_channels))
+    print('input list:',batch_images)
     for i, val in enumerate(batch_images):
 
-      X[i,] = self.image_dict[val]
+      in_img = self.image_dict[val]
+      in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
+      X[i,] = in_img
       
       return X
 
   def _data_generator_y(self, batch_images):
 
-    y = np.zeros((self.batch_size, self.output_shape_tuple[0], 
-                  self.output_shape_tuple[1], self.num_classes))
-    
+    y = np.zeros((self.batch_size, self.output_shape, 
+                  self.output_shape, self.num_classes))
+    print('output list:',batch_images)
     for i, val in enumerate(batch_images):
       
       y[i] = self.label_dict[val]

@@ -25,15 +25,11 @@ def get_optical_thickness(data_dir, fnames, dimensions=480, file_format='png',
     classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='float32')
     
     for k in range(cot_bins.shape[0]):
-      for row in range(cot.shape[0]):
-        for col in range(cot.shape[1]):
-          if cot[row,col]>100:
-            cot[row,col] = 100
-          try:
-            if (cot[row,col]>=cot_bins[k]) and (cot[row,col] <= cot_bins[k+1]):
-              classmap[row,col] = pxvals[k]
-          except IndexError:
-            pass
+      try:
+        classmap[np.bitwise_and(cot>=cot_bins[k],cot<cot_bins[k+1])] = pxvals[k] 
+      except IndexError:
+        classmap[cot>=cot_bins[k]] = pxvals[k]
+      
     store_cots['{}'.format(fnames[i])] = classmap
     
     if save:            
