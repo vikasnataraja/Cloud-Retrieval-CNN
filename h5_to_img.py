@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 import cv2
 
-def store_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', file_format='png',
+def get_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', file_format='png',
                             save=False, save_labels_dir=None):
 
   # read only h5 files"
@@ -48,7 +48,7 @@ def store_optical_thickness(data_dir, fnames, dimensions, fname_prefix='image', 
   return store_cots
 
 
-def store_radiances(data_dir, fnames, dimensions, fname_prefix='image'):
+def get_radiances(data_dir, fnames, dimensions, fname_prefix='image'):
 
   # read only h5 files"
   #fnames = [file for file in os.listdir(data_dir) if file.endswith('.h5')]
