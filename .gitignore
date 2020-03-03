@@ -7,3 +7,4 @@ gitstuff/
 old_files/
 data/
 extras/
+*.csv
