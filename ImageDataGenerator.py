@@ -51,7 +51,7 @@ class ImageGenerator(Sequence):
     #print('output list:',batch_images)
     for i, val in enumerate(batch_images):
       label = self.label_dict[val]
-      print(np.unique(label))
+      #print(np.unique(label))
       # convert to 0 and 1 and reshape to (width,height, num_classes)
       label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
       #label = np.reshape(label,(label.shape[0],label.shape[1],self.num_classes))
