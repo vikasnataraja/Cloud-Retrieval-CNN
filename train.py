@@ -12,13 +12,13 @@ from slice_images import crop_images
 
 def train_val_generator(args):
   
-  files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
-  original_X = get_radiances(args.h5_dir, files)
-  original_y = get_optical_thickness(args.h5_dir, files)
+  h5files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
+  original_X = get_radiances(args.h5_dir, h5files)
+  original_y = get_optical_thickness(args.h5_dir, h5files, num_classes=args.num_classes)
 
   X_dict = crop_images(original_X, args.input_dims)
   y_dict = crop_images(original_y, args.output_dims)
-
+  #print('Number of training images:',len(list(X_dict.values())))
   X_train_list,X_val_list,y_train_list,y_val_list = train_test_split(list(X_dict.keys()),
                                                                      list(y_dict.keys()),
                                                                      shuffle=False,
@@ -67,7 +67,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   optimizer = Adam(learning_rate=learn_rate)
   
   model.compile(optimizer=optimizer,
-                loss='sparse_categorical_crossentropy',
+                loss='categorical_crossentropy',
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
@@ -85,12 +85,12 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
   lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=10, verbose=1)
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
-  
+  #print('length of train gen',len(train_generator))
+  #print('steps per ep is',np.ceil(len(train_generator)/batch_size))
   model.fit_generator(train_generator,
                       validation_data=val_generator,
                       callbacks=[checkpoint, lr],
-                      epochs=epochs,verbose=1,
-                      steps_per_epoch=np.ceil(len(train_generator)/batch_size))
+                      epochs=epochs,verbose=1)
   
   print('Finished training model. Exiting function ...\n')
   

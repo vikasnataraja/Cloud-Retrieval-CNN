@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 import cv2
 
-def get_optical_thickness(data_dir, fnames, dimensions=480, file_format='png',
+def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_format='png',
                             save=False, save_labels_dir=None):
 
   # read only h5 files"
@@ -14,7 +14,7 @@ def get_optical_thickness(data_dir, fnames, dimensions=480, file_format='png',
                           np.arange(20.0, 50.0, 5.0),
                           np.arange(50.0, 101.0, 10.0)))
 
-  pxvals = [(255/cot_bins.shape[0])*i for i in range(cot_bins.shape[0])]
+  pxvals = np.uint8([(num_classes/cot_bins.shape[0])*i for i in range(cot_bins.shape[0])])
     
   store_cots = {}
   for i in range(len(fnames)):

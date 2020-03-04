@@ -35,7 +35,7 @@ class ImageGenerator(Sequence):
       
     X = np.zeros((self.batch_size, self.input_shape,
                   self.input_shape, self.num_channels))
-    print('input list:',batch_images)
+    #print('input list:',batch_images)
     for i, val in enumerate(batch_images):
 
       in_img = self.image_dict[val]
@@ -48,10 +48,13 @@ class ImageGenerator(Sequence):
 
     y = np.zeros((self.batch_size, self.output_shape, 
                   self.output_shape, self.num_classes))
-    print('output list:',batch_images)
+    #print('output list:',batch_images)
     for i, val in enumerate(batch_images):
-      label = np.uint8(self.label_dict[val])
-      label = np.reshape(label,(label.shape[0],label.shape[1],self.num_classes))
+      label = self.label_dict[val]
+      print(np.unique(label))
+      # convert to 0 and 1 and reshape to (width,height, num_classes)
+      label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
+      #label = np.reshape(label,(label.shape[0],label.shape[1],self.num_classes))
       y[i] = label
       
       return y
@@ -67,6 +70,7 @@ class ImageGenerator(Sequence):
     
     batch_images = [self.image_list[k] for k in indices]
     # Generate data
+    #print('batch length is',len(batch_images))
     X = self._data_generator_X(batch_images)
 
     if self.to_fit:
