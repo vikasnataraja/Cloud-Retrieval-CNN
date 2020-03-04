@@ -47,7 +47,6 @@ def get_radiances(data_dir, fnames, dimensions=480):
   # read only h5 files"
   #fnames = [file for file in os.listdir(data_dir) if file.endswith('.h5')]
   store_rads = {}
-  h5dict = {}  
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
     store_rads['{}'.format(fnames[i])] = np.float32(f['rad_mca_3d'][...][:, :, 0, 2])
