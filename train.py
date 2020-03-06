@@ -23,7 +23,6 @@ def train_val_generator(args):
                                                                      list(y_dict.keys()),
                                                                      shuffle=False,
                                                                      test_size=args.test_size)
-  
   assert len(X_train_list)==len(y_train_list),'Number of images is not equal to number of labels'
   
   train_generator = ImageGenerator(image_list=X_train_list,

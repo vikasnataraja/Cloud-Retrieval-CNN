@@ -19,23 +19,20 @@ def common_skip(prev, num_filters, kernel_size,
   and the convolutional block. Both of those blocks share
   this common functionality.
   """
-
-  prev = BatchNorm()(prev)
-  prev = Activation('relu')(prev)
-
   x1 = Conv2D(filters=num_filters, kernel_size=kernel_size, 
               strides=stride_tuple, dilation_rate=atrous_rate,
-              padding=pad_type, use_bias=False)(prev)
-  if name=="halve_feature_map":
-      x1 = MaxPooling2D(pool_size=(2,2),padding='same')(x1)
-
+              padding=pad_type, use_bias=True)(prev)
   x1 = BatchNorm()(x1)
   x1 = Activation('relu')(x1)
+  if name=="halve_feature_map":
+      x1 = MaxPooling2D(pool_size=(2,2),padding='same')(x1)
   # dropout rate is 10%
   x1 = Dropout(rate=0.1)(x1)
   x2 = Conv2D(num_filters, kernel_size=kernel_size, 
               strides=stride_tuple, dilation_rate=atrous_rate,
-              padding=pad_type, use_bias=False)(x1)
+              padding=pad_type, use_bias=True)(x1)
+  x2 = BatchNorm()(x2)
+  #x2 = Activation('relu')(x2)
   #print('common_skip end',x2.shape)
   # I think this should be followed by BatchNorm and an activation
   return x2
@@ -44,13 +41,12 @@ def convolution_branch(name, num_filters, kernel_size,
                      stride_tuple, pad_type, atrous_rate, prev):
 
   prev = Conv2D(num_filters, kernel_size=kernel_size, strides=stride_tuple,
-                padding=pad_type, dilation_rate=atrous_rate, use_bias=False)(prev)
+                padding=pad_type, dilation_rate=atrous_rate, use_bias=True)(prev)
   
+  prev = BatchNorm()(prev)
   if name=='halve_feature_map':
       # halve the size of feature map by using same padding, 2x2 pooling
-    prev = MaxPooling2D(pool_size=(2,2),padding='same')(prev)
-
-  prev = BatchNorm()(prev)
+    prev = MaxPooling2D(pool_size=(2,2),padding='same')(prev)  
   return prev
 
 
@@ -60,14 +56,15 @@ def empty_branch(prev):
 def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
                              stride_tuple, pad_type, atrous_rate=1):
 
-  #prev_layer = Activation('relu')(prev_layer)
+  #prev_layer = BatchNorm()(prev_layer)
+  prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
                         name=name, kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
                         pad_type=pad_type,
                         atrous_rate=atrous_rate)
 
-  block_2 = convolution_branch(name, num_filters=num_filters,
+  block_2 = convolution_branch(name=name, num_filters=num_filters,
                                kernel_size=kernel_size, 
                                stride_tuple=stride_tuple,
                                prev=prev_layer, 
@@ -84,6 +81,8 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
   
   #prev_layer = Activation('relu')(prev_layer)
   #print('activ',prev_layer.shape)
+  #prev_layer = BatchNorm()(prev_layer)
+  prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
                         name=name, kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
@@ -100,7 +99,8 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
 def ResNet(input_layer):
   #print('inp',input_layer.shape)
   x = Conv2D(16, (3, 3), strides=(1, 1), padding='same',
-             use_bias=False)(input_layer)
+             use_bias=True)(input_layer)
+  x = BatchNorm()(x)
   #print('conv',input_layer.shape)
   x = identity_resnet_block(x, num_filters=16, kernel_size=(3,3),
                             stride_tuple=(1,1), name="identity",
@@ -144,6 +144,9 @@ def ResNet(input_layer):
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=4)
   
+  #x = BatchNorm()(x)
+  x = Activation('relu')(x)
+
   x = Conv2D(filters=512,kernel_size=(3,3),
              strides=(1,1), padding='same',dilation_rate=2)(x)
   x = BatchNorm()(x)
@@ -166,7 +169,7 @@ def ResNet(input_layer):
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   
-  #print('Finished building ResNet')
+  print('Finished building ResNet')
   return x
   
 """Spatial Pyramid Pooling"""
@@ -185,7 +188,7 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   pool_size_tuple = (pool_size_int, pool_size_int)
   pool_layer = AveragePooling2D(pool_size=pool_size_tuple)(prev_layer)
   conv1 = Conv2D(128, (1, 1), strides=(1, 1),
-                      use_bias=False)(pool_layer)
+                      use_bias=True)(pool_layer)
   conv1 = BatchNorm()(conv1)
   conv1 = Activation('relu')(conv1)
   
