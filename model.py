@@ -1,7 +1,6 @@
 import tensorflow as tf
 import keras
 import numpy as np
-from keras import layers
 from keras.layers import MaxPooling2D, AveragePooling2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
@@ -32,13 +31,11 @@ def common_skip(prev, num_filters, kernel_size,
               strides=stride_tuple, dilation_rate=atrous_rate,
               padding=pad_type, use_bias=True)(x1)
   x2 = BatchNorm()(x2)
-  #x2 = Activation('relu')(x2)
-  #print('common_skip end',x2.shape)
-  # I think this should be followed by BatchNorm and an activation
+
   return x2
 
-def convolution_branch(name, num_filters, kernel_size, 
-                     stride_tuple, pad_type, atrous_rate, prev):
+def convolution_branch(prev, num_filters, kernel_size, 
+                     stride_tuple, pad_type, atrous_rate, name):
 
   prev = Conv2D(num_filters, kernel_size=kernel_size, strides=stride_tuple,
                 padding=pad_type, dilation_rate=atrous_rate, use_bias=True)(prev)
@@ -58,19 +55,20 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
 
   #prev_layer = BatchNorm()(prev_layer)
   prev_layer = Activation('relu')(prev_layer)
+  
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
                         name=name, kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
                         pad_type=pad_type,
                         atrous_rate=atrous_rate)
 
-  block_2 = convolution_branch(name=name, num_filters=num_filters,
+  block_2 = convolution_branch(prev=prev_layer, num_filters=num_filters,
                                kernel_size=kernel_size, 
                                stride_tuple=stride_tuple,
-                               prev=prev_layer, 
                                pad_type=pad_type,
-                               atrous_rate=atrous_rate)
-  #print('conv_block',block_1.shape,block_2.shape)
+                               atrous_rate=atrous_rate,
+                               name=name)
+  
   added = Add()([block_1, block_2])
   
   return added
@@ -79,25 +77,25 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
 def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
                         stride_tuple, pad_type, atrous_rate=1):
   
-  #prev_layer = Activation('relu')(prev_layer)
-  #print('activ',prev_layer.shape)
   #prev_layer = BatchNorm()(prev_layer)
   prev_layer = Activation('relu')(prev_layer)
+  
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
-                        name=name, kernel_size=kernel_size, 
+                        kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
                         pad_type=pad_type, 
-                        atrous_rate=atrous_rate)
+                        atrous_rate=atrous_rate,
+                        name=name)
   
   block_2 = empty_branch(prev_layer)
-  #print(block_1.shape,block_2.shape)
+
   added = Add()([block_1, block_2])
   
   return added
 
 
 def ResNet(input_layer):
-  #print('inp',input_layer.shape)
+  
   x = Conv2D(16, (3, 3), strides=(1, 1), padding='same',
              use_bias=True)(input_layer)
   x = BatchNorm()(x)
@@ -196,7 +194,6 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   upsampled_layer = Lambda(upsample_bilinear, 
                            arguments={'new_size':feature_map_shape})(conv1)
   
-  #print('upsampled layer end of spp shape before concat',upsampled_layer.shape)
   return upsampled_layer
 
 def pyramid_pooling_module(resnet_last, output_shape):
@@ -221,7 +218,6 @@ def pyramid_pooling_module(resnet_last, output_shape):
                           pool_block4,
                           pool_block2,
                           pool_block1])
-  #print(concat.shape)
   return concat    
   
 

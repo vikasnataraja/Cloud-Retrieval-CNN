@@ -1,14 +1,15 @@
-""" 
-Adapted from sources: 
-https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
-https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
-"""
 import random
 from keras.utils import Sequence
 from keras.utils import to_categorical
 import os
 import cv2
 import numpy as np
+
+""" 
+Adapted from sources: 
+https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
+https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
+"""
 
 class ImageGenerator(Sequence):
   
@@ -33,6 +34,7 @@ class ImageGenerator(Sequence):
   def _data_generator_X(self, batch_images):
     X = np.zeros((self.batch_size, self.input_shape,
                     self.input_shape, self.num_channels))
+    
     for i, val in enumerate(batch_images):
       in_img = self.image_dict[val]
       if self.num_channels<3:
@@ -42,24 +44,25 @@ class ImageGenerator(Sequence):
     return X
 
   def _data_generator_y(self, batch_images):
-
     y = np.zeros((self.batch_size, self.output_shape, 
                   self.output_shape, self.num_classes))
-    #print('output list:',batch_images)
+    
     for i, val in enumerate(batch_images):
       label = self.label_dict[val]
-      label = to_categorical(label,num_classes=self.num_classes)
+
+      # one-hot encoding of mask labels using Keras. This will transform mask from 
+      # (width x height) to (width x height x num_classes)
+      label = to_categorical(label, num_classes=self.num_classes)
       y[i] = label
       
     return y
               
   
   def __len__(self):
-          
     return int(np.floor(len(self.image_list)/self.batch_size))
 
+  
   def __getitem__(self, index):
-      
     indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
     
     batch_images = [self.image_list[k] for k in indices]

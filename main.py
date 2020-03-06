@@ -4,7 +4,6 @@ import argparse
 from albumentations import Compose, VerticalFlip, HorizontalFlip, Rotate, GridDistortion
 from keras.models import load_model
 from train import PSPNet, train_val_generator, train_model
-from sklearn.model_selection import train_test_split
 
 
 def args_checks_reports(args):

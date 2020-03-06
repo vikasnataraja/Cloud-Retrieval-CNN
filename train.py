@@ -3,7 +3,7 @@ import os
 from keras.models import Model
 from keras.layers import Input
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
@@ -34,7 +34,7 @@ def train_val_generator(args):
                                    num_channels=args.input_channels,
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
-                                   to_fit=True)
+                                   to_fit=True, shuffle=True)
   
   val_generator = ImageGenerator(image_list=X_val_list,
                                  label_list=y_val_list,
@@ -45,7 +45,7 @@ def train_val_generator(args):
                                  num_channels=args.input_channels,
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
-                                 to_fit=True)
+                                 to_fit=True, shuffle=False)
   
   return (train_generator,val_generator)
 
@@ -82,13 +82,15 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
                                save_best_only=True, verbose=1)
 
   lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=10, verbose=1)
+
+  stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=0, verbose=1, mode='min', restore_best_weights=True)
+  
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
-  #print('length of train gen',len(train_generator))
-  #print('steps per ep is',np.ceil(len(train_generator)/batch_size))
+
   model.fit_generator(train_generator,
                       validation_data=val_generator,
-                      callbacks=[checkpoint, lr],
+                      callbacks=[checkpoint, lr, stop],
                       epochs=epochs,verbose=1)
   
   print('Finished training model. Exiting function ...\n')
