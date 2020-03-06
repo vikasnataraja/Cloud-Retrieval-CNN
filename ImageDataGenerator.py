@@ -4,9 +4,8 @@ https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/pre
 https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
 """
 import random
-from skimage.io import imread
-from skimage.transform import resize
 from keras.utils import Sequence
+from keras.utils import to_categorical
 import os
 import cv2
 import numpy as np
@@ -32,17 +31,15 @@ class ImageGenerator(Sequence):
 
 
   def _data_generator_X(self, batch_images):
-      
     X = np.zeros((self.batch_size, self.input_shape,
-                  self.input_shape, self.num_channels))
-    #print('input list:',batch_images)
+                    self.input_shape, self.num_channels))
     for i, val in enumerate(batch_images):
-
       in_img = self.image_dict[val]
-      in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
-      X[i,] = in_img
+      if self.num_channels<3:
+        in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
+      X[i] = in_img
       
-      return X
+    return X
 
   def _data_generator_y(self, batch_images):
 
@@ -51,13 +48,10 @@ class ImageGenerator(Sequence):
     #print('output list:',batch_images)
     for i, val in enumerate(batch_images):
       label = self.label_dict[val]
-      #print(np.unique(label))
-      # convert to 0 and 1 and reshape to (width,height, num_classes)
-      label = (np.arange(self.num_classes) == label[:,:,None]).astype('float32')
-      #label = np.reshape(label,(label.shape[0],label.shape[1],self.num_classes))
+      label = to_categorical(label,num_classes=self.num_classes)
       y[i] = label
       
-      return y
+    return y
               
   
   def __len__(self):
@@ -77,7 +71,7 @@ class ImageGenerator(Sequence):
       y = self._data_generator_y(batch_images)
       return X,y
     else:
-      return y
+      return X
   
   def on_epoch_end(self):
     self.indices = np.arange(len(self.image_list))
