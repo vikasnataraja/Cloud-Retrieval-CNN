@@ -3,13 +3,13 @@ import os
 from keras.models import Model
 from keras.layers import Input
 from keras.optimizers import Adam, SGD
-from keras.regularizers import l1,l2,l1_l2
+from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
-from h5_to_img import get_optical_thickness, get_radiances
-from slice_images import crop_images
+from feed_images import get_optical_thickness, get_radiances, crop_images
+
 
 def train_val_generator(args):
   
@@ -88,6 +88,7 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
 
+  # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:
       for attr in ['kernel_regularizer']:
