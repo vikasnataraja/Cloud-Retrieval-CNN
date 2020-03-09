@@ -8,3 +8,6 @@ old_files/
 data/
 extras/
 *.csv
+save_train_images.py
+h5_to_img.py
+slices_images.py
