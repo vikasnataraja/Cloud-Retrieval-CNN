@@ -2,7 +2,8 @@ import numpy as np
 import os
 from keras.models import Model
 from keras.layers import Input
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
+from keras.regularizers import l1,l2,l1_l2
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
@@ -16,17 +17,16 @@ def train_val_generator(args):
   original_X = get_radiances(args.h5_dir, h5files)
   original_y = get_optical_thickness(args.h5_dir, h5files, num_classes=args.num_classes)
 
-  X_dict = crop_images(original_X, args.input_dims)
-  y_dict = crop_images(original_y, args.output_dims)
-  #print('Number of training images:',len(list(X_dict.values())))
+  X_dict = crop_images(original_X, args.input_dims, fname_prefix='data')
+  y_dict = crop_images(original_y, args.output_dims, fname_prefix='data')
+
   X_train_list,X_val_list,y_train_list,y_val_list = train_test_split(list(X_dict.keys()),
                                                                      list(y_dict.keys()),
-                                                                     shuffle=False,
+                                                                     shuffle=True,
                                                                      test_size=args.test_size)
-  assert len(X_train_list)==len(y_train_list),'Number of images is not equal to number of labels'
+  assert X_train_list==y_train_list,'Image names in X and y are different'
   
   train_generator = ImageGenerator(image_list=X_train_list,
-                                   label_list=y_train_list,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
                                    input_shape=args.input_dims,
@@ -37,7 +37,6 @@ def train_val_generator(args):
                                    to_fit=True, shuffle=True)
   
   val_generator = ImageGenerator(image_list=X_val_list,
-                                 label_list=y_val_list,
                                  image_dict=X_dict,
                                  label_dict=y_dict,
                                  input_shape=args.input_dims,
@@ -45,7 +44,7 @@ def train_val_generator(args):
                                  num_channels=args.input_channels,
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
-                                 to_fit=True, shuffle=False)
+                                 to_fit=True, shuffle=True)
   
   return (train_generator,val_generator)
 
@@ -63,7 +62,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   
   model = Model(inputs=input_layer,outputs=out_layer)
   
-  optimizer = Adam(learning_rate=learn_rate)
+  optimizer = SGD(learning_rate=learn_rate)
   
   model.compile(optimizer=optimizer,
                 loss='categorical_crossentropy',
@@ -83,14 +82,21 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
 
   lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=10, verbose=1)
 
-  stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=0, verbose=1, mode='min', restore_best_weights=True)
+  stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=20, verbose=1, mode='min', restore_best_weights=True)
   
+  call_list = [checkpoint, lr]
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
 
+  regularizer = l2(0.01)
+  for layer in model.layers:
+      for attr in ['kernel_regularizer']:
+          if hasattr(layer, attr):
+              setattr(layer, attr, regularizer)
+
   model.fit_generator(train_generator,
                       validation_data=val_generator,
-                      callbacks=[checkpoint, lr, stop],
+                      callbacks=call_list,
                       epochs=epochs,verbose=1)
   
   print('Finished training model. Exiting function ...\n')

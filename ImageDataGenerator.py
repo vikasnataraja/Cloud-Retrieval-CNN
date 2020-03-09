@@ -13,12 +13,11 @@ https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
 
 class ImageGenerator(Sequence):
   
-  def __init__(self, image_list, label_list, image_dict, label_dict,
+  def __init__(self, image_list, image_dict, label_dict,
                num_classes, batch_size, input_shape, output_shape,
                num_channels, to_fit=True, shuffle=False):
       
     self.image_list = image_list
-    self.label_list = label_list
     self.image_dict = image_dict
     self.label_dict = label_dict
     self.num_classes = num_classes
@@ -37,10 +36,11 @@ class ImageGenerator(Sequence):
     
     for i, val in enumerate(batch_images):
       in_img = self.image_dict[val]
-      if self.num_channels<3:
-        in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
+      in_img = (in_img-in_img.min())/(in_img.max()-in_img.min())
+      #if self.num_channels<3:
+      in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
       X[i] = in_img
-      
+      #print('img val\n',val)
     return X
 
   def _data_generator_y(self, batch_images):
@@ -49,9 +49,9 @@ class ImageGenerator(Sequence):
     
     for i, val in enumerate(batch_images):
       label = self.label_dict[val]
-
+      #print('label val\n',val)
       # one-hot encoding of mask labels using Keras. This will transform mask from 
-      # (width x height) to (width x height x num_classes)
+      # (width x height) to (width x height x num_classes) with 1s and 0s
       label = to_categorical(label, num_classes=self.num_classes)
       y[i] = label
       
@@ -66,8 +66,8 @@ class ImageGenerator(Sequence):
     indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
     
     batch_images = [self.image_list[k] for k in indices]
+ 
     # Generate data
-    #print('batch length is',len(batch_images))
     X = self._data_generator_X(batch_images)
 
     if self.to_fit:
