@@ -14,7 +14,7 @@ def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_fo
                           np.arange(20.0, 50.0, 5.0),
                           np.arange(50.0, 101.0, 10.0)))
 
-  pxvals = np.uint8([(num_classes/cot_bins.shape[0])*i for i in range(cot_bins.shape[0])])
+  pxvals = np.arange(0,num_classes)
     
   store_cots = {}
   for i in range(len(fnames)):
@@ -24,10 +24,10 @@ def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_fo
 
     classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='float32')
     
-    for k in range(cot_bins.shape[0]):
-      try:
+    for k in range(pxvals.size):
+      if k< (pxvals.size-1):
         classmap[np.bitwise_and(cot>=cot_bins[k],cot<cot_bins[k+1])] = pxvals[k] 
-      except IndexError:
+      else:
         classmap[cot>=cot_bins[k]] = pxvals[k]
       
     store_cots['{}'.format(fnames[i])] = classmap
