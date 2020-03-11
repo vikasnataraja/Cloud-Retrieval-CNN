@@ -1,5 +1,4 @@
 import tensorflow as tf
-import keras
 import numpy as np
 from keras.layers import MaxPooling2D, AveragePooling2D
 from keras.layers import Conv2D, Conv2DTranspose

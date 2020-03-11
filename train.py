@@ -9,6 +9,7 @@ from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from feed_images import get_optical_thickness, get_radiances, crop_images
+import tensorflow as tf
 
 
 def train_val_generator(args):
@@ -62,10 +63,10 @@ def PSPNet(input_shape, num_channels, out_shape,
   
   model = Model(inputs=input_layer,outputs=out_layer)
   
-  optimizer = SGD(learning_rate=learn_rate)
+  optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss='categorical_crossentropy',
+                loss=weighted_cross_entropy(35.0),
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
@@ -74,7 +75,8 @@ def PSPNet(input_shape, num_channels, out_shape,
   return model
 
 
-def train_model(model, model_dir, filename, train_generator, val_generator,
+def train_model(model, model_dir, filename, 
+                train_generator, val_generator,
                 batch_size, epochs):
   
   checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
@@ -103,3 +105,19 @@ def train_model(model, model_dir, filename, train_generator, val_generator,
   print('Finished training model. Exiting function ...\n')
   
   return model
+
+def weighted_cross_entropy(beta):
+  def convert_to_logits(y_pred):
+      # see https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/keras/backend.py#L3525
+      y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon())
+
+      return tf.log(y_pred / (1 - y_pred))
+
+  def loss(y_true, y_pred):
+    y_pred = convert_to_logits(y_pred)
+    loss = tf.nn.weighted_cross_entropy_with_logits(logits=y_pred, targets=y_true, pos_weight=beta)
+
+    # or reduce_sum and/or axis=-1
+    return tf.reduce_mean(loss)
+
+  return loss

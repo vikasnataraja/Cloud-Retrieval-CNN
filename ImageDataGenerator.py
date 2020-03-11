@@ -40,7 +40,6 @@ class ImageGenerator(Sequence):
       #if self.num_channels<3:
       in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
       X[i] = in_img
-      #print('img val\n',val)
     return X
 
   def _data_generator_y(self, batch_images):
@@ -52,7 +51,7 @@ class ImageGenerator(Sequence):
       #print('label val\n',val)
       # one-hot encoding of mask labels using Keras. This will transform mask from 
       # (width x height) to (width x height x num_classes) with 1s and 0s
-      label = to_categorical(label, num_classes=self.num_classes)
+      label = np.uint8(to_categorical(label, num_classes=self.num_classes))
       y[i] = label
       
     return y
