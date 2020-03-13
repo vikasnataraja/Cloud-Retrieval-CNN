@@ -3,7 +3,7 @@ import os
 import h5py
 import cv2
 
-def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_format='png',
+def get_optical_thickness(data_dir, fnames, num_classes, file_format='png',
                             save=False, save_labels_dir=None):
 
   # read only h5 files"
@@ -25,8 +25,8 @@ def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_fo
     classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='float32')
     
     for k in range(pxvals.size):
-      if k< (pxvals.size-1):
-        classmap[np.bitwise_and(cot>=cot_bins[k],cot<cot_bins[k+1])] = pxvals[k] 
+      if k < (pxvals.size-1):
+        classmap[np.bitwise_and(cot>=cot_bins[k], cot<cot_bins[k+1])] = pxvals[k] 
       else:
         classmap[cot>=cot_bins[k]] = pxvals[k]
       
@@ -42,7 +42,7 @@ def get_optical_thickness(data_dir, fnames, num_classes, dimensions=480, file_fo
   return store_cots
 
 
-def get_radiances(data_dir, fnames, dimensions=480):
+def get_radiances(data_dir, fnames):
 
   # read only h5 files"
   #fnames = [file for file in os.listdir(data_dir) if file.endswith('.h5')]
