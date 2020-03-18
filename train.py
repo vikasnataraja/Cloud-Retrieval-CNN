@@ -9,8 +9,7 @@ from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from feed_images import get_optical_thickness, get_radiances, crop_images
-import tensorflow as tf
-from losses import dice_coefficient_loss
+from losses import dice_coefficient_loss, dice_loss, focal_loss, weighted_cross_entropy
 
 def train_val_generator(args):
   
@@ -67,7 +66,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss=dice_coefficient_loss,
+                loss=focal_loss,
                 metrics=['accuracy'])
   
   print('Model has compiled\n')

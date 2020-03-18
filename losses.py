@@ -36,6 +36,16 @@ def wce_loss(y_true, y_pred):
   # or reduce_sum and/or axis=-1
   return tf.reduce_mean(loss)
 
+def weighted_categorical_crossentropy(y_true, y_pred):
+  # weights = [0.9,0.05,0.04,0.01]
+  def wcce(y_true, y_pred):
+    Kweights = K.constant(35.0)
+    if not K.is_tensor(y_pred):
+      y_pred = K.constant(y_pred)
+    y_true = K.cast(y_true, y_pred.dtype)
+    return K.categorical_crossentropy(y_true, y_pred) * K.sum(y_true * Kweights, axis=-1)
+  
+  return wcce(y_true, y_pred)
 ######################################################
 def jaccard_distance_loss(y_true, y_pred, smooth=100):
     """Jaccard distance for semantic segmentation.
