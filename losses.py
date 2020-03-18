@@ -63,4 +63,3 @@ def focal_loss(y_true, y_pred, gamma=2):
     eps = K.epsilon()
     y_pred = K.clip(y_pred, eps, 1. - eps)
     return -K.sum(K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred), axis=-1)
-
