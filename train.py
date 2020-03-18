@@ -10,7 +10,7 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from feed_images import get_optical_thickness, get_radiances, crop_images
 import tensorflow as tf
-
+from losses import dice_coefficient_loss
 
 def train_val_generator(args):
   
@@ -59,14 +59,15 @@ def PSPNet(input_shape, num_channels, out_shape,
   spp_block = pyramid_pooling_module(resnet_block, out_shape)
   out_layer = deconvolution_module(concat_layer=spp_block,
                                   num_classes=num_classes,
-                                  output_shape=(out_shape,out_shape))
+                                  output_shape=(out_shape,out_shape),
+				  activation_fn='softmax')
   
   model = Model(inputs=input_layer,outputs=out_layer)
   
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss=weighted_cross_entropy,
+                loss=dice_coefficient_loss,
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
@@ -106,13 +107,4 @@ def train_model(model, model_dir, filename,
   
   return model
 
-def weighted_cross_entropy(y_true, y_pred):
-  # see https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/keras/backend.py#L3525
-  y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1 - tf.keras.backend.epsilon())
 
-  y_pred = tf.log(y_pred / (1 - y_pred))
-
-  loss = tf.nn.weighted_cross_entropy_with_logits(logits=y_pred, targets=y_true, pos_weight=35.0)
-
-  # or reduce_sum and/or axis=-1
-  return tf.reduce_mean(loss)

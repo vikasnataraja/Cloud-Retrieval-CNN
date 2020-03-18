@@ -227,7 +227,7 @@ From the paper:
 "Finally, multi-scale features are fused to obtain an image with 
 the same size as the input image by the transposed convolution"
 """
-def deconvolution_module(concat_layer, num_classes, output_shape):
+def deconvolution_module(concat_layer, num_classes, output_shape, activation_fn='sigmoid'):
   
   deconv_layer = Conv2DTranspose(filters=num_classes, kernel_size=(16,16),
                                  strides=(1,1),padding='same')(concat_layer)
@@ -239,6 +239,6 @@ def deconvolution_module(concat_layer, num_classes, output_shape):
   #deconv_layer.set_shape((None,128,128,1))
   deconv_layer = BatchNorm()(deconv_layer)
 
-  deconv_layer = Activation('softmax')(deconv_layer)
+  deconv_layer = Activation(activation_fn)(deconv_layer)
                         
   return deconv_layer

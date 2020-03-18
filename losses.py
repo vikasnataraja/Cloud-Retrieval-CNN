@@ -12,7 +12,7 @@ def dice_coefficient_loss(y_true, y_pred):
 
   return 1-dice_coefficient(y_true, y_pred)
 
-def weighted_cross_entropy(beta):
+def weighted_cross_entropy(y_true, y_pred):
   
   def convert_to_logits(y_pred):
       # see https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/keras/backend.py#L3525
@@ -22,12 +22,12 @@ def weighted_cross_entropy(beta):
 
   def loss(y_true, y_pred):
     y_pred = convert_to_logits(y_pred)
-    loss = tf.nn.weighted_cross_entropy_with_logits(logits=y_pred, targets=y_true, pos_weight=beta)
+    loss = tf.nn.weighted_cross_entropy_with_logits(logits=y_pred, targets=y_true, pos_weight=35.0)
 
     # or reduce_sum and/or axis=-1
     return tf.reduce_mean(loss)
 
-  return loss
+  return loss(y_true, y_pred)
   
 def jaccard_distance_loss(y_true, y_pred, smooth=100):
     """Jaccard distance for semantic segmentation.
