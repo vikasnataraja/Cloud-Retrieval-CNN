@@ -8,11 +8,6 @@ import cv2
 def normalize(img):
         return (img-img.min())/(img.max()-img.min())
 
-""" 
-Adapted from sources: 
-https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
-https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
-"""
 
 class ImageGenerator(Sequence):
   """ 
