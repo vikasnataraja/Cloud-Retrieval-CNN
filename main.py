@@ -39,7 +39,7 @@ if __name__=='__main__':
                       help="Number of classes")
   parser.add_argument('--batch_size', default=16, type=int, 
                       help="Batch size for the model")
-  parser.add_argument('--learning_rate', default=1e-3, type=float, 
+  parser.add_argument('--lr', default=1e-3, type=float, 
                       help="Learning rate for the model")
   parser.add_argument('--epochs', default=100000, type=int, 
                       help="Number of epochs to train the model")
