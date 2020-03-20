@@ -28,7 +28,7 @@ def common_skip(prev, num_filters, kernel_size,
   x1 = Dropout(rate=0.1)(x1)
   x2 = Conv2D(num_filters, kernel_size=kernel_size, 
               strides=stride_tuple, dilation_rate=atrous_rate,
-              padding=pad_type, use_bias=True)(x1)
+              padding=pad_type, use_bias=False)(x1)
   x2 = BatchNorm()(x2)
 
   return x2
@@ -37,7 +37,7 @@ def convolution_branch(prev, num_filters, kernel_size,
                      stride_tuple, pad_type, atrous_rate, name):
 
   prev = Conv2D(num_filters, kernel_size=kernel_size, strides=stride_tuple,
-                padding=pad_type, dilation_rate=atrous_rate, use_bias=True)(prev)
+                padding=pad_type, dilation_rate=atrous_rate, use_bias=False)(prev)
   
   prev = BatchNorm()(prev)
   if name=='halve_feature_map':
@@ -96,7 +96,7 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
 def ResNet(input_layer):
   
   x = Conv2D(16, (3, 3), strides=(1, 1), padding='same',
-             use_bias=True)(input_layer)
+             use_bias=False)(input_layer)
   x = BatchNorm()(x)
   #print('conv',input_layer.shape)
   x = identity_resnet_block(x, num_filters=16, kernel_size=(3,3),
@@ -145,24 +145,24 @@ def ResNet(input_layer):
   x = Activation('relu')(x)
 
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=2)(x)
+             strides=(1,1), padding='same',dilation_rate=2,use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=2)(x)
+             strides=(1,1), padding='same',dilation_rate=2, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   
   """End of dilated convolution block"""
   
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=1)(x)
+             strides=(1,1), padding='same',dilation_rate=1,use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=1)(x)
+             strides=(1,1), padding='same',dilation_rate=1, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   
@@ -195,14 +195,11 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   
   return upsampled_layer
 
-def pyramid_pooling_module(resnet_last, output_shape):
+def pyramid_pooling_module(resnet_last, output_shape, pool_sizes=[1,2,4,8]):
   """Build the Pyramid Pooling Module."""
   
   # feature map size to be used for interpolation
-  # for 128x128 image, this will need to be doubled to (16,16)
-  # need to automate this with a ratio
   feature_map_size = (int(output_shape/8),int(output_shape/8)) # (height, width) not (width, height)
-  pool_sizes = [1,2,4,8]
 
   pool_block1 = spp_block(resnet_last, pool_sizes[0], feature_map_size)
   pool_block2 = spp_block(resnet_last, pool_sizes[1], feature_map_size)
