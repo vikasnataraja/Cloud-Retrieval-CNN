@@ -4,12 +4,12 @@ from keras.models import Model
 from keras.layers import Input
 from keras.optimizers import Adam, SGD
 from keras.regularizers import l1, l2 
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from ImageDataGenerator import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from feed_images import get_optical_thickness, get_radiances, crop_images
-from losses import dice_coefficient_loss, dice_loss, focal_loss, weighted_cross_entropy
+from losses import focal_loss
 
 def train_val_generator(args):
   
@@ -86,6 +86,7 @@ def train_model(model, model_dir, filename,
 
   stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=20, verbose=1, mode='min', restore_best_weights=True)
   
+  csv = CSVLogger(filename='{}.csv'.format(filename), separator=',', append=True)
   call_list = [checkpoint, lr]
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))

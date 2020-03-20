@@ -58,7 +58,7 @@ def jaccard_distance_loss(y_true, y_pred, smooth=100):
     jac = (intersection + smooth) / (sum_ - intersection + smooth)
     return (1 - jac) * smooth
 
-def focal_loss(y_true, y_pred, gamma=2):
+def focal_loss(y_true, y_pred, gamma=3.0):
     y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
     eps = K.epsilon()
     y_pred = K.clip(y_pred, eps, 1. - eps)
