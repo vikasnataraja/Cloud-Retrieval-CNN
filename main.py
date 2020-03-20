@@ -16,7 +16,7 @@ def args_checks_reports(args):
   print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.input_channels))
   print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
   print('Batch size is {}, learning rate is set '\
-        'to {}'.format(args.batch_size,args.learning_rate))
+        'to {}'.format(args.batch_size,args.lr))
     
 if __name__=='__main__':
     
@@ -59,7 +59,7 @@ if __name__=='__main__':
                  num_channels=args.input_channels,
                  out_shape=args.output_dims,
                  num_classes=args.num_classes, 
-                 learn_rate=args.learning_rate)
+                 learn_rate=args.lr)
   
   trained_model = train_model(model, model_dir=args.model_dir,
                               filename=args.model_name,
