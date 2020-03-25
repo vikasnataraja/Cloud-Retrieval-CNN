@@ -5,11 +5,11 @@ from keras.layers import Input
 from keras.optimizers import Adam, SGD
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
-from ImageDataGenerator import ImageGenerator
+from utils.utils import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
-from feed_images import get_optical_thickness, get_radiances, crop_images
-from losses import focal_loss
+from utils.utils import get_radiances, get_optical_thickness, crop_images
+from utils.losses import focal_loss
 
 def train_val_generator(args):
   
