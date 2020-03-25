@@ -18,7 +18,7 @@ class ImageGenerator(Sequence):
   
   def __init__(self, image_list, image_dict, label_dict,
                num_classes, batch_size, input_shape, output_shape,
-               num_channels, normalize, to_fit=True, shuffle=False):
+               num_channels, augment, normalize, to_fit=True, shuffle=False, augmentation=None):
       
     self.image_list = image_list
     self.image_dict = image_dict
@@ -29,6 +29,8 @@ class ImageGenerator(Sequence):
     self.output_shape = output_shape
     self.num_channels = num_channels
     self.to_fit = to_fit
+    self.augment = augment
+    self.augmentation = augmentation
     self.shuffle = shuffle
     self.normalize = normalize
     self.on_epoch_end()

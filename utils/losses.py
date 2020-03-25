@@ -51,10 +51,16 @@ def jaccard_distance_loss(y_true, y_pred, smooth=100):
 
 """
 Focal Loss 
-"""
 def focal_loss(y_true, y_pred, gamma=2.0):
-  """ Focal loss weights the hard examples higher than easy examples"""
   y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
   eps = K.epsilon()
   y_pred = K.clip(y_pred, eps, 1. - eps)
   return -K.sum(K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred), axis=-1)
+"""
+def focal_loss(y_true, y_pred, alpha=1., gamma=2.):
+  """ Focal loss weights the hard examples higher than easy examples"""
+  y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+  eps = K.epsilon()
+  y_pred = K.clip(y_pred, eps, 1. - eps)
+  loss = alpha * K.pow(1. - y_pred, gamma) * (-y_true) * K.log(y_pred)
+  return K.mean(loss, axis=-1)

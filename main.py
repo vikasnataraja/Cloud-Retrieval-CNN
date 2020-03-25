@@ -45,6 +45,8 @@ if __name__=='__main__':
                       help="Number of epochs to train the model")
   parser.add_argument('--normalize', default=True, type=bool,
 		      help="Flag, set to True if input images need to be normalized")
+  parser.add_argument('--augment', default=False, type=bool,
+                      help="Flag, set to True if data augmentation needs to be enabled")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
 

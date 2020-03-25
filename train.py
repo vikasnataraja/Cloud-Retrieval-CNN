@@ -10,6 +10,7 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import focal_loss
+from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast
 
 def train_val_generator(args):
   
@@ -26,6 +27,10 @@ def train_val_generator(args):
                                                                      test_size=args.test_size)
   assert X_train_list==y_train_list,'Image names in X and y are different'
   
+  AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
+			         RandomContrast(limit=0.2, p=0.5),
+			         RandomBrightness(limit=0.2, p=0.5)])
+
   train_generator = ImageGenerator(image_list=X_train_list,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
@@ -35,7 +40,8 @@ def train_val_generator(args):
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
 				   normalize=args.normalize,
-                                   to_fit=True, shuffle=True)
+				   augmentation=AUGMENTATIONS_TRAIN,
+                                   to_fit=True, augment=args.augment, shuffle=True)
   
   val_generator = ImageGenerator(image_list=X_val_list,
                                  image_dict=X_dict,
@@ -46,7 +52,7 @@ def train_val_generator(args):
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
 				 normalize=args.normalize,
-                                 to_fit=True, shuffle=True)
+                                 to_fit=True, augment=False, shuffle=True)
   
   return (train_generator,val_generator)
 
