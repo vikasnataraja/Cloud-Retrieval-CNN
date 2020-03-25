@@ -87,7 +87,7 @@ def train_model(model, model_dir, filename,
   stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=20, verbose=1, mode='min', restore_best_weights=True)
   
   csv = CSVLogger(filename='{}.csv'.format(filename), separator=',', append=True)
-  call_list = [checkpoint, lr]
+  call_list = [checkpoint, lr, csv]
   print('Model will be saved in' 
         ' directory: {} as {}\n'.format(model_dir, filename))
 
