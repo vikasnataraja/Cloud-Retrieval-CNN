@@ -18,7 +18,7 @@ class ImageGenerator(Sequence):
   
   def __init__(self, image_list, image_dict, label_dict,
                num_classes, batch_size, input_shape, output_shape,
-               num_channels, to_fit=True, shuffle=False, normalize=False):
+               num_channels, normalize, to_fit=True, shuffle=False):
       
     self.image_list = image_list
     self.image_dict = image_dict
@@ -41,7 +41,7 @@ class ImageGenerator(Sequence):
     for i, val in enumerate(batch_images):
       in_img = self.image_dict[val]
       if self.normalize:
-        in_img = self.normalize(in_img)
+        in_img = self.normalize_img(in_img)
       #if self.num_channels<3:
       in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
       X[i] = in_img
@@ -82,7 +82,7 @@ class ImageGenerator(Sequence):
     if self.shuffle:
       np.random.shuffle(self.indices)
 
-  def normalize(self, img):
+  def normalize_img(self, img):
     return (img-img.min())/(img.max()-img.min())
 
 def get_optical_thickness(data_dir, fnames, num_classes, file_format='png',
