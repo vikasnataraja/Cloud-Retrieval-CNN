@@ -41,7 +41,7 @@ if __name__=='__main__':
                       help="Batch size for the model")
   parser.add_argument('--lr', default=1e-3, type=float, 
                       help="Learning rate for the model")
-  parser.add_argument('--epochs', default=100000, type=int, 
+  parser.add_argument('--epochs', default=500, type=int, 
                       help="Number of epochs to train the model")
   parser.add_argument('--normalize', default=True, type=bool,
 		      help="Flag, set to True if input images need to be normalized")
