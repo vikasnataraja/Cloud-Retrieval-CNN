@@ -9,7 +9,7 @@ from utils.utils import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
-from utils.losses import focal_loss
+from utils.losses import binary_focal_loss_fixed
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast
 
 def train_val_generator(args):
@@ -74,7 +74,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss=focal_loss,
+                loss=binary_focal_loss_fixed,
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
