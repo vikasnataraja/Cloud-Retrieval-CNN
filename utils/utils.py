@@ -59,6 +59,8 @@ class ImageGenerator(Sequence):
       # one-hot encoding of mask labels using Keras. This will transform mask from 
       # (width x height) to (width x height x num_classes) with 1s and 0s
       label = np.uint8(to_categorical(label, num_classes=self.num_classes))
+      # make background pixels 0
+      label[:,:,0] = 0
       y[i] = label
     return y
               
