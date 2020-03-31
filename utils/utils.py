@@ -5,10 +5,6 @@ import os
 import h5py
 import cv2
 
-def normalize(img):
-  return (img-img.min())/(img.max()-img.min())
-
-
 class ImageGenerator(Sequence):
   """ 
   Adapted from sources: 
@@ -44,7 +40,7 @@ class ImageGenerator(Sequence):
       in_img = self.image_dict[val]
       if self.normalize:
         in_img = self.normalize_img(in_img)
-      #if self.num_channels<3:
+ 
       in_img = np.reshape(in_img, (in_img.shape[0],in_img.shape[1],self.num_channels))
       X[i] = in_img
     return X
@@ -88,6 +84,13 @@ class ImageGenerator(Sequence):
 
   def normalize_img(self, img):
     return (img-img.min())/(img.max()-img.min())
+
+  def standard_normalize(self, img):
+    if img.std()!=0.:
+      img = (img - img.mean())/(img.std())
+      img = np.clip(img, -1.0, 1.0)
+      img = (img + 1.0)/2.0
+    return img
 
 def get_optical_thickness(data_dir, fnames, num_classes, file_format='png',
                             save=False, save_labels_dir=None):

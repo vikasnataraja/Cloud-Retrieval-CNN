@@ -51,15 +51,15 @@ def jaccard_distance_loss(y_true, y_pred, smooth=100):
 
 """
 Focal Loss 
-
-def focal_loss(y_true, y_pred, alpha=1., gamma=2.):
+"""
+def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
   y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
   eps = K.epsilon()
   y_pred = K.clip(y_pred, eps, 1. - eps)
   loss = alpha * K.pow(1. - y_pred, gamma) * (-y_true) * K.log(y_pred)
   return K.mean(loss, axis=-1)
-"""
-def binary_focal_loss_fixed(y_true, y_pred, gamma=2., alpha=0.25):
+
+def binary_focal_loss(y_true, y_pred, gamma=2., alpha=0.5):
   pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
   pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
   epsilon = K.epsilon()
