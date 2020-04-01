@@ -2,7 +2,7 @@
 Repo to maintain codebase for the CNN model we're developing.
 
 ### Model Architecture
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/tree/master/extras/full_model.png" width="200" height="100">
+<img src="https://www.mdpi.com/remotesensing/remotesensing-11-01962/article_deploy/html/images/remotesensing-11-01962-g009.png" width="500" height="200">
 
 ### Questions and Assumpations:
 
