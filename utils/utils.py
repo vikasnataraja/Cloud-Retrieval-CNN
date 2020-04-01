@@ -83,8 +83,7 @@ class ImageGenerator(Sequence):
       img = (img + 1.0)/2.0
     return img
 
-def get_optical_thickness(data_dir, fnames, num_classes, file_format='png',
-                            save=False, save_labels_dir=None):
+def get_optical_thickness(data_dir, fnames, num_classes):
   cot_bins=np.concatenate((np.arange(0.0, 1.0, 0.1),
                           np.arange(1.0, 10.0, 1.0),
                           np.arange(10.0, 20.0, 2.0),
@@ -102,13 +101,6 @@ def get_optical_thickness(data_dir, fnames, num_classes, file_format='png',
       else:
         classmap[cot>=cot_bins[k]] = pxvals[k]
     store_cots['{}'.format(fnames[i])] = classmap
-    if save:            
-      if not os.path.isdir(save_labels_dir):
-        print('Output directory {} does not exist,'\
-              ' creating it now ...'.format(save_labels_dir))
-        os.makedirs(save_labels_dir)
-      cv2.imwrite(os.path.join(save_labels_dir,fnames[i])+'_{}.{}'.format(i,file_format),classmap)
-    
   return store_cots
 
 def get_radiances(data_dir, fnames):
