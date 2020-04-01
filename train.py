@@ -75,7 +75,7 @@ def PSPNet(input_shape, num_channels, out_shape,
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss=focal_loss,
+                loss=binary_focal_loss,
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
