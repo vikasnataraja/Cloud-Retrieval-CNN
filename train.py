@@ -10,7 +10,7 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss
-from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast
+from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 
 def train_val_generator(args):
   
@@ -28,8 +28,11 @@ def train_val_generator(args):
   assert X_train_list==y_train_list,'Image names in X and y are different'
   
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
-			         RandomContrast(limit=0.2, p=0.5),
-			         RandomBrightness(limit=0.2, p=0.5)])
+			         RandomContrast(limit=0.2, p=0.75),
+			         RandomBrightness(limit=0.2, p=0.75),
+				 HueSaturationValue(p=0.5),
+				 GaussNoise(p=0.25),
+				 ShiftScaleRotate(p=0.5,rotate_limit=20)])
 
   train_generator = ImageGenerator(image_list=X_train_list,
                                    image_dict=X_dict,

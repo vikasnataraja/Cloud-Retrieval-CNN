@@ -40,20 +40,22 @@ class ImageGenerator(Sequence):
                   self.output_shape, self.num_classes)) 
 
     for i, val in enumerate(batch_images):
-      # read in input image
+      # read in input image from image dictionary
       img = self.image_dict[val]
+      # read in ground truth (mask) from label dictionary
+      label = self.label_dict[val]
       if self.normalize:
         img = self.standard_normalize(img)
+      if self.augment:
+        augmented = self.augmentation(image=img,mask=label)
+        img = augmented['img']
+        label = augmented['mask']
       img = np.reshape(img, (img.shape[0],img.shape[1],self.num_channels))
       X[i] = img
       
-      # read in ground truth label from dictionary
-      label = self.label_dict[val]
       # one-hot encoding of mask labels using Keras. This will transform mask from 
       # (width x height) to (width x height x num_classes) with 1s and 0s
       label = np.uint8(to_categorical(label, num_classes=self.num_classes))
-      # make background pixels 0
-      #label[:,:,0] = 0
       y[i] = label
     return X,y
 
