@@ -1,6 +1,8 @@
 # Cloud-Retrieval-CNN
 Repo to maintain codebase for the CNN model we're developing.
 
+### Model Architecture
+![model architecture](https://github.com/vikasnataraja/Cloud-Retrieval-CNN/tree/master/extras/full_model.png)
 ### Questions and Assumpations:
 
 * Activation function - Currently, there is an acitvation layer included at the top of the ResNet blocks meaning after each convolution, there will be activation. But in the blocks themselves, there is no BN + activation after the second convolution. Will need to address this soon enough.
