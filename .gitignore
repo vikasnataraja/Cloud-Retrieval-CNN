@@ -2,16 +2,8 @@
 .ipynb_checkpoints/
 __pycache__/
 *.ipynb
-*.png
-gitstuff/
 old_files/
 data/
-extras/
 *.csv
-save_train_images.py
-h5_to_img.py
-slices_images.py
-add_remove_colormap.py
-save_remove_colormap.py
 model/
 mymodel/
