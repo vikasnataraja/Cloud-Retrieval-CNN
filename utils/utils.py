@@ -12,9 +12,10 @@ class ImageGenerator(Sequence):
   https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
   """
   
-  def __init__(self, image_list, image_dict, label_dict,
-               num_classes, batch_size, input_shape, output_shape,
-               num_channels, augment, normalize, to_fit=True, shuffle=True, augmentation=None):
+  def __init__(self, image_list=None, image_dict=None, label_dict=None,
+               num_classes=36, batch_size=16, input_shape=64, output_shape=64,
+               num_channels=1, augment=False, normalize=False, 
+	       to_fit=False, shuffle=False, augmentation=None):
       
     self.image_list = image_list
     self.image_dict = image_dict
@@ -29,26 +30,24 @@ class ImageGenerator(Sequence):
     self.augmentation = augmentation
     self.shuffle = shuffle
     self.normalize = normalize
-    self.on_epoch_end()
+    if self.to_fit:
+      self.on_epoch_end()
 
-  def _data_generator_X(self, batch_images):
+  def _data_generator(self, batch_images):
     X = np.zeros((self.batch_size, self.input_shape,
                     self.input_shape, self.num_channels))
-     
+    y = np.zeros((self.batch_size, self.output_shape,
+                  self.output_shape, self.num_classes)) 
+
     for i, val in enumerate(batch_images):
+      # read in input image
       img = self.image_dict[val]
       if self.normalize:
         img = self.standard_normalize(img)
-      
       img = np.reshape(img, (img.shape[0],img.shape[1],self.num_channels))
       X[i] = img
-    return X
-
-  def _data_generator_y(self, batch_images):
-    y = np.zeros((self.batch_size, self.output_shape, 
-                  self.output_shape, self.num_classes))
-    
-    for i, val in enumerate(batch_images):
+      
+      # read in ground truth label from dictionary
       label = self.label_dict[val]
       # one-hot encoding of mask labels using Keras. This will transform mask from 
       # (width x height) to (width x height x num_classes) with 1s and 0s
@@ -56,8 +55,8 @@ class ImageGenerator(Sequence):
       # make background pixels 0
       #label[:,:,0] = 0
       y[i] = label
-    return y
-              
+    return X,y
+
   def __len__(self):
     return int(np.floor(len(self.image_list)/self.batch_size))
   
@@ -65,13 +64,9 @@ class ImageGenerator(Sequence):
     indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
     batch_images = [self.image_list[k] for k in indices]
  
-    # Generate data
-    X = self._data_generator_X(batch_images)
-    if self.to_fit:
-      y = self._data_generator_y(batch_images)
-      return X,y
-    else:
-      return X
+    # Generate data and ground truth
+    X,y = self._data_generator(batch_images)
+    return X,y
   
   def on_epoch_end(self):
     self.indices = np.arange(len(self.image_list))
