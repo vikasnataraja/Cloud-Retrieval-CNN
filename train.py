@@ -30,7 +30,6 @@ def train_val_generator(args):
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
 			         RandomContrast(limit=0.2, p=0.75),
 			         RandomBrightness(limit=0.2, p=0.75),
-				 HueSaturationValue(p=0.5),
 				 GaussNoise(p=0.25),
 				 ShiftScaleRotate(p=0.5,rotate_limit=20)])
 
