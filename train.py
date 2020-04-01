@@ -9,7 +9,7 @@ from utils.utils import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
-from utils.losses import binary_focal_loss, focal_loss, dice_coefficient_loss
+from utils.losses import binary_focal_loss, focal_loss
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast
 
 def train_val_generator(args):
@@ -60,7 +60,6 @@ def train_val_generator(args):
 def PSPNet(input_shape, num_channels, out_shape,
            num_classes, learn_rate):
     
-  print('Started building PSPNet\n')
   input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
   spp_block = pyramid_pooling_module(resnet_block, out_shape)
@@ -81,7 +80,6 @@ def PSPNet(input_shape, num_channels, out_shape,
   print('The input shape will be {} and the output of'
         ' the model will be {}'.format(model.input_shape[1:],model.output_shape[1:]))
   return model
-
 
 def train_model(model, model_dir, filename, 
                 train_generator, val_generator,
@@ -112,5 +110,4 @@ def train_model(model, model_dir, filename,
                       epochs=epochs,verbose=1)
   
   print('Finished training model. Exiting function ...\n')
-  
   return model
