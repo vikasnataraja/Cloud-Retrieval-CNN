@@ -72,15 +72,22 @@ def PSPNet(input_shape, num_channels, out_shape,
   
   model = Model(inputs=input_layer,outputs=out_layer)
   
+  # add regularization to layers
+  regularizer = l2(0.01)
+  for layer in model.layers:
+      for attr in ['kernel_regularizer']:
+          if hasattr(layer, attr):
+              setattr(layer, attr, regularizer)
+
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
   model.compile(optimizer=optimizer,
-                loss=binary_focal_loss,
+                loss=focal_loss,
                 metrics=['accuracy'])
   
   print('Model has compiled\n')
-  print('The input shape will be {} and the output of'
-        ' the model will be {}'.format(model.input_shape[1:],model.output_shape[1:]))
+  # print('The input shape will be {} and the output of'
+  #       ' the model will be {}'.format(model.input_shape[1:],model.output_shape[1:]))
   return model
 
 def train_model(model, model_dir, filename, 
@@ -90,22 +97,13 @@ def train_model(model, model_dir, filename,
   checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
                                save_best_only=True, verbose=1)
 
-  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=10, verbose=1)
+  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=15, verbose=1)
 
   stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=20, verbose=1, mode='min', restore_best_weights=True)
   
   csv = CSVLogger(filename='{}.csv'.format(os.path.splitext(filename)[0]), separator=',', append=True)
   call_list = [checkpoint, lr]
-  print('Model will be saved in' 
-        ' directory: {} as {}\n'.format(model_dir, filename))
-
-  # add regularization to layers
-  regularizer = l2(0.01)
-  for layer in model.layers:
-      for attr in ['kernel_regularizer']:
-          if hasattr(layer, attr):
-              setattr(layer, attr, regularizer)
-
+  print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
   model.fit_generator(train_generator,
                       validation_data=val_generator,
                       callbacks=call_list,
