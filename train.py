@@ -59,19 +59,18 @@ def train_val_generator(args):
   return (train_generator,val_generator)
 
 
-def PSPNet(input_shape, num_channels, out_shape,
-           num_classes, learn_rate):
+def PSPNet(input_shape, num_channels, out_shape, num_classes, learn_rate):
     
   input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
-  spp_block = pyramid_pooling_module(resnet_block, out_shape)
+  spp_block = pyramid_pooling_module(resnet_block, out_shape, pool_sizes=[1,2,4,8])
   out_layer = deconvolution_module(concat_layer=spp_block,
                                   num_classes=num_classes,
                                   output_shape=(out_shape,out_shape),
 				  activation_fn='softmax')
   
   model = Model(inputs=input_layer,outputs=out_layer)
-  
+   
   # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:
@@ -84,10 +83,8 @@ def PSPNet(input_shape, num_channels, out_shape,
   model.compile(optimizer=optimizer,
                 loss=focal_loss,
                 metrics=['accuracy'])
-  
+  # print(model.summary()) 
   print('Model has compiled\n')
-  # print('The input shape will be {} and the output of'
-  #       ' the model will be {}'.format(model.input_shape[1:],model.output_shape[1:]))
   return model
 
 def train_model(model, model_dir, filename, 
