@@ -152,7 +152,6 @@ def ResNet(input_layer):
              strides=(1,1), padding='same',dilation_rate=1, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
-  
   return x
   
 """Spatial Pyramid Pooling"""
@@ -165,8 +164,6 @@ def upsample_bilinear(in_tensor, new_size):
                          align_corners=True)
 
 def spp_block(prev_layer, pool_size_int, feature_map_shape):
-
-  #kernel = [(1,1),(2,2),(4,4),(8,8)]
   pool_size_tuple = (pool_size_int, pool_size_int)
   pool_layer = AveragePooling2D(pool_size=pool_size_tuple, strides=pool_size_tuple)(prev_layer)
   conv1 = Conv2D(128, (1, 1), strides=(1, 1),
@@ -193,10 +190,10 @@ def pyramid_pooling_module(resnet_last, output_shape, pool_sizes=[1,2,4,8]):
   # concatenate all these layers with previous layer. resulted
   # shape=(batch_size,feature_map_size_x,feature_map_size_y,4096)
   concat = Concatenate(axis=-1)([resnet_last,
-                          pool_block1,
-                          pool_block2,
-                          pool_block3,
-                          pool_block4])
+                          	 pool_block4,
+                                 pool_block3,
+  	                         pool_block2,
+                                 pool_block1])
   return concat    
 
 """
@@ -206,17 +203,15 @@ From the paper:
 "Finally, multi-scale features are fused to obtain an image with 
 the same size as the input image by the transposed convolution"
 """
-def deconvolution_module(concat_layer, num_classes, output_shape, activation_fn):
-  x = Conv2D(filters=512, kernel_size=(3,3),
-             strides=(1,1), padding='same', use_bias=False)(concat_layer)
-  x = BatchNorm()(x)
-  x = Activation('relu')(x)
-  x = Dropout(0.1)(x)
-
-  x = Conv2D(filters=num_classes, kernel_size=(1,1),
-             strides=(1,1), padding='same', use_bias=False)(x)
-  # output shape needs to be 128,128, so upsample from 16x16
+def deconvolution_module(concat_layer, num_classes, output_shape, activation_fn, transpose=True):
+  if transpose:
+    x = Conv2DTranspose(filters=num_classes, kernel_size=(int(output_shape[0]/8),int(output_shape[1]/8)),
+               	        strides=(2,2), use_bias=False)(concat_layer)
+  else:
+    x = Conv2D(filters=num_classes, kernel_size=(1,1),
+               strides=(2,2), padding='same', use_bias=False)(concat_layer)
+  # upsample to output_shape
   x = Lambda(upsample_bilinear,
-                        arguments={'new_size':output_shape})(x)
+             arguments={'new_size':output_shape})(x)
   x = Activation(activation_fn)(x)
   return x
