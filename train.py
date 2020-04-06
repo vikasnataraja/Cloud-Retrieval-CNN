@@ -9,7 +9,7 @@ from utils.utils import ImageGenerator
 from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
-from utils.losses import binary_focal_loss, focal_loss
+from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 
 def train_val_generator(args):
@@ -59,7 +59,7 @@ def train_val_generator(args):
   return (train_generator,val_generator)
 
 
-def PSPNet(input_shape, num_channels, out_shape, num_classes, learn_rate):
+def PSPNet(input_shape, num_channels, out_shape, num_classes, learn_rate, loss_fn):
     
   input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
@@ -79,9 +79,19 @@ def PSPNet(input_shape, num_channels, out_shape, num_classes, learn_rate):
               setattr(layer, attr, regularizer)
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
-  
+  print('Loss function being used is: {}'.format(loss_fn))
+  custom_loss = ''
+  if loss_fn == 'focal':
+    custom_loss = focal_loss
+  elif loss_fn == 'binary_focal':
+    custom_loss = binary_focal_loss
+  elif loss_fn == 'jaccard':
+    custom_loss = jaccard_distance_loss
+  elif loss_fn == 'crossentropy':
+    custom_loss = 'categorical_crossentropy'
+
   model.compile(optimizer=optimizer,
-                loss=focal_loss,
+                loss=custom_loss,
                 metrics=['accuracy'])
   # print(model.summary()) 
   print('Model has compiled\n')
@@ -99,7 +109,7 @@ def train_model(model, model_dir, filename,
   stop = EarlyStopping(monitor='val_loss', min_delta=0.08, patience=20, verbose=1, mode='min', restore_best_weights=True)
   
   csv = CSVLogger(filename='{}.csv'.format(os.path.splitext(filename)[0]), separator=',', append=True)
-  call_list = [checkpoint, lr]
+  call_list = [checkpoint, lr, stop]
   print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
   model.fit_generator(train_generator,
                       validation_data=val_generator,

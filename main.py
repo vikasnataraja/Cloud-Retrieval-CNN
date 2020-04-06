@@ -49,6 +49,8 @@ if __name__=='__main__':
                       help="Flag, set to True if data augmentation needs to be enabled")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
+  parser.add_argument('--loss', default='crossentropy', type=str,
+		      help="Loss function")
 
   args = parser.parse_args()
   
@@ -63,7 +65,8 @@ if __name__=='__main__':
                  num_channels=args.input_channels,
                  out_shape=args.output_dims,
                  num_classes=args.num_classes, 
-                 learn_rate=args.lr)
+                 learn_rate=args.lr,
+		 loss_fn=args.loss)
   
   trained_model = train_model(model, model_dir=args.model_dir,
                               filename=args.model_name,
