@@ -11,7 +11,6 @@ class ImageGenerator(Sequence):
   https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
   https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
   """
-  
   def __init__(self, image_list=None, image_dict=None, label_dict=None,
                num_classes=36, batch_size=32, input_shape=64, output_shape=64,
                num_channels=1, augment=False, normalize=False, 
@@ -86,11 +85,11 @@ class ImageGenerator(Sequence):
     return img
 
 def get_optical_thickness(data_dir, fnames, num_classes):
-  cot_bins=np.concatenate((np.arange(0.0, 1.0, 0.1),
-                          np.arange(1.0, 10.0, 1.0),
-                          np.arange(10.0, 20.0, 2.0),
-                          np.arange(20.0, 50.0, 5.0),
-                          np.arange(50.0, 101.0, 10.0)))
+  cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
+                             np.arange(1.0, 10.0, 1.0),
+                             np.arange(10.0, 20.0, 2.0),
+                             np.arange(20.0, 50.0, 5.0),
+                             np.arange(50.0, 101.0, 10.0)))
   pxvals = np.arange(0,num_classes)  
   store_cots = {}
   for i in range(len(fnames)):

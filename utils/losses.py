@@ -41,7 +41,7 @@ def weighted_cross_entropy(y_true, y_pred):
 Jaccard Distance Loss
 Adapted from https://github.com/keras-team/keras-contrib/blob/master/keras_contrib/losses/jaccard.py
 """
-def jaccard_distance_loss(y_true, y_pred, smooth=100):
+def jaccard_distance_loss(y_true, y_pred, smooth=100.):
   """Jaccard distance for semantic segmentation.
   Also known as the intersection-over-union loss.
   This loss is useful when you have unbalanced numbers of pixels within an image
@@ -52,7 +52,7 @@ def jaccard_distance_loss(y_true, y_pred, smooth=100):
   return (1 - jac) * smooth
 
 def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
-  # y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
+  y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
   epsilon = K.epsilon()
   y_pred = K.clip(y_pred, epsilon, 1. - epsilon)
   loss = -alpha * K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred)

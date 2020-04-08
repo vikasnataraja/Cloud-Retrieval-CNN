@@ -37,7 +37,7 @@ if __name__=='__main__':
                       help="Output dimension")
   parser.add_argument('--num_classes', default=36, type=int, 
                       help="Number of classes")
-  parser.add_argument('--batch_size', default=16, type=int, 
+  parser.add_argument('--batch_size', default=32, type=int, 
                       help="Batch size for the model")
   parser.add_argument('--lr', default=1e-3, type=float, 
                       help="Learning rate for the model")
@@ -49,7 +49,7 @@ if __name__=='__main__':
                       help="Flag, set to True if data augmentation needs to be enabled")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
-  parser.add_argument('--loss', default='crossentropy', type=str,
+  parser.add_argument('--loss', default='focal', type=str,
 		      help="Loss function")
 
   args = parser.parse_args()
@@ -63,7 +63,7 @@ if __name__=='__main__':
   # build the model
   model = PSPNet(input_shape=args.input_dims, 
                  num_channels=args.input_channels,
-                 out_shape=args.output_dims,
+                 out_dim=args.output_dims,
                  num_classes=args.num_classes, 
                  learn_rate=args.lr,
 		 loss_fn=args.loss)
@@ -74,4 +74,3 @@ if __name__=='__main__':
                               val_generator=val_gen,
                               batch_size=args.batch_size,
                               epochs=args.epochs)
-  
