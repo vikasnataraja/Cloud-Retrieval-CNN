@@ -13,7 +13,7 @@ class ImageGenerator(Sequence):
   """
   
   def __init__(self, image_list=None, image_dict=None, label_dict=None,
-               num_classes=36, batch_size=16, input_shape=64, output_shape=64,
+               num_classes=36, batch_size=32, input_shape=64, output_shape=64,
                num_channels=1, augment=False, normalize=False, 
 	       to_fit=False, shuffle=False, augmentation=None):
       
