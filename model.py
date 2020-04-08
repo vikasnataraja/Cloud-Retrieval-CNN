@@ -6,9 +6,35 @@ from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Lambda
 from keras.layers import Concatenate, Add
 from keras.models import Model
+import keras
 
 def BatchNorm():
   return BatchNormalization(momentum=0.95, epsilon=1e-5)
+
+class UpSample(keras.layers.Layer):
+
+  def __init__(self, new_size, **kwargs):
+    self.new_size = new_size
+    super(UpSample, self).__init__(**kwargs)
+
+  def build(self, input_shape):
+    super(UpSample, self).build(input_shape)
+
+  def call(self, inputs, **kwargs):
+    resized_height, resized_width = self.new_size
+    return tf.image.resize(images=inputs,
+                           size=[resized_height,resized_width],
+                           method='bilinear',
+                           align_corners=True)
+
+  def compute_output_shape(self, input_shape):
+    return tuple([None, self.new_size[0], self.new_size[1], input_shape[3]])
+
+  def get_config(self):
+    config = super(UpSample, self).get_config()
+    config['new_size'] = self.new_size
+    return config
+
 
 def common_skip(prev, num_filters, kernel_size, 
               stride_tuple, pad_type, atrous_rate, name):
@@ -17,13 +43,18 @@ def common_skip(prev, num_filters, kernel_size,
   and the convolutional block. Both of those blocks share
   this common functionality.
   """
-  x1 = Conv2D(num_filters, kernel_size=kernel_size, 
-              strides=stride_tuple, dilation_rate=atrous_rate,
-              padding=pad_type, use_bias=True)(prev)
+  if name=='halve_feature_map':
+    x1 = Conv2D(num_filters, kernel_size=kernel_size, 
+                strides=(stride_tuple[0]*2,stride_tuple[1]*2), 
+		dilation_rate=atrous_rate,
+                padding=pad_type, use_bias=True)(prev)
+  else:
+    x1 = Conv2D(num_filters, kernel_size=kernel_size,
+                strides=stride_tuple, dilation_rate=atrous_rate,
+                padding=pad_type, use_bias=True)(prev)
   x1 = BatchNorm()(x1)
   x1 = Activation('relu')(x1)
-  if name=="halve_feature_map":
-      x1 = MaxPooling2D(pool_size=(2,2),padding='same')(x1)
+
   # dropout rate is 10%
   x1 = Dropout(rate=0.1)(x1)
   x2 = Conv2D(num_filters, kernel_size=kernel_size, 
@@ -35,13 +66,14 @@ def common_skip(prev, num_filters, kernel_size,
 
 def convolution_branch(prev, num_filters, kernel_size, 
                      stride_tuple, pad_type, atrous_rate, name):
-
-  prev = Conv2D(num_filters, kernel_size=kernel_size, strides=stride_tuple,
-                padding=pad_type, dilation_rate=atrous_rate, use_bias=False)(prev)
-  prev = BatchNorm()(prev)
+  
   if name=='halve_feature_map':
-      # halve the size of feature map by using same padding, 2x2 pooling
-    prev = MaxPooling2D(pool_size=(2,2),padding='same')(prev)  
+    prev = Conv2D(num_filters, kernel_size=kernel_size, strides=(stride_tuple[0]*2,stride_tuple[1]*2),
+                  padding=pad_type, dilation_rate=atrous_rate, use_bias=False)(prev)
+  else:
+    prev = Conv2D(num_filters, kernel_size=kernel_size, strides=stride_tuple,
+                  padding=pad_type, dilation_rate=atrous_rate, use_bias=False)(prev)
+  prev = BatchNorm()(prev)
   return prev
 
 def empty_branch(prev):
@@ -172,8 +204,9 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   conv1 = Activation('relu')(conv1)
   
   # upsampling
-  upsampled_layer = Lambda(upsample_bilinear, 
-                           arguments={'new_size':feature_map_shape})(conv1)
+  upsampled_layer = UpSample(new_size=feature_map_shape)(conv1)
+  # upsampled_layer = Lambda(upsample_bilinear, 
+  #                          arguments={'new_size':feature_map_shape})(conv1)
   return upsampled_layer
 
 def pyramid_pooling_module(resnet_last, output_shape, pool_sizes=[1,2,4,8]):
@@ -203,15 +236,16 @@ From the paper:
 "Finally, multi-scale features are fused to obtain an image with 
 the same size as the input image by the transposed convolution"
 """
-def deconvolution_module(concat_layer, num_classes, output_shape, activation_fn, transpose=True):
+def deconvolution_module(concat_layer, num_classes, out_shape, activation_fn, transpose=True):
   if transpose:
-    x = Conv2DTranspose(filters=num_classes, kernel_size=(int(output_shape[0]/8),int(output_shape[1]/8)),
+    x = Conv2DTranspose(filters=num_classes, kernel_size=(int(out_shape[0]/8),int(out_shape[1]/8)),
                	        strides=(2,2), use_bias=False)(concat_layer)
   else:
     x = Conv2D(filters=num_classes, kernel_size=(1,1),
                strides=(2,2), padding='same', use_bias=False)(concat_layer)
   # upsample to output_shape
-  x = Lambda(upsample_bilinear,
-             arguments={'new_size':output_shape})(x)
+  x = UpSample(new_size=out_shape)(x)
+  # x = Lambda(upsample_bilinear,
+  #            arguments={'new_size':out_shape})(x)
   x = Activation(activation_fn)(x)
   return x
