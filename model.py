@@ -168,7 +168,7 @@ def ResNet(input_layer):
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   x = ZeroPadding2D(padding=(2,2))(x)
-  x = Dropout(0.1)(x)
+  # x = Dropout(0.1)(x)
   
   """End of dilated convolution block"""
   
@@ -181,7 +181,7 @@ def ResNet(input_layer):
              strides=(1,1), padding='same',dilation_rate=1, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
-  x = Dropout(0.1)(x)
+  # x = Dropout(0.1)(x)
   return x
   
 """Spatial Pyramid Pooling"""

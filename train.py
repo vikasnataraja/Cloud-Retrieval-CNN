@@ -2,7 +2,7 @@ import numpy as np
 import os
 from keras.models import Model
 from keras.layers import Input
-from keras.optimizers import Adam, SGD
+from keras.optimizers import Adam, SGD, Adadelta
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from utils.utils import ImageGenerator
@@ -27,6 +27,11 @@ def train_val_generator(args):
                                                                      test_size=args.test_size)
   assert X_train_list==y_train_list,'Image names in X and y are different'
   
+  txtfile = open('{}'.format(os.path.join(args.model_dir,os.path.splitext(args.model_name)[0])+'.txt'),'w')
+  txtfile.write('Training images:\n {}\n'.format(X_train_list))
+  txtfile.write('Validation images:\n {}\n'.format(X_val_list))
+  txtfile.close()
+
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
 			         RandomContrast(limit=0.2, p=0.75),
 			         RandomBrightness(limit=0.2, p=0.75),
