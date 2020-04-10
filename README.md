@@ -6,8 +6,6 @@ Repo to maintain codebase for the CNN model we're developing.
 
 ### Questions and Assumpations:
 
-* Activation function - Currently, there is an acitvation layer included at the top of the ResNet blocks meaning after each convolution, there will be activation. But in the blocks themselves, there is no BN + activation after the second convolution. Will need to address this soon enough.
-
 * Output layer - Output(2) is not being computed here
 
 * The `x1/2` notation means the feature map is reduced by half. But there is no indication as to how this is done. Assuming this is double strided convolution.
