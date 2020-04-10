@@ -63,7 +63,7 @@ def PSPNet(input_shape, num_channels, out_dim, num_classes, learn_rate, loss_fn)
     
   input_layer = Input((input_shape,input_shape,num_channels))
   resnet_block = ResNet(input_layer)
-  spp_block = pyramid_pooling_module(resnet_block, out_dim, pool_sizes=[1,2,4,8])
+  spp_block = pyramid_pooling_module(resnet_block, out_dim, pool_sizes=[1,2,3,4])
   out_layer = deconvolution_module(concat_layer=spp_block,
                                   num_classes=num_classes,
                                   out_shape=(out_dim,out_dim),
@@ -94,7 +94,7 @@ def PSPNet(input_shape, num_channels, out_dim, num_classes, learn_rate, loss_fn)
   model.compile(optimizer=optimizer,
                 loss=custom_loss,
                 metrics=['accuracy'])
-  # print(model.summary()) 
+  print(model.summary()) 
   print('Model has compiled\n')
   return model
 

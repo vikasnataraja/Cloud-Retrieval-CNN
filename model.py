@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from keras.layers import MaxPooling2D, AveragePooling2D
+from keras.layers import MaxPooling2D, AveragePooling2D, ZeroPadding2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Lambda
@@ -54,14 +54,13 @@ def common_skip(prev, num_filters, kernel_size,
                 padding=pad_type, use_bias=True)(prev)
   x1 = BatchNorm()(x1)
   x1 = Activation('relu')(x1)
-
+  
   # dropout rate is 10%
   x1 = Dropout(rate=0.1)(x1)
   x2 = Conv2D(num_filters, kernel_size=kernel_size, 
               strides=stride_tuple, dilation_rate=atrous_rate,
               padding=pad_type, use_bias=False)(x1)
   x2 = BatchNorm()(x2)
-
   return x2
 
 def convolution_branch(prev, num_filters, kernel_size, 
@@ -80,7 +79,7 @@ def empty_branch(prev):
   return prev
 
 def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
-                             stride_tuple, pad_type, atrous_rate=1):
+                             stride_tuple, pad_type, atrous_rate):
 
   prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
@@ -95,12 +94,11 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
                                pad_type=pad_type,
                                atrous_rate=atrous_rate,
                                name=name)
- 
   added = Add()([block_1, block_2])
   return added
   
 def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
-                        stride_tuple, pad_type, atrous_rate=1):
+                        stride_tuple, pad_type, atrous_rate):
   
   prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
@@ -109,7 +107,7 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
                         pad_type=pad_type, 
                         atrous_rate=atrous_rate,
                         name=name)
-  
+   
   block_2 = empty_branch(prev_layer)
   added = Add()([block_1, block_2])
   return added
@@ -164,14 +162,16 @@ def ResNet(input_layer):
   x = Activation('relu')(x)
 
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=2,use_bias=False)(x)
+             strides=(1,1), padding='valid',dilation_rate=2,use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
-  
+  x = ZeroPadding2D(padding=(2,2))(x)
+    
   x = Conv2D(filters=512,kernel_size=(3,3),
-             strides=(1,1), padding='same',dilation_rate=2, use_bias=False)(x)
+             strides=(1,1), padding='valid',dilation_rate=2, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
+  x = ZeroPadding2D(padding=(2,2))(x)
   
   """End of dilated convolution block"""
   
@@ -199,7 +199,7 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   pool_size_tuple = (pool_size_int, pool_size_int)
   pool_layer = AveragePooling2D(pool_size=pool_size_tuple, strides=pool_size_tuple)(prev_layer)
   conv1 = Conv2D(128, (1, 1), strides=(1, 1),
-                      use_bias=False)(pool_layer)
+                 use_bias=False)(pool_layer)
   conv1 = BatchNorm()(conv1)
   conv1 = Activation('relu')(conv1)
   
@@ -209,7 +209,7 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   #                          arguments={'new_size':feature_map_shape})(conv1)
   return upsampled_layer
 
-def pyramid_pooling_module(resnet_last, output_shape, pool_sizes=[1,2,4,8]):
+def pyramid_pooling_module(resnet_last, output_shape, pool_sizes):
   """Build the Pyramid Pooling Module."""
   
   # feature map size to be used for interpolation
@@ -239,10 +239,10 @@ the same size as the input image by the transposed convolution"
 def deconvolution_module(concat_layer, num_classes, out_shape, activation_fn, transpose=True):
   if transpose:
     x = Conv2DTranspose(filters=num_classes, kernel_size=(int(out_shape[0]/8),int(out_shape[1]/8)),
-               	        strides=(2,2), use_bias=False)(concat_layer)
+               	        strides=(1,1), use_bias=False)(concat_layer)
   else:
     x = Conv2D(filters=num_classes, kernel_size=(1,1),
-               strides=(2,2), padding='same', use_bias=False)(concat_layer)
+               strides=(1,1), padding='same', use_bias=False)(concat_layer)
   # upsample to output_shape
   x = UpSample(new_size=out_shape)(x)
   # x = Lambda(upsample_bilinear,
