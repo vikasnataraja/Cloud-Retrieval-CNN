@@ -87,7 +87,7 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, strid
                         atrous_rate=atrous_rate)
 
   block_2 = convolution_branch(prev=prev_layer, num_filters=num_filters,
-                               kernel_size=kernel_size, 
+                               kernel_size=(1,1), 
                                stride_tuple=stride_tuple,
                                pad_type=pad_type,
                                atrous_rate=atrous_rate,
@@ -168,6 +168,7 @@ def ResNet(input_layer):
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   x = ZeroPadding2D(padding=(2,2))(x)
+  x = Dropout(0.1)(x)
   
   """End of dilated convolution block"""
   
@@ -180,16 +181,17 @@ def ResNet(input_layer):
              strides=(1,1), padding='same',dilation_rate=1, use_bias=False)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
+  x = Dropout(0.1)(x)
   return x
   
 """Spatial Pyramid Pooling"""
 
-def upsample_bilinear(in_tensor, new_size):
-  resized_height, resized_width = new_size
-  return tf.image.resize(images=in_tensor,
-                         size=[resized_height,resized_width],
-                         method='bilinear',
-                         align_corners=True)
+# def upsample_bilinear(in_tensor, new_size):
+#   resized_height, resized_width = new_size
+#   return tf.image.resize(images=in_tensor,
+#                          size=[resized_height,resized_width],
+#                          method='bilinear',
+#                          align_corners=True)
 
 def spp_block(prev_layer, pool_size_int, feature_map_shape):
   pool_size_tuple = (pool_size_int, pool_size_int)

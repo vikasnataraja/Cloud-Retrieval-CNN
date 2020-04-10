@@ -84,11 +84,6 @@ class ImageGenerator(Sequence):
       img = (img + 1.0)/2.0
     return img
 
-  def standard_normalize2(self, img):
-    if img.std()!=0.:
-      img = (img - img.mean())/(img.std())
-      img = np.clip(img, 0.0, 1.0)
-    return img
 def get_optical_thickness(data_dir, fnames, num_classes):
   cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                              np.arange(1.0, 10.0, 1.0),
