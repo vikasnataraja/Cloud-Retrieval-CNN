@@ -93,7 +93,7 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, strid
                                atrous_rate=atrous_rate,
                                name=name)
   added = Add()([block_1, block_2])
-  prev_layer = Activation('relu')(prev_layer)
+  added = Activation('relu')(added)
   return added
   
 def identity_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tuple, pad_type, atrous_rate):
@@ -107,7 +107,7 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tup
    
   block_2 = empty_branch(prev_layer)
   added = Add()([block_1, block_2])
-  prev_layer = Activation('relu')(prev_layer)
+  added = Activation('relu')(added)
   return added
 
 def ResNet(input_layer):
