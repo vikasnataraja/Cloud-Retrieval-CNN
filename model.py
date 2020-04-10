@@ -12,6 +12,8 @@ def BatchNorm():
   return BatchNormalization(momentum=0.95, epsilon=1e-5)
 
 class UpSample(keras.layers.Layer):
+  """ Custom Keras layer that upsamples to a new size using bilinear interpolation.
+  Bypasses the use of Keras Lambda layer"""
 
   def __init__(self, new_size, **kwargs):
     self.new_size = new_size
@@ -36,8 +38,7 @@ class UpSample(keras.layers.Layer):
     return config
 
 
-def common_skip(prev, num_filters, kernel_size, 
-              stride_tuple, pad_type, atrous_rate, name):
+def common_skip(prev, num_filters, kernel_size, stride_tuple, pad_type, atrous_rate, name):
   """
   The common ResNet block shared by the identity block
   and the convolutional block. Both of those blocks share
@@ -63,8 +64,7 @@ def common_skip(prev, num_filters, kernel_size,
   x2 = BatchNorm()(x2)
   return x2
 
-def convolution_branch(prev, num_filters, kernel_size, 
-                     stride_tuple, pad_type, atrous_rate, name):
+def convolution_branch(prev, num_filters, kernel_size, stride_tuple, pad_type, atrous_rate, name):
   
   if name=='halve_feature_map':
     prev = Conv2D(num_filters, kernel_size=kernel_size, strides=(stride_tuple[0]*2,stride_tuple[1]*2),
@@ -78,10 +78,8 @@ def convolution_branch(prev, num_filters, kernel_size,
 def empty_branch(prev):
   return prev
 
-def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
-                             stride_tuple, pad_type, atrous_rate):
+def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tuple, pad_type, atrous_rate):
 
-  prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
                         name=name, kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
@@ -95,12 +93,11 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size,
                                atrous_rate=atrous_rate,
                                name=name)
   added = Add()([block_1, block_2])
+  prev_layer = Activation('relu')(prev_layer)
   return added
   
-def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
-                        stride_tuple, pad_type, atrous_rate):
+def identity_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tuple, pad_type, atrous_rate):
   
-  prev_layer = Activation('relu')(prev_layer)
   block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
                         kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
@@ -110,13 +107,14 @@ def identity_resnet_block(prev_layer, num_filters, name, kernel_size,
    
   block_2 = empty_branch(prev_layer)
   added = Add()([block_1, block_2])
+  prev_layer = Activation('relu')(prev_layer)
   return added
 
 def ResNet(input_layer):
   
-  x = Conv2D(16, (7, 7), strides=(1, 1), padding='same',
-             use_bias=False)(input_layer)
+  x = Conv2D(16, (7, 7), strides=(1, 1), padding='same', use_bias=True)(input_layer)
   x = BatchNorm()(x)
+  x = Activation('relu')(x)
   x = identity_resnet_block(x, num_filters=16, kernel_size=(3,3),
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=1)
@@ -141,7 +139,7 @@ def ResNet(input_layer):
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=1)
   
-  """ dilated/atrous convolutional ResNet block starts here"""
+  """ dilated/atrous convolutional ResNet starts here"""
   
   x = convolutional_resnet_block(x, num_filters=256, kernel_size=(3,3),
                                  stride_tuple=(1,1), name="full_feature_map", 
@@ -158,8 +156,6 @@ def ResNet(input_layer):
   x = identity_resnet_block(x, num_filters=512, kernel_size=(3,3),
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=4)
-  
-  x = Activation('relu')(x)
 
   x = Conv2D(filters=512,kernel_size=(3,3),
              strides=(1,1), padding='valid',dilation_rate=2,use_bias=False)(x)
