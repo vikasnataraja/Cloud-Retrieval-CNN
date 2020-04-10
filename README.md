@@ -4,7 +4,7 @@ Repo to maintain codebase for the CNN model we're developing.
 ### Model Architecture
 <img src="https://www.mdpi.com/remotesensing/remotesensing-11-01962/article_deploy/html/images/remotesensing-11-01962-g009.png" width="700" height="700" align="middle">
 
-### Questions and Assumpations:
+### Questions and Assumptions:
 
 * Output layer - Output(2) is not being computed here
 

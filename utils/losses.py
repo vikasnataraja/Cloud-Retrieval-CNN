@@ -65,5 +65,4 @@ def binary_focal_loss(y_true, y_pred, gamma=2., alpha=0.25):
   # clip to prevent NaN's and Inf's
   pt_1 = K.clip(pt_1, epsilon, 1. - epsilon)
   pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
- 
   return -K.mean(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1),axis=-1) - K.mean((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0),axis=-1)
