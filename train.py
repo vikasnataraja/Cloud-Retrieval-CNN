@@ -10,7 +10,7 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
-from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
+from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate, RandomCrop
 
 def train_val_generator(args):
   
@@ -33,8 +33,9 @@ def train_val_generator(args):
   txtfile.close()
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
-			         RandomContrast(limit=0.2, p=0.75),
-			         RandomBrightness(limit=0.2, p=0.75),
+				 RandomCrop(height=48, width=48, p=0.5),
+			         RandomContrast(limit=0.2, p=0.5),
+			         RandomBrightness(limit=0.2, p=0.5),
 				 GaussNoise(p=0.25),
 				 ShiftScaleRotate(p=0.5,rotate_limit=20)])
 
