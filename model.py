@@ -87,7 +87,7 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, strid
                         atrous_rate=atrous_rate)
 
   block_2 = convolution_branch(prev=prev_layer, num_filters=num_filters,
-                               kernel_size=(1,1), 
+                               kernel_size=kernel_size, 
                                stride_tuple=stride_tuple,
                                pad_type=pad_type,
                                atrous_rate=atrous_rate,
@@ -140,11 +140,10 @@ def ResNet(input_layer):
                             pad_type='same', atrous_rate=1)
   
   """ dilated/atrous convolutional ResNet starts here"""
-  
   x = convolutional_resnet_block(x, num_filters=256, kernel_size=(3,3),
                                  stride_tuple=(1,1), name="full_feature_map", 
                                  pad_type='same', atrous_rate=2)
-  
+ 
   x = identity_resnet_block(x, num_filters=256, kernel_size=(3,3),
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=2)
@@ -152,7 +151,7 @@ def ResNet(input_layer):
   x = convolutional_resnet_block(x, num_filters=512, kernel_size=(3,3),
                                  stride_tuple=(1,1), name="full_feature_map", 
                                  pad_type='same', atrous_rate=4)
-  
+
   x = identity_resnet_block(x, num_filters=512, kernel_size=(3,3),
                             stride_tuple=(1,1), name="identity",
                             pad_type='same', atrous_rate=4)

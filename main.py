@@ -22,9 +22,9 @@ if __name__=='__main__':
     
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--h5_dir', default='data', type=str, 
+  parser.add_argument('--h5_dir', default='data/', type=str, 
                       help="Path to h5 files directory")
-  parser.add_argument('--model_dir', default='model', type=str, 
+  parser.add_argument('--model_dir', default='weights/', type=str, 
                       help="Directory where model will be saved.\n" 
                       "If directory does not exist, one will be created")
   parser.add_argument('--model_name', default='pspnet.h5', type=str, 
