@@ -5,5 +5,5 @@ __pycache__/
 old_files/
 data/
 *.csv
-model/
+weights/
 mymodel/
