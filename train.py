@@ -10,7 +10,7 @@ from model import ResNet, pyramid_pooling_module, deconvolution_module
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
-from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate, RandomCrop
+from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 
 def train_val_generator(args):
   
@@ -28,12 +28,11 @@ def train_val_generator(args):
   assert X_train_list==y_train_list,'Image names in X and y are different'
   
   txtfile = open('{}'.format(os.path.join(args.model_dir,os.path.splitext(args.model_name)[0])+'.txt'),'w')
-  txtfile.write('Training images:\n {}\n'.format(X_train_list))
+  txtfile.write('Training images:\n {}\n\n'.format(X_train_list))
   txtfile.write('Validation images:\n {}\n'.format(X_val_list))
   txtfile.close()
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
-				 RandomCrop(height=48, width=48, p=0.5),
 			         RandomContrast(limit=0.2, p=0.5),
 			         RandomBrightness(limit=0.2, p=0.5),
 				 GaussNoise(p=0.25),
@@ -85,7 +84,8 @@ def PSPNet(input_shape, num_channels, out_dim, num_classes, learn_rate, loss_fn)
           if hasattr(layer, attr):
               setattr(layer, attr, regularizer)
 
-  optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
+  optimizer = Adadelta(clipnorm=1.0, clipvalue=0.5)
+  # optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   print('Loss function being used is: {}'.format(loss_fn))
   custom_loss = ''
   if loss_fn == 'focal':
