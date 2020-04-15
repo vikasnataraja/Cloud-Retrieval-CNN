@@ -1,4 +1,3 @@
-*.webp
 .ipynb_checkpoints/
 __pycache__/
 *.ipynb
@@ -6,4 +5,3 @@ old_files/
 data/
 *.csv
 weights/
-mymodel/
