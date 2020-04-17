@@ -4,7 +4,7 @@ from keras.layers import MaxPooling2D, AveragePooling2D, ZeroPadding2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Lambda
-from keras.layers import Concatenate, Add
+from keras.layers import Concatenate, Add, Input
 from keras.models import Model
 import keras
 
@@ -38,7 +38,7 @@ class UpSample(keras.layers.Layer):
     return config
 
 
-def common_skip(prev, num_filters, kernel_size, stride_tuple, pad_type, atrous_rate, name):
+def common_block(prev, num_filters, kernel_size, stride_tuple, pad_type, atrous_rate, name):
   """
   The common ResNet block shared by the identity block
   and the convolutional block. Both of those blocks share
@@ -80,7 +80,7 @@ def empty_branch(prev):
 
 def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tuple, pad_type, atrous_rate):
 
-  block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
+  block_1 = common_block(prev=prev_layer, num_filters=num_filters, 
                         name=name, kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
                         pad_type=pad_type,
@@ -98,7 +98,7 @@ def convolutional_resnet_block(prev_layer, num_filters, name, kernel_size, strid
   
 def identity_resnet_block(prev_layer, num_filters, name, kernel_size, stride_tuple, pad_type, atrous_rate):
   
-  block_1 = common_skip(prev=prev_layer, num_filters=num_filters, 
+  block_1 = common_block(prev=prev_layer, num_filters=num_filters, 
                         kernel_size=kernel_size, 
                         stride_tuple=stride_tuple,
                         pad_type=pad_type, 
@@ -246,3 +246,24 @@ def deconvolution_module(concat_layer, num_classes, out_shape, activation_fn, tr
   #            arguments={'new_size':out_shape})(x)
   x = Activation(activation_fn)(x)
   return x
+
+def PSPNet(input_shape, num_channels, output_shape, num_classes,
+	   spatial_pool_sizes, final_activation_fn, transpose=True):
+  input_layer = Input((input_shape,input_shape,num_channels))
+  resnet_block = ResNet(input_layer)
+  spp_block = pyramid_pooling_module(resnet_block, output_shape=output_shape, pool_sizes=spatial_pool_sizes)
+  out_layer = deconvolution_module(concat_layer=spp_block,
+                                  num_classes=num_classes,
+                                  out_shape=(output_shape,output_shape),
+				  activation_fn=final_activation_fn,
+				  transpose=transpose)
+  
+  model = Model(inputs=input_layer,outputs=out_layer) 
+  return model
+
+
+"""
+U-Net architecure starts here
+"""
+def UNet():
+  pass

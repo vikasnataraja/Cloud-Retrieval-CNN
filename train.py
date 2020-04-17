@@ -6,7 +6,7 @@ from keras.optimizers import Adam, SGD, Adadelta
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from utils.utils import ImageGenerator
-from model import ResNet, pyramid_pooling_module, deconvolution_module
+from model import PSPNet
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
@@ -64,19 +64,11 @@ def train_val_generator(args):
   return (train_generator,val_generator)
 
 
-def PSPNet(input_shape, num_channels, out_dim, num_classes, learn_rate, loss_fn):
-    
-  input_layer = Input((input_shape,input_shape,num_channels))
-  resnet_block = ResNet(input_layer)
-  spp_block = pyramid_pooling_module(resnet_block, out_dim, pool_sizes=[1,2,3,4])
-  out_layer = deconvolution_module(concat_layer=spp_block,
-                                  num_classes=num_classes,
-                                  out_shape=(out_dim,out_dim),
-				  activation_fn='softmax',
-				  transpose=True)
+def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, loss_fn):
   
-  model = Model(inputs=input_layer,outputs=out_layer)
-   
+  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
+		 spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
+		 transpose=True)   
   # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:

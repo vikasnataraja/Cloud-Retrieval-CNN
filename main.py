@@ -3,7 +3,7 @@ import os
 import argparse
 from albumentations import Compose, VerticalFlip, HorizontalFlip, Rotate, GridDistortion
 from keras.models import load_model
-from train import PSPNet, train_val_generator, train_model
+from train import build_model, train_val_generator, train_model
 
 
 def args_checks_reports(args):
@@ -61,9 +61,9 @@ if __name__=='__main__':
   train_gen, val_gen = train_val_generator(args)
   
   # build the model
-  model = PSPNet(input_shape=args.input_dims, 
+  model = build_model(input_shape=args.input_dims, 
                  num_channels=args.input_channels,
-                 out_dim=args.output_dims,
+                 output_shape=args.output_dims,
                  num_classes=args.num_classes, 
                  learn_rate=args.lr,
 		 loss_fn=args.loss)
