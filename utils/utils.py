@@ -45,10 +45,10 @@ class ImageGenerator(Sequence):
       label = self.label_dict[val]
       if self.normalize:
         img = self.standard_normalize(img)
-      if self.augment:
-        augmented = self.augmentation(image=img,mask=label)
-        img = augmented['image']
-        label = augmented['mask']
+      # if self.augment:
+      #   augmented = self.augmentation(image=img,mask=label)
+      #   img = augmented['image']
+      #   label = augmented['mask']
       img = np.reshape(img, (img.shape[0],img.shape[1],self.num_channels))
       X[i] = img
       

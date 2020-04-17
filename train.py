@@ -84,8 +84,8 @@ def PSPNet(input_shape, num_channels, out_dim, num_classes, learn_rate, loss_fn)
           if hasattr(layer, attr):
               setattr(layer, attr, regularizer)
 
-  optimizer = Adadelta(clipnorm=1.0, clipvalue=0.5)
-  # optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
+  # optimizer = Adadelta(clipnorm=1.0, clipvalue=0.5)
+  optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   print('Loss function being used is: {}'.format(loss_fn))
   custom_loss = ''
   if loss_fn == 'focal':
