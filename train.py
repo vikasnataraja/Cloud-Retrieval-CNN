@@ -6,7 +6,7 @@ from keras.optimizers import Adam, SGD, Adadelta
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from utils.utils import ImageGenerator
-from model import PSPNet
+from model import PSPNet, UNet
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
@@ -66,9 +66,11 @@ def train_val_generator(args):
 
 def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, loss_fn):
   
-  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
-		 spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
-		 transpose=True)   
+ #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
+ #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
+ #		   transpose=True)   
+
+  model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:
