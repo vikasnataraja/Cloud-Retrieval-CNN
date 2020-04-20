@@ -1,11 +1,13 @@
 # Cloud-Retrieval-CNN
 Repo to maintain codebase for the CNN model we're developing.
 
+
 ### PSPNet-based Model Architecture
-<img src="https://www.mdpi.com/remotesensing/remotesensing-11-01962/article_deploy/html/images/remotesensing-11-01962-g009.png" width="700" height="700" align="middle">
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/extras/full_model.png" width="900" height="800" align="middle">
+
 
 ### UNet Model Architecture
-<img src="https://lmb.informatik.uni-freiburg.de/people/ronneber/u-net/u-net-architecture.png" width="700" height="400" align="middle">
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/extras/u-net-architecture.png" width="900" height="600" align="middle">
 
 
 ### Notes about the original paper (Masuda et al.):
