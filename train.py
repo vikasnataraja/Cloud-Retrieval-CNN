@@ -1,12 +1,11 @@
-import numpy as np
 import os
-from keras.models import Model
-from keras.layers import Input
-from keras.optimizers import Adam, SGD, Adadelta
+import argparse
+from keras.optimizers import Adam
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from utils.utils import ImageGenerator
-from model import PSPNet, UNet
+from architectures.unet import UNet
+from architectures.pspnet import PSPNet
 from sklearn.model_selection import train_test_split
 from utils.utils import get_radiances, get_optical_thickness, crop_images
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
@@ -78,7 +77,6 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
           if hasattr(layer, attr):
               setattr(layer, attr, regularizer)
 
-  # optimizer = Adadelta(clipnorm=1.0, clipvalue=0.5)
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   print('Loss function being used is: {}'.format(loss_fn))
   custom_loss = ''
@@ -116,3 +114,72 @@ def train_model(model, model_dir, filename,
   
   print('Finished training model. Exiting function ...\n')
   return model
+
+def args_checks_reports(args):
+  """ Function to check and print command line arguments """
+  if not os.path.isdir(args.model_dir):
+    print('Model directory {} does not exist,'\
+          ' creating it now ...'.format(args.model_dir))
+    os.makedirs(args.model_dir)
+  
+  print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.input_channels))
+  print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
+  print('Batch size is {}, learning rate is set '\
+        'to {}'.format(args.batch_size,args.lr))
+    
+if __name__=='__main__':
+    
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument('--h5_dir', default='data/', type=str, 
+                      help="Path to h5 files directory")
+  parser.add_argument('--model_dir', default='weights/', type=str, 
+                      help="Directory where model will be saved.\n" 
+                      "If directory does not exist, one will be created")
+  parser.add_argument('--model_name', default='pspnet.h5', type=str, 
+                      help="File Name of .h5 file which will contain the weights and saved in model_dir")
+  parser.add_argument('--input_dims', default=64, type=int, 
+                      help="Input dimension")
+  parser.add_argument('--input_channels', default=1, type=int, 
+                      help="Number of channels in input images")
+  parser.add_argument('--output_dims', default=64, type=int, 
+                      help="Output dimension")
+  parser.add_argument('--num_classes', default=36, type=int, 
+                      help="Number of classes")
+  parser.add_argument('--batch_size', default=32, type=int, 
+                      help="Batch size for the model")
+  parser.add_argument('--lr', default=1e-3, type=float, 
+                      help="Learning rate for the model")
+  parser.add_argument('--epochs', default=500, type=int, 
+                      help="Number of epochs to train the model")
+  parser.add_argument('--normalize', default=True, type=bool,
+		      help="Flag, set to True if input images need to be normalized")
+  parser.add_argument('--augment', default=False, type=bool,
+                      help="Flag, set to True if data augmentation needs to be enabled")
+  parser.add_argument('--test_size', default=0.20, type=float, 
+                      help="Fraction of training image to use for validation during training")
+  parser.add_argument('--loss', default='focal', type=str,
+		      help="Loss function")
+
+  args = parser.parse_args()
+  
+  # check to see if arguments are valid
+  args_checks_reports(args)
+
+  # data generators for training and validation data
+  train_gen, val_gen = train_val_generator(args)
+  
+  # build the model
+  model = build_model(input_shape=args.input_dims, 
+                 num_channels=args.input_channels,
+                 output_shape=args.output_dims,
+                 num_classes=args.num_classes, 
+                 learn_rate=args.lr,
+		 loss_fn=args.loss)
+  
+  trained_model = train_model(model, model_dir=args.model_dir,
+                              filename=args.model_name,
+                              train_generator=train_gen,
+                              val_generator=val_gen,
+                              batch_size=args.batch_size,
+                              epochs=args.epochs)
