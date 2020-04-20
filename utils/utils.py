@@ -84,6 +84,9 @@ class ImageGenerator(Sequence):
       img = (img + 1.0)/2.0
     return img
 
+  def resize_img(self, img, resize_dims):
+    return cv2.resize(img, resize_dims)
+
 def get_optical_thickness(data_dir, fnames, num_classes):
   cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                              np.arange(1.0, 10.0, 1.0),

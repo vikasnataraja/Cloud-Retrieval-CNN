@@ -1,4 +1,4 @@
-from keras.layers import MaxPooling2D, ZeroPadding2D, UpSampling2D
+from keras.layers import MaxPooling2D, ZeroPadding2D, UpSampling2D, Cropping2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Concatenate, Input
@@ -45,7 +45,7 @@ def UNet(input_shape, num_channels, num_classes, final_activation_fn):
 
   conv5 = ConvBlock(layer=pool4, filters=1024, kernel_size=(3,3), pad_type='same')
   up6 = UpSampleTranspose(layer=conv5, filters=512, kernel_size=(2,2), pad_type='same')
-  concat6 = Concatenate(axis = -1)([conv4, up6])
+  concat6 = Concatenate(axis=-1)([conv4, up6])
 
   conv6 = ConvBlock(layer=concat6, filters=512, kernel_size=(3,3), pad_type='same')
   up7 = UpSampleTranspose(layer=conv6, filters=256, kernel_size=(2,2), pad_type='same')
