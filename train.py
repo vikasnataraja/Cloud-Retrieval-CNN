@@ -59,9 +59,9 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
   # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:
-      for attr in ['kernel_regularizer']:
-          if hasattr(layer, attr):
-              setattr(layer, attr, regularizer)
+    for attr in ['kernel_regularizer']:
+      if hasattr(layer, attr):
+        setattr(layer, attr, regularizer)
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   print('Loss function being used is: {}'.format(loss_fn))
