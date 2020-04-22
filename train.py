@@ -13,23 +13,10 @@ from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 
 def train_val_generator(args):
-  
-  # h5files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
-  # original_X = get_radiances(args.h5_dir, h5files)
-  # original_y = get_optical_thickness(args.h5_dir, h5files, num_classes=args.num_classes)
-
-  # X_dict = crop_images(original_X, args.input_dims, fname_prefix='data')
-  # y_dict = crop_images(original_y, args.output_dims, fname_prefix='data')
-  
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
   y_dict = np.load('{}'.format(args.ground_truth_file),allow_pickle=True).item()
   assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
   X_train, X_val = train_test_split(list(X_dict.keys()),shuffle=True,random_state=42, test_size=args.test_size)
-  
-  # txtfile = open('{}'.format(os.path.join(args.model_dir,os.path.splitext(args.model_name)[0])+'.txt'),'w')
-  # txtfile.write('Training images:\n {}\n\n'.format(X_train))
-  # txtfile.write('Validation images:\n {}\n'.format(X_val))
-  # txtfile.close()
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
 			         RandomContrast(limit=0.2, p=0.5),
