@@ -170,7 +170,7 @@ def spp_block(prev_layer, pool_size_int, feature_map_shape):
   conv1 = Activation('relu')(conv1)
   
   # upsampling
-  upsampled_layer = UpSample(new_size=feature_map_shape)(conv1)
+  upsampled_layer = UpSample(new_size=feature_map_shape, method='bilinear')(conv1)
   # upsampled_layer = Lambda(upsample_bilinear, 
   #                          arguments={'new_size':feature_map_shape})(conv1)
   return upsampled_layer
@@ -210,7 +210,7 @@ def deconvolution_module(concat_layer, num_classes, out_shape, activation_fn, tr
     x = Conv2D(filters=num_classes, kernel_size=(1,1),
                strides=(1,1), padding='same', use_bias=False)(concat_layer)
   # upsample to output_shape
-  x = UpSample(new_size=out_shape)(x)
+  x = UpSample(new_size=out_shape, method='bilinear')(x)
   # x = Lambda(upsample_bilinear,
   #            arguments={'new_size':out_shape})(x)
   x = Activation(activation_fn)(x)

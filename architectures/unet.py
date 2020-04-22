@@ -3,17 +3,17 @@ from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Concatenate, Input
 from keras.models import Model
-from utils.model_utils import BatchNorm
+from utils.model_utils import BatchNorm, UpSample
 
-def UpSampleTranspose(layer, filters, kernel_size, pad_type):
-  x = UpSampling2D(size = (2,2))(layer)
+def UpSampleTranspose(layer, filters, kernel_size, pad_type, method='bilinear'):
+  x = UpSampling2D(size=(2,2), interpolation=method)(layer)
   x = Conv2DTranspose(filters=filters, kernel_size=kernel_size, padding=pad_type)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
   return x
 
-def UpSampleConv(layer, filters, kernel_size, pad_type):
-  x = UpSampling2D(size = (2,2))(layer)
+def UpSampleConv(layer, filters, kernel_size, pad_type, method='bilinear'):
+  x = UpSampling2D(size=(2,2), interpolation=method)(layer)
   x = Conv2D(filters=filters, kernel_size=kernel_size, padding=pad_type)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)

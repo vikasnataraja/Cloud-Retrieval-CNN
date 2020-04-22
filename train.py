@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import argparse
 from keras.optimizers import Adam
 from keras.regularizers import l1, l2 
@@ -13,23 +14,22 @@ from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBr
 
 def train_val_generator(args):
   
-  h5files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
-  original_X = get_radiances(args.h5_dir, h5files)
-  original_y = get_optical_thickness(args.h5_dir, h5files, num_classes=args.num_classes)
+  # h5files = [file for file in os.listdir(args.h5_dir) if file.endswith('.h5')]
+  # original_X = get_radiances(args.h5_dir, h5files)
+  # original_y = get_optical_thickness(args.h5_dir, h5files, num_classes=args.num_classes)
 
-  X_dict = crop_images(original_X, args.input_dims, fname_prefix='data')
-  y_dict = crop_images(original_y, args.output_dims, fname_prefix='data')
-
-  X_train_list,X_val_list,y_train_list,y_val_list = train_test_split(list(X_dict.keys()),
-                                                                     list(y_dict.keys()),
-                                                                     shuffle=True,
-                                                                     test_size=args.test_size)
-  assert X_train_list==y_train_list,'Image names in X and y are different'
+  # X_dict = crop_images(original_X, args.input_dims, fname_prefix='data')
+  # y_dict = crop_images(original_y, args.output_dims, fname_prefix='data')
   
-  txtfile = open('{}'.format(os.path.join(args.model_dir,os.path.splitext(args.model_name)[0])+'.txt'),'w')
-  txtfile.write('Training images:\n {}\n\n'.format(X_train_list))
-  txtfile.write('Validation images:\n {}\n'.format(X_val_list))
-  txtfile.close()
+  X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
+  y_dict = np.load('{}'.format(args.ground_truth_file),allow_pickle=True).item()
+  assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
+  X_train, X_val = train_test_split(list(X_dict.keys()),shuffle=True,random_state=42, test_size=args.test_size)
+  
+  # txtfile = open('{}'.format(os.path.join(args.model_dir,os.path.splitext(args.model_name)[0])+'.txt'),'w')
+  # txtfile.write('Training images:\n {}\n\n'.format(X_train))
+  # txtfile.write('Validation images:\n {}\n'.format(X_val))
+  # txtfile.close()
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
 			         RandomContrast(limit=0.2, p=0.5),
@@ -37,7 +37,7 @@ def train_val_generator(args):
 				 GaussNoise(p=0.25),
 				 ShiftScaleRotate(p=0.5,rotate_limit=20)])
 
-  train_generator = ImageGenerator(image_list=X_train_list,
+  train_generator = ImageGenerator(image_list=X_train,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
                                    input_shape=args.input_dims,
@@ -49,7 +49,7 @@ def train_val_generator(args):
 				   augmentation=AUGMENTATIONS_TRAIN,
                                    to_fit=True, augment=args.augment, shuffle=True)
   
-  val_generator = ImageGenerator(image_list=X_val_list,
+  val_generator = ImageGenerator(image_list=X_val,
                                  image_dict=X_dict,
                                  label_dict=y_dict,
                                  input_shape=args.input_dims,
@@ -131,8 +131,10 @@ if __name__=='__main__':
     
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('--h5_dir', default='data/', type=str, 
-                      help="Path to h5 files directory")
+  parser.add_argument('--input_file', default='data/input_radiance.npy', type=str, 
+                      help="Path to numpy input images file")
+  parser.add_argument('--ground_truth_file', default='data/output_cot.npy', type=str,
+                      help="Path to numpy ground truth file")
   parser.add_argument('--model_dir', default='weights/', type=str, 
                       help="Directory where model will be saved.\n" 
                       "If directory does not exist, one will be created")
