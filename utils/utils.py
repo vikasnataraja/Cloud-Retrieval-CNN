@@ -130,3 +130,18 @@ def crop_images(img_dict, crop_dims, fname_prefix):
 
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
+
+def save_to_file(h5_dir, num_classes, input_dims, output_dims, output_dir=None):
+  h5files = [file for file in os.listdir(h5_dir) if file.endswith('.h5')]
+  original_X = get_radiances(h5_dir, h5files)
+  original_y = get_optical_thickness(h5_dir, h5files, num_classes=num_classes)
+
+  X_dict = crop_images(original_X, input_dims, fname_prefix='data')
+  y_dict = crop_images(original_y, output_dims, fname_prefix='data')
+
+  if output_dir is None:
+    output_dir = h5_dir
+  np.save('{}'.format(os.path.join(output_dir,'input_radiance.npy')),X_dict)
+  np.save('{}'.format(os.path.join(output_dir,'output_cot.npy')),y_dict)
+
+  print('Saved data files in {} directory'.format(output_dir))
