@@ -4,13 +4,12 @@ import argparse
 from keras.optimizers import Adam
 from keras.regularizers import l1, l2 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
-from utils.utils import ImageGenerator
+from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
+from sklearn.model_selection import train_test_split
 from architectures.unet import UNet
 from architectures.pspnet import PSPNet
-from sklearn.model_selection import train_test_split
-from utils.utils import get_radiances, get_optical_thickness, crop_images
+from utils.utils import ImageGenerator
 from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
-from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
@@ -108,7 +107,9 @@ def args_checks_reports(args):
     print('Model directory {} does not exist,'\
           ' creating it now ...'.format(args.model_dir))
     os.makedirs(args.model_dir)
-  
+  # append .h5 to model_name if it does not have that extension already
+  if not os.path.splitext(args.model_name)[1]:
+    args.model_name = args.model_name + '.h5'
   print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.input_channels))
   print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
   print('Batch size is {}, learning rate is set '\
@@ -117,7 +118,6 @@ def args_checks_reports(args):
 if __name__=='__main__':
     
   parser = argparse.ArgumentParser()
-
   parser.add_argument('--input_file', default='data/input_radiance.npy', type=str, 
                       help="Path to numpy input images file")
   parser.add_argument('--ground_truth_file', default='data/output_cot.npy', type=str,
@@ -126,7 +126,7 @@ if __name__=='__main__':
                       help="Directory where model will be saved.\n" 
                       "If directory does not exist, one will be created")
   parser.add_argument('--model_name', default='pspnet.h5', type=str, 
-                      help="File Name of .h5 file which will contain the weights and saved in model_dir")
+                      help="File Name of .h5 file which will contain the model and saved in model_dir")
   parser.add_argument('--input_dims', default=64, type=int, 
                       help="Input dimension")
   parser.add_argument('--input_channels', default=1, type=int, 
@@ -149,7 +149,6 @@ if __name__=='__main__':
                       help="Fraction of training image to use for validation during training")
   parser.add_argument('--loss', default='focal', type=str,
 		      help="Loss function")
-
   args = parser.parse_args()
   
   # check to see if arguments are valid
@@ -160,13 +159,14 @@ if __name__=='__main__':
   
   # build the model
   model = build_model(input_shape=args.input_dims, 
-                 num_channels=args.input_channels,
-                 output_shape=args.output_dims,
-                 num_classes=args.num_classes, 
-                 learn_rate=args.lr,
-		 loss_fn=args.loss)
+                      num_channels=args.input_channels,
+                      output_shape=args.output_dims,
+                      num_classes=args.num_classes, 
+                      learn_rate=args.lr,
+		      loss_fn=args.loss)
   
-  trained_model = train_model(model, model_dir=args.model_dir,
+  trained_model = train_model(model, 
+			      model_dir=args.model_dir,
                               filename=args.model_name,
                               train_generator=train_gen,
                               val_generator=val_gen,
