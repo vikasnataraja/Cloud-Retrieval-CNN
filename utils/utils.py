@@ -87,13 +87,13 @@ class ImageGenerator(Sequence):
   def resize_img(self, img, resize_dims):
     return cv2.resize(img, resize_dims)
 
-def get_optical_thickness(data_dir, fnames, num_classes):
+def get_optical_thickness(data_dir, fnames):
   cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                              np.arange(1.0, 10.0, 1.0),
                              np.arange(10.0, 20.0, 2.0),
                              np.arange(20.0, 50.0, 5.0),
                              np.arange(50.0, 101.0, 10.0)))
-  pxvals = np.arange(0,num_classes)  
+  pxvals = np.arange(0,cot_bins.shape[0])  
   store_cots = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
