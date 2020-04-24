@@ -9,11 +9,11 @@ class UpSample(keras.layers.Layer):
   """ Custom Keras layer that upsamples to a new size using interpolation.
   Bypasses the use of Keras Lambda layer
   Args:
-	- new_size: tuple, new size to which layer needs to be resized to. Must be (height, width)
-	- method: str, method of interpolation to be used. If None, defaults to bilinear.
-		  Choose amongst 'bilinear', 'nearest', 'lanczos3', 'lanczos5', 'area', 'gaussian', 'mitchellcubic'
+    - new_size: tuple, new size to which layer needs to be resized to. Must be (height, width)
+    - method: str, method of interpolation to be used. If None, defaults to bilinear.
+             Choose amongst 'bilinear', 'nearest', 'lanczos3', 'lanczos5', 'area', 'gaussian', 'mitchellcubic'
   Returns:
-	- keras.layers.Layer of size [None, new_size[0], new_size[1], depth]
+    - keras.layers.Layer of size [None, new_size[0], new_size[1], depth]
   """
 
   def __init__(self, new_size, method='bilinear', **kwargs):
@@ -38,3 +38,4 @@ class UpSample(keras.layers.Layer):
     config = super(UpSample, self).get_config()
     config['new_size'] = self.new_size
     return config
+

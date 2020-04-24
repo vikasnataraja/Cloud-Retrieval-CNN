@@ -34,7 +34,7 @@ class ImageGenerator(Sequence):
 
   def _data_generator(self, batch_images):
     X = np.zeros((self.batch_size, self.input_shape,
-                    self.input_shape, self.num_channels))
+                  self.input_shape, self.num_channels))
     y = np.zeros((self.batch_size, self.output_shape,
                   self.output_shape, self.num_classes)) 
 
@@ -107,31 +107,36 @@ def get_optical_thickness(data_dir, fnames, num_classes):
     store_cots['{}'.format(fnames[i])] = classmap
   return store_cots
 
-def get_radiances(data_dir, fnames):
+def get_radiances(data_dir, fnames, color_channel_indices):
   store_rads = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
-    store_rads['{}'.format(fnames[i])] = np.float32(f['rad_mca_3d'][...][:, :, 0, 2])
+    store_rads['{}'.format(fnames[i])] = np.stack((np.float32(f['rad_mca_3d'][...][:, :, 0, color_channel_indices[0]),\
+						   np.float32(f['rad_mca_3d'][...][:, :, 0, color_channel_indices[1])),\
+						   axis=-1)
   return store_rads
 
 def crop_images(img_dict, crop_dims, fname_prefix):
   imgs = np.array(list(img_dict.values()))
   img_names = np.array(list(img_dict.keys()))
-  imgwidth, imgheight = imgs.shape[1:]
+  imgwidth, imgheight = imgs.shape[1], imgs.shape[2]
   return_imgs = {}
   counter=0
   for idx in range(img_names.shape[0]):
     for hcount, i in enumerate(range(0, imgwidth, int(crop_dims/2))):
       for vcount, j in enumerate(range(0, imgheight, int(crop_dims/2))):
-        cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims]
+	if len(imgs.shape)>2:
+          cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims,:]
+	else:
+	  cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims]
         if cropped_img.shape[:2] == (crop_dims,crop_dims):
           return_imgs['{}_{}'.format(fname_prefix,counter)] = cropped_img
-          counter+=1
+          counter += 1
 
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
 
-def save_to_file(h5_dir, num_classes, input_dims, output_dims, output_dir=None):
+def save_to_file(h5_dir, num_classes, input_dims, output_dims, radiance_filename, cot_filename, output_dir=os.getcwd()):
   h5files = [file for file in os.listdir(h5_dir) if file.endswith('.h5')]
   original_X = get_radiances(h5_dir, h5files)
   original_y = get_optical_thickness(h5_dir, h5files, num_classes=num_classes)
@@ -139,9 +144,12 @@ def save_to_file(h5_dir, num_classes, input_dims, output_dims, output_dir=None):
   X_dict = crop_images(original_X, input_dims, fname_prefix='data')
   y_dict = crop_images(original_y, output_dims, fname_prefix='data')
 
-  if output_dir is None:
-    output_dir = h5_dir
-  np.save('{}'.format(os.path.join(output_dir,'input_radiance.npy')),X_dict)
-  np.save('{}'.format(os.path.join(output_dir,'output_cot.npy')),y_dict)
+  # append npy extension if the filenames don't have them already
+  if not os.path.splitext(radiance_filename)[1]:
+    radiance_filename = radiance_filename + '.npy'
+  if not os.path.splitext(cot_filename)[1]:
+    cot_filename = cot_filename + '.npy'
+  np.save('{}'.format(os.path.join(output_dir,radiance_filename)),X_dict)
+  np.save('{}'.format(os.path.join(output_dir,cot_filename)),y_dict)
 
   print('Saved data files in {} directory'.format(output_dir))

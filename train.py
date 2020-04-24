@@ -51,9 +51,9 @@ def train_val_generator(args):
 
 def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, loss_fn):
   
- #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
- #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
- #		   transpose=True)   
+  #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
+  #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
+  #		   transpose=True)   
 
   model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   # add regularization to layers
@@ -64,7 +64,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
         setattr(layer, attr, regularizer)
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
-  print('Loss function being used is: {}'.format(loss_fn))
+  print('Loss function being used is: {} loss'.format(loss_fn))
   custom_loss = ''
   if loss_fn == 'focal':
     custom_loss = focal_loss
