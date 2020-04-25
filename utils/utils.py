@@ -14,7 +14,7 @@ class ImageGenerator(Sequence):
   def __init__(self, image_list=None, image_dict=None, label_dict=None,
                num_classes=36, batch_size=32, input_shape=64, output_shape=64,
                num_channels=1, augment=False, normalize=False, 
-	       to_fit=False, shuffle=False, augmentation=None):
+         to_fit=False, shuffle=False, augmentation=None):
       
     self.image_list = image_list
     self.image_dict = image_dict
@@ -111,24 +111,26 @@ def get_radiances(data_dir, fnames, color_channel_indices):
   store_rads = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
-    store_rads['{}'.format(fnames[i])] = np.stack((np.float32(f['rad_mca_3d'][...][:, :, 0, color_channel_indices[0]),\
-						   np.float32(f['rad_mca_3d'][...][:, :, 0, color_channel_indices[1])),\
-						   axis=-1)
+    fields = f['rad_mca_3d'][...]
+    store_rads['{}'.format(fnames[i])] = np.stack((np.float32(fields[:, :, 0, color_channel_indices[0]]),\
+                                                   np.float32(fields[:, :, 0, color_channel_indices[1]])),\
+                                                   axis=-1)
   return store_rads
 
-def crop_images(img_dict, crop_dims, fname_prefix):
+def crop_images(img_dict, crop_dims, fname_prefix='data'):
   imgs = np.array(list(img_dict.values()))
   img_names = np.array(list(img_dict.keys()))
   imgwidth, imgheight = imgs.shape[1], imgs.shape[2]
+  print(imgs.shape)
   return_imgs = {}
   counter=0
   for idx in range(img_names.shape[0]):
     for hcount, i in enumerate(range(0, imgwidth, int(crop_dims/2))):
       for vcount, j in enumerate(range(0, imgheight, int(crop_dims/2))):
-	if len(imgs.shape)>2:
+        if len(imgs.shape)>3:
           cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims,:]
-	else:
-	  cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims]
+        else:
+          cropped_img = imgs[idx, i:i+crop_dims, j:j+crop_dims]
         if cropped_img.shape[:2] == (crop_dims,crop_dims):
           return_imgs['{}_{}'.format(fname_prefix,counter)] = cropped_img
           counter += 1
@@ -136,13 +138,13 @@ def crop_images(img_dict, crop_dims, fname_prefix):
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
 
-def save_to_file(h5_dir, num_classes, input_dims, output_dims, radiance_filename, cot_filename, output_dir=os.getcwd()):
+def save_to_file(h5_dir, color_channel_indices, input_dims, radiance_filename, cot_filename, output_dir=os.getcwd()):
   h5files = [file for file in os.listdir(h5_dir) if file.endswith('.h5')]
-  original_X = get_radiances(h5_dir, h5files)
-  original_y = get_optical_thickness(h5_dir, h5files, num_classes=num_classes)
+  original_X = get_radiances(h5_dir, h5files, color_channel_indices)
+  original_y = get_optical_thickness(h5_dir, h5files)
 
   X_dict = crop_images(original_X, input_dims, fname_prefix='data')
-  y_dict = crop_images(original_y, output_dims, fname_prefix='data')
+  y_dict = crop_images(original_y, input_dims, fname_prefix='data')
 
   # append npy extension if the filenames don't have them already
   if not os.path.splitext(radiance_filename)[1]:
@@ -153,3 +155,4 @@ def save_to_file(h5_dir, num_classes, input_dims, output_dims, radiance_filename
   np.save('{}'.format(os.path.join(output_dir,cot_filename)),y_dict)
 
   print('Saved data files in {} directory'.format(output_dir))
+
