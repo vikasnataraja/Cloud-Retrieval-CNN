@@ -118,9 +118,9 @@ def args_checks_reports(args):
 if __name__=='__main__':
     
   parser = argparse.ArgumentParser()
-  parser.add_argument('--input_file', default='data/input_radiance.npy', type=str, 
+  parser.add_argument('--input_file', default='data/single_channel/input_radiance.npy', type=str, 
                       help="Path to numpy input images file")
-  parser.add_argument('--ground_truth_file', default='data/output_cot.npy', type=str,
+  parser.add_argument('--ground_truth_file', default='data/single_channel/output_cot.npy', type=str,
                       help="Path to numpy ground truth file")
   parser.add_argument('--model_dir', default='weights/', type=str, 
                       help="Directory where model will be saved.\n" 
