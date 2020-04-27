@@ -9,6 +9,13 @@ Repo to maintain codebase for the CNN model we're developing.
 ### UNet Model Architecture
 <img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/u-net-architecture.png" width="900" height="600" align="middle">
 
+### UNet Results
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/unet_output.png" width="900" height="900" align="middle">
+
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/iou.png" width="900" height="600" align="middle">
+
+#### Feature map visualization
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/layer_78.png" width="900" height="600" align="middle">
 
 ### Notes about the original paper (Masuda et al.):
 
@@ -24,4 +31,5 @@ Repo to maintain codebase for the CNN model we're developing.
 
 * Need a bigger image size to try valid padding.
 
-* Need to try `Cropping2D` before concatenation like the paper suggests.
+* Need to try `Cropping2D` before concatenation like the paper suggests but will need a 200x200 image for that.
+
