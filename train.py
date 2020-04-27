@@ -9,13 +9,13 @@ from sklearn.model_selection import train_test_split
 from architectures.unet import UNet
 from architectures.pspnet import PSPNet
 from utils.utils import ImageGenerator
-from utils.losses import binary_focal_loss, focal_loss, jaccard_distance_loss
+from utils.losses import focal_loss
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
   y_dict = np.load('{}'.format(args.ground_truth_file),allow_pickle=True).item()
   assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
-  X_train, X_val = train_test_split(list(X_dict.keys()),shuffle=True,random_state=42, test_size=args.test_size)
+  X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
 			         RandomContrast(limit=0.2, p=0.5),
@@ -63,19 +63,8 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
         setattr(layer, attr, regularizer)
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
-  print('Loss function being used is: {} loss'.format(loss_fn))
-  custom_loss = ''
-  if loss_fn == 'focal':
-    custom_loss = focal_loss
-  elif loss_fn == 'binary_focal':
-    custom_loss = binary_focal_loss
-  elif loss_fn == 'jaccard':
-    custom_loss = jaccard_distance_loss
-  elif loss_fn == 'crossentropy':
-    custom_loss = 'categorical_crossentropy'
-
   model.compile(optimizer=optimizer,
-                loss=custom_loss,
+                loss=focal_loss,
                 metrics=['accuracy'])
   print(model.summary()) 
   print('Model has compiled\n')
@@ -146,8 +135,6 @@ if __name__=='__main__':
                       help="Flag, set to True if data augmentation needs to be enabled")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
-  parser.add_argument('--loss', default='focal', type=str,
-		      help="Loss function")
   args = parser.parse_args()
   
   # check to see if arguments are valid
@@ -161,8 +148,7 @@ if __name__=='__main__':
 		      num_channels=args.num_channels,
 		      output_shape=args.output_dims,
 		      num_classes=args.num_classes,
-		      learn_rate=args.lr, 
-		      loss_fn=args.loss)
+		      learn_rate=args.lr)
   
   trained_model = train_model(model, 
 			      model_dir=args.model_dir,
