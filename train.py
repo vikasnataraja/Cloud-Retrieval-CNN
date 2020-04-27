@@ -28,7 +28,7 @@ def train_val_generator(args):
                                    label_dict=y_dict,
                                    input_shape=args.input_dims,
                                    output_shape=args.output_dims,
-                                   num_channels=args.input_channels,
+                                   num_channels=args.num_channels,
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
 				   normalize=args.normalize,
@@ -40,7 +40,7 @@ def train_val_generator(args):
                                  label_dict=y_dict,
                                  input_shape=args.input_dims,
                                  output_shape=args.output_dims,
-                                 num_channels=args.input_channels,
+                                 num_channels=args.num_channels,
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
 				 normalize=args.normalize,
@@ -54,7 +54,6 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
   #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
   #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
   #		   transpose=True)   
-
   model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   # add regularization to layers
   regularizer = l2(0.01)
@@ -110,7 +109,7 @@ def args_checks_reports(args):
   # append .h5 to model_name if it does not have that extension already
   if not os.path.splitext(args.model_name)[1]:
     args.model_name = args.model_name + '.h5'
-  print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.input_channels))
+  print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.num_channels))
   print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
   print('Batch size is {}, learning rate is set '\
         'to {}'.format(args.batch_size,args.lr))
@@ -129,7 +128,7 @@ if __name__=='__main__':
                       help="File Name of .h5 file which will contain the model and saved in model_dir")
   parser.add_argument('--input_dims', default=64, type=int, 
                       help="Input dimension")
-  parser.add_argument('--input_channels', default=1, type=int, 
+  parser.add_argument('--num_channels', default=1, type=int, 
                       help="Number of channels in input images")
   parser.add_argument('--output_dims', default=64, type=int, 
                       help="Output dimension")
@@ -141,7 +140,7 @@ if __name__=='__main__':
                       help="Learning rate for the model")
   parser.add_argument('--epochs', default=500, type=int, 
                       help="Number of epochs to train the model")
-  parser.add_argument('--normalize', default=True, type=bool,
+  parser.add_argument('--normalize', default=False, type=bool,
 		      help="Flag, set to True if input images need to be normalized")
   parser.add_argument('--augment', default=False, type=bool,
                       help="Flag, set to True if data augmentation needs to be enabled")
@@ -158,11 +157,11 @@ if __name__=='__main__':
   train_gen, val_gen = train_val_generator(args)
   
   # build the model
-  model = build_model(input_shape=args.input_dims, 
-                      num_channels=args.input_channels,
-                      output_shape=args.output_dims,
-                      num_classes=args.num_classes, 
-                      learn_rate=args.lr,
+  model = build_model(input_shape=args.input_dims,
+		      num_channels=args.num_channels,
+		      output_shape=args.output_dims,
+		      num_classes=args.num_classes,
+		      learn_rate=args.lr, 
 		      loss_fn=args.loss)
   
   trained_model = train_model(model, 
