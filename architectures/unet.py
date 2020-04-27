@@ -6,7 +6,7 @@ from keras.models import Model
 from utils.model_utils import BatchNorm, UpSample
 
 def UpSampleTranspose(layer, filters, kernel_size, strides=(1,1),  pad_type='same', method='bilinear'):
-  x = UpSampling2D(size=(1,1), interpolation=method)(layer)
+  x = UpSampling2D(size=(2,2), interpolation=method)(layer)
   x = Conv2DTranspose(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(x)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
