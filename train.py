@@ -6,8 +6,8 @@ from keras.regularizers import l1, l2
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
-from architectures.unet import UNet
-from architectures.pspnet import PSPNet
+from models.unet import UNet
+from models.pspnet import PSPNet
 from utils.utils import ImageGenerator
 from utils.losses import focal_loss
 
