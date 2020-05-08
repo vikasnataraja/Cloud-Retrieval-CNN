@@ -107,14 +107,14 @@ def get_optical_thickness(data_dir, fnames):
     store_cots['{}'.format(fnames[i])] = classmap
   return store_cots
 
-def get_radiances(data_dir, fnames, color_channel_indices):
+def get_radiances(data_dir, fnames):
   store_rads = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
     fields = f['rad_mca_3d'][...]
-    store_rads['{}'.format(fnames[i])] = np.stack((np.float32(fields[:, :, 0, color_channel_indices[0]]),\
-                                                   np.float32(fields[:, :, 0, color_channel_indices[1]])),\
-                                                   axis=-1)
+    # store_rads['{}'.format(fnames[i])] = np.stack((np.float32(fields[:, :, 0, color_channel_indices[0]]),\
+    #                                                np.float32(fields[:, :, 0, color_channel_indices[1]])),\
+    #                                                axis=-1)
   return store_rads
 
 def crop_images(img_dict, crop_dims, fname_prefix='data'):

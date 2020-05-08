@@ -15,6 +15,7 @@ def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
   y_dict = np.load('{}'.format(args.ground_truth_file),allow_pickle=True).item()
   assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
+  print('Total number of data files available for training = {}'.format(int((1-args.test_size)*len(X_dict))))
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
@@ -49,7 +50,7 @@ def train_val_generator(args):
   return (train_generator,val_generator)
 
 
-def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, loss_fn):
+def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate):
   
   #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
   #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
