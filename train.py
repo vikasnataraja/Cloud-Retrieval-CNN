@@ -13,9 +13,9 @@ from utils.losses import focal_loss
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
-  y_dict = np.load('{}'.format(args.ground_truth_file),allow_pickle=True).item()
+  y_dict = np.load('{}'.format(args.output_file),allow_pickle=True).item()
   assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
-  print('Total number of data files available for training = {}'.format(int((1-args.test_size)*len(X_dict))))
+  print('Total number of data files available for training = {}\n\n'.format(int((1-args.test_size)*len(X_dict))))
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
@@ -109,7 +109,7 @@ if __name__=='__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--input_file', default='data/single_channel/input_radiance.npy', type=str, 
                       help="Path to numpy input images file")
-  parser.add_argument('--ground_truth_file', default='data/single_channel/output_cot.npy', type=str,
+  parser.add_argument('--output_file', default='data/single_channel/output_cot.npy', type=str,
                       help="Path to numpy ground truth file")
   parser.add_argument('--model_dir', default='weights/', type=str, 
                       help="Directory where model will be saved.\n" 
