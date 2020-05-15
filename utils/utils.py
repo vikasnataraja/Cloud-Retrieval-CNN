@@ -79,7 +79,10 @@ class ImageGenerator(Sequence):
 
   def standard_normalize(self, img):
     if img.std()!=0.:
-      img = (img - img.mean())/(img.std())
+      img = img.astype('float32')
+      means = img.mean(axis=(0,1), dtype='float64')
+      devs = img.std(axis=(0,1), dtype='float64')
+      img = (img - means)/devs
       img = np.clip(img, -1.0, 1.0)
       img = (img + 1.0)/2.0
     return img
@@ -87,7 +90,7 @@ class ImageGenerator(Sequence):
   def resize_img(self, img, resize_dims):
     return cv2.resize(img, resize_dims)
 
-def get_optical_thickness(data_dir, fnames):
+def get_output_data(data_dir, fnames):
   cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                              np.arange(1.0, 10.0, 1.0),
                              np.arange(10.0, 20.0, 2.0),
@@ -107,7 +110,7 @@ def get_optical_thickness(data_dir, fnames):
     store_cots['{}'.format(fnames[i])] = classmap
   return store_cots
 
-def get_radiances(data_dir, fnames):
+def get_input_data(data_dir, fnames):
   store_rads = {}
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
@@ -117,7 +120,7 @@ def get_radiances(data_dir, fnames):
     #                                                axis=-1)
   return store_rads
 
-def crop_images(img_dict, crop_dims, fname_prefix='data'):
+def crop_images(img_dict, crop_dims, fname_prefix):
   imgs = np.array(list(img_dict.values()))
   img_names = np.array(list(img_dict.keys()))
   imgwidth, imgheight = imgs.shape[1], imgs.shape[2]
@@ -137,10 +140,10 @@ def crop_images(img_dict, crop_dims, fname_prefix='data'):
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
 
-def save_to_file(h5_dir, color_channel_indices, input_dims, radiance_filename, cot_filename, output_dir):
+def save_to_file(h5_dir, input_dims, radiance_filename, cot_filename, output_dir):
   h5files = [file for file in os.listdir(h5_dir) if file.endswith('.h5')]
-  original_X = get_radiances(h5_dir, h5files, color_channel_indices)
-  original_y = get_optical_thickness(h5_dir, h5files)
+  original_X = get_input_data(h5_dir, h5files)
+  original_y = get_output_data(h5_dir, h5files)
 
   X_dict = crop_images(original_X, input_dims, fname_prefix='data')
   y_dict = crop_images(original_y, input_dims, fname_prefix='data')
