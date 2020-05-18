@@ -90,35 +90,51 @@ class ImageGenerator(Sequence):
   def resize_img(self, img, resize_dims):
     return cv2.resize(img, resize_dims)
 
-def get_output_data(data_dir, fnames):
-  cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
+cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                              np.arange(1.0, 10.0, 1.0),
                              np.arange(10.0, 20.0, 2.0),
                              np.arange(20.0, 50.0, 5.0),
                              np.arange(50.0, 101.0, 10.0)))
-  pxvals = np.arange(0,cot_bins.shape[0])  
-  store_cots = {}
-  for i in range(len(fnames)):
-    f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
-    cot = f['cot_inp_3d'][...][:, :, 0, 2]
-    classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
-    for k in range(pxvals.size):
-      if k < (pxvals.size-1):
-        classmap[np.bitwise_and(cot>=cot_bins[k], cot<cot_bins[k+1])] = pxvals[k] 
-      else:
-        classmap[cot>=cot_bins[k]] = pxvals[k]
-    store_cots['{}'.format(fnames[i])] = classmap
-  return store_cots
 
-def get_input_data(data_dir, fnames):
+pxvals = np.arange(0,cot_bins.shape[0]) 
+
+
+def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_coarse=False):
+  
   store_rads = {}
+  store_cots = {}
+  
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
-    fields = f['rad_mca_3d'][...]
-    # store_rads['{}'.format(fnames[i])] = np.stack((np.float32(fields[:, :, 0, color_channel_indices[0]]),\
-    #                                                np.float32(fields[:, :, 0, color_channel_indices[1]])),\
-    #                                                axis=-1)
-  return store_rads
+    
+    if not use_coarse:
+      cot = f['{}'.format(cot_keyname)][...][:, :, 0, 2]
+      classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
+      for k in range(pxvals.size):
+        if k < (pxvals.size-1):
+          classmap[np.bitwise_and(cot>=cot_bins[k], cot<cot_bins[k+1])] = pxvals[k] 
+        else:
+          classmap[cot>=cot_bins[k]] = pxvals[k]
+
+      store_cots['{}'.format(fnames[i])] = classmap
+      rad = f['{}'.format(rad_keyname)][...]
+      store_rads['{}'.format(fnames[i])] = np.float32(rad[:, :, 0, 2])
+    
+    else:
+      cot = f['{}'.format(cot_keyname)]
+      classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
+      for k in range(pxvals.size):
+        if k < (pxvals.size-1):
+          classmap[np.bitwise_and(cot>=cot_bins[k], cot<cot_bins[k+1])] = pxvals[k] 
+        else:
+          classmap[cot>=cot_bins[k]] = pxvals[k]
+
+      store_cots['{}'.format(fnames[i])] = classmap
+      rad = f['{}'.format(rad_keyname)]
+      store_rads['{}'.format(fnames[i])] = np.float32(rad)
+
+  return store_rads,store_cots
+
 
 def crop_images(img_dict, crop_dims, fname_prefix):
   imgs = np.array(list(img_dict.values()))
@@ -139,24 +155,4 @@ def crop_images(img_dict, crop_dims, fname_prefix):
 
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
-
-def save_to_file(h5_dir, input_dims, radiance_filename, cot_filename, output_dir):
-  h5files = [file for file in os.listdir(h5_dir) if file.endswith('.h5')]
-  original_X = get_input_data(h5_dir, h5files)
-  original_y = get_output_data(h5_dir, h5files)
-
-  X_dict = crop_images(original_X, input_dims, fname_prefix='data')
-  y_dict = crop_images(original_y, input_dims, fname_prefix='data')
-
-  # append npy extension if the filenames don't have them already
-  if not os.path.splitext(radiance_filename)[1]:
-    radiance_filename = radiance_filename + '.npy'
-  if not os.path.splitext(cot_filename)[1]:
-    cot_filename = cot_filename + '.npy'
-  if not os.path.isdir(output_dir):
-    os.makedirs(output_dir)
-  np.save('{}'.format(os.path.join(output_dir,radiance_filename)),X_dict)
-  np.save('{}'.format(os.path.join(output_dir,cot_filename)),y_dict)
-
-  print('Saved data files in {} directory'.format(output_dir))
 
