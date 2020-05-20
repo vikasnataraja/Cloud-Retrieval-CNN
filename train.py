@@ -92,17 +92,31 @@ def train_model(model, model_dir, filename,
 
 def args_checks_reports(args):
   """ Function to check and print command line arguments """
+  print('-----------------------------------------------------')
   if not os.path.isdir(args.model_dir):
-    print('Model directory {} does not exist,'\
+    print('\n Model directory {} does not exist,'\
           ' creating it now ...'.format(args.model_dir))
     os.makedirs(args.model_dir)
+
   # append .h5 to model_name if it does not have that extension already
   if not os.path.splitext(args.model_name)[1]:
     args.model_name = args.model_name + '.h5'
+
+  if args.normalize:
+    print('\nImages will be normalized\n')
+  else:
+    print('\nImages will not be normalized\n')
+
+  if args.augment:
+    print('Data augmentation will be used\n')
+  else:
+    print('Data augmentation will not be used\n')
+
   print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.num_channels))
   print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
   print('Batch size is {}, learning rate is set '\
         'to {}'.format(args.batch_size,args.lr))
+  print('-----------------------------------------------------')
     
 if __name__=='__main__':
     
@@ -119,9 +133,9 @@ if __name__=='__main__':
   parser.add_argument('--input_dims', default=64, type=int, 
                       help="Input dimension")
   parser.add_argument('--num_channels', default=1, type=int, 
-                      help="Number of channels in input images")
+                      help="Number of channels in input images, set to 1 by default")
   parser.add_argument('--output_dims', default=64, type=int, 
-                      help="Output dimension")
+                      help="Output dimension, set to 64 by default to get 64x64 images")
   parser.add_argument('--num_classes', default=36, type=int, 
                       help="Number of classes")
   parser.add_argument('--batch_size', default=32, type=int, 
@@ -130,10 +144,10 @@ if __name__=='__main__':
                       help="Learning rate for the model")
   parser.add_argument('--epochs', default=500, type=int, 
                       help="Number of epochs to train the model")
-  parser.add_argument('--normalize', default=False, type=bool,
-		      help="Flag, set to True if input images need to be normalized")
-  parser.add_argument('--augment', default=False, type=bool,
-                      help="Flag, set to True if data augmentation needs to be enabled")
+  parser.add_argument('--normalize', dest='normalize', action='store_true',
+		      help="Pass --normalize to normalize the images. Default is set to False to not normalize")
+  parser.add_argument('--augment', dest='augment', action='store_true',
+                      help="Pass --augment to use data augmentation. Default is set to False to not use any augmentation")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
   args = parser.parse_args()
