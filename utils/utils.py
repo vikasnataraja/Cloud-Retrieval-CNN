@@ -5,16 +5,31 @@ import os
 import h5py
 import cv2
 
+
+def normalize_img(img):
+  return (img-img.min())/(img.max()-img.min())
+
+def standard_normalize(img):
+  if img.std()!=0.:
+    img = img.astype('float32')
+    means = img.mean(axis=(0,1), dtype='float64')
+    devs = img.std(axis=(0,1), dtype='float64')
+    img = (img - means)/devs
+    img = np.clip(img, -1.0, 1.0)
+    img = (img + 1.0)/2.0
+  return img
+
+
 class ImageGenerator(Sequence):
   """ 
   Adapted from sources: 
   https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
   https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
   """
-  def __init__(self, image_list=None, image_dict=None, label_dict=None,
-               num_classes=36, batch_size=32, input_shape=64, output_shape=64,
-               num_channels=1, augment=False, normalize=False, 
-  	       to_fit=False, shuffle=False, augmentation=None):
+  def __init__(self, image_list, image_dict, label_dict,
+               num_classes, batch_size, input_shape, output_shape,
+               num_channels, augment, normalize, 
+  	       to_fit, shuffle, augmentation):
       
     self.image_list = image_list
     self.image_dict = image_dict
@@ -44,7 +59,7 @@ class ImageGenerator(Sequence):
       # read in ground truth (mask) from label dictionary
       label = self.label_dict[val]
       if self.normalize:
-        img = self.standard_normalize(img)
+        img = standard_normalize(img)
       # if self.augment:
       #   augmented = self.augmentation(image=img,mask=label)
       #   img = augmented['image']
@@ -73,19 +88,6 @@ class ImageGenerator(Sequence):
     self.indices = np.arange(len(self.image_list))
     if self.shuffle:
       np.random.shuffle(self.indices)
-
-  def normalize_img(self, img):
-    return (img-img.min())/(img.max()-img.min())
-
-  def standard_normalize(self, img):
-    if img.std()!=0.:
-      img = img.astype('float32')
-      means = img.mean(axis=(0,1), dtype='float64')
-      devs = img.std(axis=(0,1), dtype='float64')
-      img = (img - means)/devs
-      img = np.clip(img, -1.0, 1.0)
-      img = (img + 1.0)/2.0
-    return img
 
   def resize_img(self, img, resize_dims):
     return cv2.resize(img, resize_dims)

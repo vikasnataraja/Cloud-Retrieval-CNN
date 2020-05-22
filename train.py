@@ -45,6 +45,7 @@ def train_val_generator(args):
                                  num_classes=args.num_classes,
                                  batch_size=args.batch_size,
 				 normalize=args.normalize,
+                                 augmentation=None,
                                  to_fit=True, augment=False, shuffle=True)
   
   return (train_generator,val_generator)
@@ -115,7 +116,7 @@ def args_checks_reports(args):
   print('Input dimensions are ({},{},{})\n'.format(args.input_dims, args.input_dims, args.num_channels))
   print('Output dimensions are ({},{},{})\n'.format(args.output_dims, args.output_dims, args.num_classes))
   print('Batch size is {}, learning rate is set '\
-        'to {}'.format(args.batch_size,args.lr))
+        'to {}\n'.format(args.batch_size,args.lr))
   print('-----------------------------------------------------')
     
 if __name__=='__main__':
@@ -126,10 +127,10 @@ if __name__=='__main__':
   parser.add_argument('--output_file', default='data/single_channel/output_cot.npy', type=str,
                       help="Path to numpy ground truth file")
   parser.add_argument('--model_dir', default='weights/', type=str, 
-                      help="Directory where model will be saved.\n" 
+                      help="Directory where model will be saved."
                       "If directory does not exist, one will be created")
   parser.add_argument('--model_name', default='pspnet.h5', type=str, 
-                      help="File Name of .h5 file which will contain the model and saved in model_dir")
+                      help="Model name that will be saved in model_dir")
   parser.add_argument('--input_dims', default=64, type=int, 
                       help="Input dimension")
   parser.add_argument('--num_channels', default=1, type=int, 
@@ -145,9 +146,9 @@ if __name__=='__main__':
   parser.add_argument('--epochs', default=500, type=int, 
                       help="Number of epochs to train the model")
   parser.add_argument('--normalize', dest='normalize', action='store_true',
-		      help="Pass --normalize to normalize the images. Default is set to False to not normalize")
+		      help="Pass --normalize to normalize the images. By default, images will not be normalized")
   parser.add_argument('--augment', dest='augment', action='store_true',
-                      help="Pass --augment to use data augmentation. Default is set to False to not use any augmentation")
+                      help="Pass --augment to use data augmentation. By default, no augmentation is used")
   parser.add_argument('--test_size', default=0.20, type=float, 
                       help="Fraction of training image to use for validation during training")
   args = parser.parse_args()
