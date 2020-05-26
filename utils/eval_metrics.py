@@ -53,7 +53,8 @@ def plot_evaluation(target, prediction):
   ax[1,1].set_title('Intersection over Union (IoU): {:0.2f}%'.format(iou(target, prediction)*100))
   
   plt.show()
-  plt.savefig('evaluation.png', dpi=100)
+  fig.savefig('results/evaluation.png', dpi=100)
+  print('Saved evaluation figure in "results/" as "evaluation.png"')
   plt.close();
 
 
