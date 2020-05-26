@@ -19,6 +19,9 @@ def standard_normalize(img):
     img = (img + 1.0)/2.0
   return img
 
+def resize_img(img, resize_dims):
+  return cv2.resize(img, resize_dims)
+ 
 
 class ImageGenerator(Sequence):
   """ 
@@ -64,7 +67,7 @@ class ImageGenerator(Sequence):
       #   augmented = self.augmentation(image=img,mask=label)
       #   img = augmented['image']
       #   label = augmented['mask']
-      img = np.reshape(img, (img.shape[0],img.shape[1],self.num_channels))
+      img = np.reshape(img, (img.shape[0], img.shape[1], self.num_channels))
       X[i] = img
       
       # one-hot encoding of mask labels using Keras. This will transform mask from 
@@ -89,16 +92,14 @@ class ImageGenerator(Sequence):
     if self.shuffle:
       np.random.shuffle(self.indices)
 
-  def resize_img(self, img, resize_dims):
-    return cv2.resize(img, resize_dims)
 
 cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
-                             np.arange(1.0, 10.0, 1.0),
-                             np.arange(10.0, 20.0, 2.0),
-                             np.arange(20.0, 50.0, 5.0),
-                             np.arange(50.0, 101.0, 10.0)))
+                           np.arange(1.0, 10.0, 1.0),
+                           np.arange(10.0, 20.0, 2.0),
+                           np.arange(20.0, 50.0, 5.0),
+                           np.arange(50.0, 101.0, 10.0)))
 
-pxvals = np.arange(0,cot_bins.shape[0]) 
+pxvals = np.arange(0, cot_bins.shape[0]) 
 
 
 def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_coarse=False):
