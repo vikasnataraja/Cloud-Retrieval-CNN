@@ -27,27 +27,23 @@ def iou(target, prediction):
 
 def predict_cot(image_path, model_path, ground_truth_path):
   # load the appropriate model
-  try:
-    model = load_model(model_path, custom_metrics:{'focal_loss':focal_loss})
-  except:
-    model = load_model(model_path, custom_metrics:{'tf':tf, 'UpSample':Upsample, 'focal_loss':focal_loss})
-
+  model = load_model(model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
   # read in the image
   img = cv2.imread(image_path)
   # pre-process the image and resize to model's input dimensions
-  img = preprocess(img, resize_dims=(model.input_shape[1],model.input_shape[2])) 
+  img = preprocess(img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
   # make the prediction
   prediction = model.prediction(img)
   # resize to output dimensions
-  prediction = np.reshape(prediction.flatten(),model.output_shape[1:])
+  prediction = np.reshape(prediction.flatten(), model.output_shape[1:])
   # use argmax to get the image
   predicted_img = np.argmax(prediction, axis=-1) 
   # write to file
-  cv2.imwrite('prediction.png',predicted_img)
+  cv2.imwrite('prediction.png', predicted_img)
   if ground_truth_path is not None:
     gt = cv2.imread(ground_truth_path)
     print('IoU: {}%'.format(iou(gt, predicted_img)*100))
-  return predicted_image
+
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -56,4 +52,4 @@ if __name__ == '__main__':
   parser.add_argument("--ground_truth_path", default=None, type=str, help="Path to the ground truth image, will also calculate the iou between predicted image and the ground truth image"
   args = parser.parse_args()
 
-  preds = prediction(img_path=args.image_path, model_path=args.model_path, ground_truth_path=args.ground_truth_path)
+  prediction(img_path=args.image_path, model_path=args.model_path, ground_truth_path=args.ground_truth_path)
