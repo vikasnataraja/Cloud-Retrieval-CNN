@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def visualize_layer(model, img, layer_idx, output_dir, fname=None, colormap=None, colorbar=False):
+def visualize_layer(model, img, layer_idx, output_dir=os.getcwd(), fname=None, colormap=None, colorbar=False):
   """
   Visalizes feature maps of a layer of a saved Keras model and saved figure.
 
@@ -70,4 +70,4 @@ def visualize_layer(model, img, layer_idx, output_dir, fname=None, colormap=None
   # save figure
   fig.savefig('{}.png'.format(os.path.join(output_dir,fname)), dpi=100)
   print('Saved figure as {}.png'.format(os.path.join(output_dir,fname)))
-  plt.close()
+  plt.close();
