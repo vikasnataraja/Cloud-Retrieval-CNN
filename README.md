@@ -17,6 +17,10 @@ Repo to maintain codebase for the CNN model we're developing.
 #### Feature map visualization
 <img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/layer_78.png" width="900" height="600" align="middle">
 
+### Setting up the environment
+
+There is a `requirements.txt` file in the root directory and all the packages and libraries necessary for running the model can be installed by using `pip install -r requirements.txt`. If you wish, you can create a virtual environment, our model has been tested with Python 3.6.8 but should work with higher versions as well.
+
 ### Notes about the original paper (Masuda et al.):
 
 * Output layer - Output(2) is not being computed here
