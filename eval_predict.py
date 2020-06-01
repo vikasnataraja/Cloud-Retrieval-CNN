@@ -7,6 +7,7 @@ import tensorflow as tf
 import os
 import numpy as np
 import argparse
+import cv2
 
 def preprocess(img, resize_dims=None, normalize=False):
   
