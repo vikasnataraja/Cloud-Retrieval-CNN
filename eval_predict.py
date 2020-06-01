@@ -43,7 +43,7 @@ def predict_cot_on_image(img, model, ground_truth_img=None):
   cv2.imwrite('results/prediction.png', prediction)
   print('Saved predicted image in "results/" as "prediction.png"')
   if ground_truth_img is not None:
-    plot_evaluation(ground_truth, prediction)
+    plot_evaluation(ground_truth_img, prediction)
 
 
 if __name__ == '__main__':
