@@ -22,26 +22,26 @@ def preprocess(img, resize_dims=None, normalize=False):
   return img
 
 
-def predict_cot_on_image(img, model_path, ground_truth=None):
+def predict_cot_on_image(img, model, ground_truth_img=None):
   """
   Predict the COT for an image (numpy array) and if ground truth is available, evaluate model performance.
   """
-  # load the appropriate model
-  model = load_model(model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
-
   # pre-process the image and resize to model's input dimensions
   img = preprocess(img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
 
   # make the prediction
   temp = model.predict(img)
+  
   # resize to output dimensions
   temp = np.reshape(temp.flatten(), model.output_shape[1:])
+  
   # use argmax to get the image
   prediction = np.argmax(temp, axis=-1) 
+  
   # write to file
   cv2.imwrite('results/prediction.png', prediction)
   print('Saved predicted image in "results/" as "prediction.png"')
-  if ground_truth is not None:
+  if ground_truth_img is not None:
     plot_evaluation(ground_truth, prediction)
 
 
@@ -51,12 +51,13 @@ if __name__ == '__main__':
   parser.add_argument("--image_path", default=None, type=str, help="Path to the image")
   parser.add_argument("--ground_truth_path", default=None, type=str, help="Path to the ground truth image, will also calculate the iou between predicted image and the ground truth image")
   args = parser.parse_args()
-  
+
+  model = load_model(args.model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
   img = plt.imread(args.image_path)
   if args.ground_truth_path is not None:
     ground_truth = plt.imread(args.ground_truth_path)
   else:
     ground_truth = None
 
-  prediction(img, model_path=args.model_path, ground_truth=ground_truth)
+  prediction(img, model, ground_truth)
 
