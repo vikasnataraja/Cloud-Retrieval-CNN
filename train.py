@@ -86,7 +86,10 @@ def train_model(model, model_dir, filename,
   model.fit_generator(train_generator,
                       validation_data=val_generator,
                       callbacks=call_list,
-                      epochs=epochs,verbose=1)
+                      epochs=epochs,
+                      verbose=1,
+                      max_queue_size=10,
+                      workers=1)
   
   print('Finished training model. Exiting function ...\n')
   return model
@@ -129,7 +132,7 @@ if __name__=='__main__':
   parser.add_argument('--model_dir', default='weights/', type=str, 
                       help="Directory where model will be saved."
                       "If directory does not exist, one will be created")
-  parser.add_argument('--model_name', default='pspnet.h5', type=str, 
+  parser.add_argument('--model_name', default='unet.h5', type=str, 
                       help="Model name that will be saved in model_dir")
   parser.add_argument('--input_dims', default=64, type=int, 
                       help="Input dimension")
