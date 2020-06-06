@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
+import os
+
 
 def iou(target, prediction):
   """ calculate the iou between ground truth (target) and the predicted image """
@@ -53,6 +55,8 @@ def plot_evaluation(target, prediction):
   ax[1,1].set_title('Intersection over Union (IoU): {:0.2f}%'.format(iou(target, prediction)*100))
   
   plt.show()
+  if not os.path.isdir(args.model_dir):
+    os.makedirs('results/')
   fig.savefig('results/evaluation.png', dpi=100)
   print('Saved evaluation figure in "results/" as "evaluation.png"')
   plt.close();
