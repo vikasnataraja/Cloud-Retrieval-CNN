@@ -45,18 +45,22 @@ def UNet(input_shape, num_channels, num_classes, final_activation_fn):
 
   conv5 = ConvBlock(layer=pool4, filters=1024, kernel_size=(3,3), strides=(1,1), pad_type='same')
   up6 = UpSampleTranspose(layer=conv5, filters=512, kernel_size=(2,2), strides=(1,1), pad_type='same')
+  # up6 = Dropout(0.5)(up6)
   concat6 = Concatenate(axis=-1)([conv4, up6])
 
   conv6 = ConvBlock(layer=concat6, filters=512, kernel_size=(3,3), strides=(1,1), pad_type='same')
   up7 = UpSampleTranspose(layer=conv6, filters=256, kernel_size=(2,2), strides=(1,1), pad_type='same')
+  # up7 = Dropout(0.5)(up7)
   concat7 = Concatenate(axis=-1)([conv3, up7])
 
   conv7 = ConvBlock(layer=concat7, filters=256, kernel_size=(3,3), strides=(1,1), pad_type='same')
   up8 = UpSampleTranspose(layer=conv7, filters=128, kernel_size=(2,2), strides=(1,1), pad_type='same')
+  # up8 = Dropout(0.5)(up8)
   concat8 = Concatenate(axis=-1)([conv2,up8])
 
   conv8 = ConvBlock(layer=concat8, filters=128, kernel_size=(3,3), strides=(1,1), pad_type='same')
   up9 = UpSampleTranspose(layer=conv8, filters=64, kernel_size=(2,2), strides=(1,1), pad_type='same')
+  # up9 = Dropout(0.5)(up9)
   concat9 = Concatenate(axis=-1)([conv1,up9])
 
   conv9 = ConvBlock(layer=concat9, filters=64, kernel_size=(3,3), strides=(1,1), pad_type='same')
