@@ -2,7 +2,7 @@ from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss
-from utils.eval_metrics import plot_evaluation
+from utils.eval_utils import plot_evaluation
 import tensorflow as tf
 import os
 import numpy as np
