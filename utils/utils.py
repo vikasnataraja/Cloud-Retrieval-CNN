@@ -102,7 +102,7 @@ cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
 pxvals = np.arange(0, cot_bins.shape[0]) 
 
 
-def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_coarse=False):
+def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_short_idx=False):
   
   store_rads = {}
   store_cots = {}
@@ -110,7 +110,7 @@ def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_coarse=False):
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
     
-    if not use_coarse:
+    if not use_short_idx:
       cot = f['{}'.format(cot_keyname)][...][:, :, 0, 2]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
