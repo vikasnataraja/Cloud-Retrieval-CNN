@@ -2,6 +2,29 @@ import numpy as np
 import tensorflow as tf
 import keras.backend as K
 
+def Active_Contour_Loss(y_true, y_pred): 
+
+  x = y_pred[:, :, 1:, :] - y_pred[:, :, :-1, :] # horizontal and vertical directions 
+  y = y_pred[:, :, :, 1:] - y_pred[:, :, :, :-1]
+
+  delta_x = x[:, :,1:, :-2]**2
+  delta_y = y[:, :, :-2, 1:]**2
+  delta_u = K.abs(delta_x + delta_y) 
+  epsilon = K.epsilon()
+
+  length = K.mean(K.sqrt(delta_u + epsilon)) # equ.(11) in the paper
+
+  C_1 = np.ones((64, 64))
+  C_2 = np.zeros((64, 64))
+
+  region_in = K.abs(K.mean(y_pred[:,0,:,:] * ((y_true[:,0,:,:] - C_1)**2))) # equ.(12) in the paper
+  region_out = K.abs(K.mean((1-y_pred[:,0,:,:]) * ((y_true[:,0,:,:] - C_2)**2))) # equ.(12) in the paper
+  
+  region = region_in + region_out
+  lambdaP = 1 # lambda parameter 
+	
+  return length + (lambdaP * region)
+
 """
 Dice coefficient and corresponding loss.
 Form of IoU loss
