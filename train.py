@@ -51,12 +51,10 @@ def train_val_generator(args):
   return (train_generator,val_generator)
 
 
-def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate):
+def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, fine_tune, path_to_weights):
   
-  #  model = PSPNet(input_shape, num_channels, output_shape, num_classes, 
-  #    		   spatial_pool_sizes=[1,2,3,4], final_activation_fn='softmax',
-  #		   transpose=True)   
   model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
+  
   # add regularization to layers
   regularizer = l2(0.01)
   for layer in model.layers:
@@ -70,6 +68,11 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
                 metrics=['accuracy'])
   print(model.summary()) 
   print('Model has compiled\n')
+  
+  if fine_tune:
+    model.load_weights(path_to_weights)
+    print('Pre-trained weights loaded to model\n')
+
   return model
 
 def train_model(model, model_dir, filename, 
@@ -150,6 +153,10 @@ if __name__=='__main__':
                       help="Number of epochs to train the model")
   parser.add_argument('--normalize', dest='normalize', action='store_true',
 		      help="Pass --normalize to normalize the images. By default, images will not be normalized")
+  parser.add_argument('--fine_tune', dest='fine_tune', action='store_true',
+                      help="Pass --fine_tune to load a previous model and fine tune. By default, this is set to False")
+  parser.add_argument('--weights_path', default='~/workspace/weights/unet.h5', type=str,
+                      help="If fine tuning, pass a path to weights that will be loaded and fine-tuned")
   parser.add_argument('--augment', dest='augment', action='store_true',
                       help="Pass --augment to use data augmentation. By default, no augmentation is used")
   parser.add_argument('--test_size', default=0.20, type=float, 
@@ -167,7 +174,9 @@ if __name__=='__main__':
 		      num_channels=args.num_channels,
 		      output_shape=args.output_dims,
 		      num_classes=args.num_classes,
-		      learn_rate=args.lr)
+		      learn_rate=args.lr,
+                      fine_tune=args.fine_tune,
+                      path_to_weights=args.weights_path)
   
   trained_model = train_model(model, 
 			      model_dir=args.model_dir,
