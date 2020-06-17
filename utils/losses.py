@@ -2,8 +2,11 @@ import numpy as np
 import tensorflow as tf
 import keras.backend as K
 
-def Active_Contour_Loss(y_true, y_pred): 
-
+def active_contour_loss(y_true, y_pred, lambda_p=1): 
+  """
+  Active Contour Loss as seen in Active Contour Models for Medical Image Segmentation by Chen et al.:
+  http://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Learning_Active_Contour_Models_for_Medical_Image_Segmentation_CVPR_2019_paper.pdf
+  """
   x = y_pred[:, :, 1:, :] - y_pred[:, :, :-1, :] # horizontal and vertical directions 
   y = y_pred[:, :, :, 1:] - y_pred[:, :, :, :-1]
 
@@ -12,18 +15,17 @@ def Active_Contour_Loss(y_true, y_pred):
   delta_u = K.abs(delta_x + delta_y) 
   epsilon = K.epsilon()
 
-  length = K.mean(K.sqrt(delta_u + epsilon)) # equ.(11) in the paper
+  length = K.mean(K.sqrt(delta_u + epsilon)) # eqn.(11) in the paper
 
-  C_1 = np.ones((64, 64))
-  C_2 = np.zeros((64, 64))
+  C_1 = np.ones((64, 64)) # make this the size of y_true
+  C_2 = np.zeros((64, 64)) # make this the size of y_true
 
-  region_in = K.abs(K.mean(y_pred[:,0,:,:] * ((y_true[:,0,:,:] - C_1)**2))) # equ.(12) in the paper
-  region_out = K.abs(K.mean((1-y_pred[:,0,:,:]) * ((y_true[:,0,:,:] - C_2)**2))) # equ.(12) in the paper
+  region_in = K.abs(K.mean(y_pred[:,0,:,:] * ((y_true[:,0,:,:] - C_1)**2))) # eqn.(12) in the paper
+  region_out = K.abs(K.mean((1-y_pred[:,0,:,:]) * ((y_true[:,0,:,:] - C_2)**2))) # eqn.(12) in the paper
   
   region = region_in + region_out
-  lambdaP = 1 # lambda parameter 
 	
-  return length + (lambdaP * region)
+  return length + (lambda_p * region)
 
 """
 Dice coefficient and corresponding loss.
