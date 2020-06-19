@@ -16,27 +16,6 @@ def dice_coefficient(y_true, y_pred, smooth=1.):
   intersection = K.sum(y_true_f * y_pred_f)
   return (2.*intersection + smooth)/(K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
 
-def tversky_loss(y_true, y_pred, beta=0.5):
-  numerator = tf.reduce_sum(y_true * y_pred, axis=-1)
-  denominator = y_true * y_pred + beta * (1 - y_true) * y_pred + (1 - beta) * y_true * (1 - y_pred)
-  return 1 - (numerator + 1) / (tf.reduce_sum(denominator, axis=-1) + 1)
-
-"""
-Weighted Cross Entropy
-"""
-
-def weighted_cross_entropy(y_true, y_pred):
-  def convert_to_logits(y_pred):
-    #see https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/keras/backend.py#L3525
-    y_pred = tf.clip_by_value(y_pred, K.epsilon(), 1 - K.epsilon())
-    return tf.log(y_pred / (1 - y_pred))
-
-  def wce_loss(y_true, y_pred):
-    y_pred = convert_to_logits(y_pred)
-    loss = tf.nn.weighted_cross_entropy_with_logits(logits=y_pred, targets=y_true, pos_weight=35.0)
-    # or reduce_sum and/or axis=-1
-    return tf.reduce_mean(loss)
-  return wce_loss(y_true, y_pred)
 
 """
 Jaccard Distance Loss
@@ -72,5 +51,8 @@ def focal_tversky(y_true, y_pred, alpha=0.7, gamma=0.75, smooth=1.):
 
   tversky_index = tversky(y_true, y_pred)
   return K.pow(1-tversky_index, gamma)
+
+def combined_loss(y_true, y_pred, alpha=0.75):
+  return alpha*focal_loss(y_true, y_pred) + (1-alpha)*focal_tversky(y_true, y_pred)
 
 
