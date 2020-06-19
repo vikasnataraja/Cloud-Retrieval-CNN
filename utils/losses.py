@@ -2,30 +2,6 @@ import numpy as np
 import tensorflow as tf
 import keras.backend as K
 
-def active_contour_loss(y_true, y_pred, lambda_p=1): 
-  """
-  Active Contour Loss as seen in Active Contour Models for Medical Image Segmentation by Chen et al.:
-  http://openaccess.thecvf.com/content_CVPR_2019/papers/Chen_Learning_Active_Contour_Models_for_Medical_Image_Segmentation_CVPR_2019_paper.pdf
-  """
-  x = y_pred[:, :, 1:, :] - y_pred[:, :, :-1, :] # horizontal and vertical directions 
-  y = y_pred[:, :, :, 1:] - y_pred[:, :, :, :-1]
-
-  delta_x = x[:, :,1:, :-2]**2
-  delta_y = y[:, :, :-2, 1:]**2
-  delta_u = K.abs(delta_x + delta_y) 
-  epsilon = K.epsilon()
-
-  length = K.mean(K.sqrt(delta_u + epsilon)) # eqn.(11) in the paper
-
-  C_1 = np.ones((64, 64)) # make this the size of y_true
-  C_2 = np.zeros((64, 64)) # make this the size of y_true
-
-  region_in = K.abs(K.mean(y_pred[:,0,:,:] * ((y_true[:,0,:,:] - C_1)**2))) # eqn.(12) in the paper
-  region_out = K.abs(K.mean((1-y_pred[:,0,:,:]) * ((y_true[:,0,:,:] - C_2)**2))) # eqn.(12) in the paper
-  
-  region = region_in + region_out
-	
-  return length + (lambda_p * region)
 
 """
 Dice coefficient and corresponding loss.
@@ -83,11 +59,18 @@ def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
   loss = -alpha * K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred)
   return K.mean(loss, axis=-1)
 
-def binary_focal_loss(y_true, y_pred, gamma=2., alpha=0.25):
-  pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
-  pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
-  epsilon = K.epsilon()
-  # clip to prevent NaN's and Inf's
-  pt_1 = K.clip(pt_1, epsilon, 1. - epsilon)
-  pt_0 = K.clip(pt_0, epsilon, 1. - epsilon)
-  return -K.mean(alpha * K.pow(1. - pt_1, gamma) * K.log(pt_1),axis=-1) - K.mean((1 - alpha) * K.pow(pt_0, gamma) * K.log(1. - pt_0),axis=-1)
+""" Focal Tversky Loss as seen in:
+https://arxiv.org/pdf/1810.07842.pdf and adapted from https://github.com/nabsabraham/focal-tversky-unet/ """
+
+def focal_tversky(y_true, y_pred, alpha=0.7, gamma=0.75, smooth=1.):
+  
+  def tversky(y_true, y_pred):
+    TP = K.sum(y_true * y_pred)
+    FN = K.sum(y_true * (1-y_pred))
+    FP = K.sum((1-y_true)*y_pred)
+    return (TP + smooth)/(TP + alpha*FN + (1-alpha)*FP + smooth)
+
+  tversky_index = tversky(y_true, y_pred)
+  return K.pow(1-tversky_index, gamma)
+
+
