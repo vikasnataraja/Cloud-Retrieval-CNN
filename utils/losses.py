@@ -52,7 +52,7 @@ def focal_tversky(y_true, y_pred, alpha=0.7, gamma=0.75, smooth=1.):
   tversky_index = tversky(y_true, y_pred)
   return K.pow(1-tversky_index, gamma)
 
-def combined_loss(y_true, y_pred, alpha=0.75):
+def combined_loss(y_true, y_pred, alpha=0.50):
   return alpha*focal_loss(y_true, y_pred) + (1-alpha)*focal_tversky(y_true, y_pred)
 
 

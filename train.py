@@ -6,7 +6,7 @@ from keras.regularizers import l1, l2
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
-from models.unet import UNet
+from models.unet import UNet, Attn_UNet
 from models.pspnet import PSPNet
 from utils.utils import ImageGenerator
 from utils.losses import focal_loss, focal_tversky, combined_loss
@@ -53,14 +53,14 @@ def train_val_generator(args):
 
 def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, fine_tune, path_to_weights):
   
-  model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
+  model = Attn_UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   
   # add regularization to layers
- #  regularizer = l2(0.01)
- #  for layer in model.layers:
- #    for attr in ['kernel_regularizer']:
- #      if hasattr(layer, attr):
- #        setattr(layer, attr, regularizer)
+  regularizer = l2(0.01)
+  for layer in model.layers:
+    for attr in ['kernel_regularizer']:
+      if hasattr(layer, attr):
+        setattr(layer, attr, regularizer)
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
@@ -71,7 +71,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
-                loss=focal_loss,
+                loss=combined_loss,
                 metrics=['accuracy'])
   print(model.summary())
   print('Model has compiled\n')
