@@ -30,8 +30,8 @@ def visualize_prediction(input_img, target, prediction):
   plt.title('Radiance channel')
 
   fig.add_subplot(rows, cols, 2)
-  plt.imshow(gt_img, cmap='plasma')
-  # plt.title('Ground truth COT = {}'.format(np.unique(gt_img)[0]))
+  plt.imshow(target, cmap='plasma')
+  # plt.title('Ground truth COT = {}'.format(np.unique(target)[0]))
   plt.title('Ground truth COT')
 
   fig.add_subplot(rows, cols, 3)
@@ -40,7 +40,7 @@ def visualize_prediction(input_img, target, prediction):
   plt.title('Predicted COT')
 
   fig.add_subplot(rows, cols, 4)
-  plt.imshow(np.abs(prediction-gt_img), cmap='plasma')
+  plt.imshow(np.abs(prediction-target), cmap='plasma')
   plt.title('Diff Map')
   plt.show()
   if not os.path.isdir('results/'):
