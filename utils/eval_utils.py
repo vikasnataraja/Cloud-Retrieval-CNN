@@ -17,6 +17,39 @@ def precision_recall_dice_support(target, prediction):
   return precision_recall_fscore_support(target.flatten(), prediction.flatten(),
 					 average=None, zero_division=0)
 
+
+def visualize_prediction(input_img, target, prediction):
+  """ visualize the input img, ground truth, predicted img and the diff"""
+
+  rows = 1
+  cols = 4
+
+  fig = plt.figure(figsize=(16,16))
+  fig.add_subplot(rows, cols,1)
+  plt.imshow(input_img, cmap='plasma')
+  plt.title('Radiance channel')
+
+  fig.add_subplot(rows, cols, 2)
+  plt.imshow(gt_img, cmap='plasma')
+  # plt.title('Ground truth COT = {}'.format(np.unique(gt_img)[0]))
+  plt.title('Ground truth COT')
+
+  fig.add_subplot(rows, cols, 3)
+  plt.imshow(prediction, cmap='plasma')
+  # plt.title('Predicted COT = {}'.format(np.unique(prediction)[0]))
+  plt.title('Predicted COT')
+
+  fig.add_subplot(rows, cols, 4)
+  plt.imshow(np.abs(prediction-gt_img), cmap='plasma')
+  plt.title('Diff Map')
+  plt.show()
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/visualization.png', dpi=100)
+  print('Saved visualized figure in "results/" as "visualization.png"')
+
+  plt.close();
+
 def plot_evaluation(target, prediction):
   """ plot the evaluation metrics """
   target_vals = np.unique(target)

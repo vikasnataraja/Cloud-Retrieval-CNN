@@ -2,7 +2,7 @@ from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss
-from utils.eval_utils import plot_evaluation
+from utils.eval_utils import plot_evaluation, visualize_prediction
 import tensorflow as tf
 import os
 import numpy as np
@@ -21,6 +21,36 @@ def preprocess(img, resize_dims=None, normalize=False):
   else:
     img = np.reshape(img, (1, img.shape[0], img.shape[1], 1))
   return img
+
+
+def predict_random_validation(input_data, gt_data, model):
+  """
+  Predict COT for a random validation image and visualize it
+  """
+  # split to training and validation
+  X_train, X_val = train_test_split(list(input_data.keys()),shuffle=True, random_state=42, test_size=0.20)
+  
+  # choose random validation image
+  random_img = np.random.choice(X_val)
+  # random_img = 'data_976'
+
+  input_img = input_data['{}'.format(random_img)]
+  gt_img = gt_data['{}'.format(random_img)]
+
+  # pre-process the image and resize to model's input dimensions
+  img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
+
+  # make the prediction
+  temp = model.predict(img)
+  
+  # resize to output dimensions
+  temp = np.reshape(temp.flatten(), model.output_shape[1:])
+  
+  # use argmax to get the image
+  prediction = np.argmax(temp, axis=-1)
+
+  print('Visualizing image {}:\n'.format(random_img))
+  visualize_prediction(input_img, gt_img, prediction)
 
 
 def predict_cot_on_image(img, model, ground_truth_img=None):
@@ -42,6 +72,9 @@ def predict_cot_on_image(img, model, ground_truth_img=None):
   # write to file
   cv2.imwrite('results/prediction.png', prediction)
   print('Saved predicted image in "results/" as "prediction.png"')
+  
+  if visualize_random_validation:
+    visualize_validation(input_dict, target_dict, prediction)
   if ground_truth_img is not None:
     plot_evaluation(ground_truth_img, prediction)
 
@@ -51,6 +84,8 @@ if __name__ == '__main__':
   parser.add_argument("--model_path", default='weights/model.h5', type=str, help="Path to the trained model")
   parser.add_argument("--image_path", default=None, type=str, help="Path to the image")
   parser.add_argument("--ground_truth_path", default=None, type=str, help="Path to the ground truth image, will also calculate the iou between predicted image and the ground truth image")
+  parser.add_argument("--input_file", default='data/single_channel/input_radiance.npy', type=str, help="Path to the npy file containing input data")
+  parser.add_argument("--output_file", default='data/single_channel/output_cot.npy', type=str, help="Path to the npy file containing ground truth data")
   args = parser.parse_args()
 
   model = load_model(args.model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
@@ -60,5 +95,8 @@ if __name__ == '__main__':
   else:
     ground_truth = None
 
-  prediction(img, model, ground_truth)
-
+  predict_cot_on_image(img, model, ground_truth)
+  
+  in_data = np.load(args.input_file, allow_pickle=True).item()
+  out_data = np.load(args.ground_truth_file, allow_pickle=True).item()
+  predict_random_validation(in_data, out_data, model)
