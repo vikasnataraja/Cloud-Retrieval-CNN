@@ -41,8 +41,13 @@ def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
 """ Focal Tversky Loss as seen in:
 https://arxiv.org/pdf/1810.07842.pdf and adapted from https://github.com/nabsabraham/focal-tversky-unet/ """
 
-def focal_tversky_loss(y_true, y_pred, alpha=0.3, inverted_gamma=0.75, smooth=1.):
-  
+def focal_tversky_loss(y_true, y_pred, alpha=0.3, inverted_gamma=0.5, smooth=1.):
+  """
+  alpha: weights FN and FP. Higher alpha weights FN higher. alpha=0.5 becomes dice score coefficient.
+  inverted_gamma: focal parameter that is in the range 0.33 - 1 (i.e gamma is from 1 - 3).
+				  inverted_gamma=1 becomes tversky loss.
+  smooth: smoothing factor, usually set to 1.
+  """
   def tversky(y_true, y_pred):
     TP = K.sum(y_true * y_pred)
     FN = K.sum(y_true * (1 - y_pred))
