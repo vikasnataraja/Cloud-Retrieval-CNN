@@ -24,16 +24,17 @@ def preprocess(img, resize_dims=None, normalize=False):
   return img
 
 
-def predict_random_validation(input_data, gt_data, model):
+def predict_random_validation(input_data, gt_data, model, keyname=None):
   """
-  Predict COT for a random validation image and visualize it
+  Predict COT for a random validation image and visualize it.
   """
-  # split to training and validation
-  X_train, X_val = train_test_split(list(input_data.keys()),shuffle=True, random_state=42, test_size=0.20)
   
-  # choose random validation image
-  random_img = np.random.choice(X_val)
-  # random_img = 'data_976'
+  if keyname is not None:
+    random_img = keyname
+  else:
+    # split to training and validation
+    X_train, X_val = train_test_split(list(input_data.keys()),shuffle=True, random_state=42, test_size=0.20)
+    random_img = np.random.choice(X_val)
 
   input_img = input_data['{}'.format(random_img)]
   gt_img = gt_data['{}'.format(random_img)]
