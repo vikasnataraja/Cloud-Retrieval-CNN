@@ -3,6 +3,7 @@ from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss
 from utils.eval_utils import plot_evaluation, visualize_prediction
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
 import numpy as np
