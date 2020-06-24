@@ -41,18 +41,18 @@ def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
 """ Focal Tversky Loss as seen in:
 https://arxiv.org/pdf/1810.07842.pdf and adapted from https://github.com/nabsabraham/focal-tversky-unet/ """
 
-def focal_tversky(y_true, y_pred, alpha=0.7, gamma=0.75, smooth=1.):
+def focal_tversky_loss(y_true, y_pred, alpha=0.3, inverted_gamma=0.75, smooth=1.):
   
   def tversky(y_true, y_pred):
     TP = K.sum(y_true * y_pred)
-    FN = K.sum(y_true * (1-y_pred))
-    FP = K.sum((1-y_true)*y_pred)
+    FN = K.sum(y_true * (1 - y_pred))
+    FP = K.sum((1 - y_true) * y_pred)
     return (TP + smooth)/(TP + alpha*FN + (1-alpha)*FP + smooth)
 
   tversky_index = tversky(y_true, y_pred)
-  return K.pow(1-tversky_index, gamma)
+  return K.pow(1-tversky_index, inverted_gamma)
 
-def combined_loss(y_true, y_pred, alpha=0.50):
-  return alpha*focal_loss(y_true, y_pred) + (1-alpha)*focal_tversky(y_true, y_pred)
+def combined_loss(y_true, y_pred, combined_alpha=0.5):
+  return combined_alpha*focal_loss(y_true, y_pred) + (1. - combined_alpha)*focal_tversky_loss(y_true, y_pred)
 
 
