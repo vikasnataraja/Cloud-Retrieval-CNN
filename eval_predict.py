@@ -52,6 +52,7 @@ def predict_random_validation(input_data, gt_data, model):
 
   print('Visualizing image {}:\n'.format(random_img))
   visualize_prediction(input_img, gt_img, prediction)
+  plot_evaluation(gt_img, prediction)
 
 
 def predict_cot_on_image(img, model, ground_truth_img=None):
