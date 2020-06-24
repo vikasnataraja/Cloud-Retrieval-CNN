@@ -74,8 +74,6 @@ def predict_cot_on_image(img, model, ground_truth_img=None):
   cv2.imwrite('results/prediction.png', prediction)
   print('Saved predicted image in "results/" as "prediction.png"')
   
-  if visualize_random_validation:
-    visualize_validation(input_dict, target_dict, prediction)
   if ground_truth_img is not None:
     plot_evaluation(ground_truth_img, prediction)
 
