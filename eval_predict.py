@@ -89,6 +89,8 @@ if __name__ == '__main__':
   parser.add_argument("--ground_truth_path", default=None, type=str, help="Path to the ground truth image, will also calculate the iou between predicted image and the ground truth image")
   parser.add_argument("--input_file", default=None, type=str, help="Path to the npy file containing input data")
   parser.add_argument("--output_file", default=None, type=str, help="Path to the npy file containing ground truth data")
+  parser.add_argument("--keyname", default=None, type=str, help="Key of the specific image to display among the validation image. For example, 'data_977', 'data_34' etc. By default, this is set to None to use a random validation image")
+
   args = parser.parse_args()
 
   model = load_model(args.model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
@@ -104,6 +106,6 @@ if __name__ == '__main__':
   else: # predict on validation
     in_data = np.load(args.input_file, allow_pickle=True).item()
     out_data = np.load(args.output_file, allow_pickle=True).item()
-    predict_random_validation(in_data, out_data, model)
+    predict_random_validation(in_data, out_data, model, args.keyname)
 
 
