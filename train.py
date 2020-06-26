@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from models.unet import UNet, Attn_UNet
 from models.pspnet import PSPNet
 from utils.utils import ImageGenerator
-from utils.losses import focal_loss, focal_tversky, combined_loss
+from utils.losses import focal_loss, combined_loss
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
@@ -53,7 +53,7 @@ def train_val_generator(args):
 
 def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, fine_tune, path_to_weights):
   
-  model = Attn_UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
+  model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   
   # add regularization to layers
   regularizer = l2(0.01)
@@ -71,7 +71,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
-                loss=combined_loss,
+                loss=focal_loss,
                 metrics=['accuracy'])
   print(model.summary())
   print('Model has compiled\n')
