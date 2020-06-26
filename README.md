@@ -7,7 +7,7 @@ Repo to maintain codebase for the CNN model we're developing.
 
 
 ### UNet Model Architecture
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/u-net-architecture.png" width="900" height="600" align="middle">
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/updated_unet_arch.png" width="900" height="600" align="middle">
 
 ### UNet Results
 <img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/unet_output.png" width="900" height="900" align="middle">
