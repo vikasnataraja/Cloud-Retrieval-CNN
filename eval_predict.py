@@ -103,7 +103,7 @@ if __name__ == '__main__':
     predict_cot_on_image(img, model, ground_truth)
   else: # predict on validation
     in_data = np.load(args.input_file, allow_pickle=True).item()
-    out_data = np.load(args.ground_truth_file, allow_pickle=True).item()
+    out_data = np.load(args.output_file, allow_pickle=True).item()
     predict_random_validation(in_data, out_data, model)
 
 
