@@ -43,15 +43,15 @@ https://arxiv.org/pdf/1810.07842.pdf and adapted from https://github.com/nabsabr
 
 def focal_tversky_loss(y_true, y_pred, alpha=0.3, inverted_gamma=0.5, smooth=1.):
   """
-  alpha: 		  weights FN and FP. Higher alpha weights FN higher. alpha=0.5 becomes dice score coefficient.
-		          Paper uses 0.7 as the default to focus more on FN.
+  alpha: weights FN and FP. Higher alpha weights FN higher. alpha=0.5 becomes dice score coefficient.
+		     Paper uses 0.7 as the default to focus more on FN.
 
   inverted_gamma: focal parameter that is in the range 0.33 - 1 (i.e gamma is from 1 - 3).
-				  Higher value makes the loss function focus more on easy examples. Lower value
-				  makes the loss function focus more on less accurate predictions/misclassifications.
-				  inverted_gamma=1 becomes tversky loss. Paper uses inverted_gamma=0.75.
+				          Higher value makes the loss function focus more on easy examples. Lower value
+				          makes the loss function focus more on less accurate predictions/misclassifications.
+				   			  inverted_gamma=1 becomes tversky loss. Paper uses inverted_gamma=0.75.
 
-  smooth:		  smoothing factor, usually set to 1.
+  smooth: smoothing factor, usually set to 1.
   """
   def get_tversky_index(y_true, y_pred):
     TP = K.sum(y_true * y_pred)
