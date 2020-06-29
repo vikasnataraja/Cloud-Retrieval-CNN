@@ -19,8 +19,8 @@ def train_val_generator(args):
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
-			         RandomContrast(limit=0.2, p=0.5),
-			         RandomBrightness(limit=0.2, p=0.5),
+							 RandomContrast(limit=0.2, p=0.5),
+							 RandomBrightness(limit=0.2, p=0.5),
 				 GaussNoise(p=0.25),
 				 ShiftScaleRotate(p=0.5,rotate_limit=20)])
 
@@ -32,8 +32,8 @@ def train_val_generator(args):
                                    num_channels=args.num_channels,
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
-				   normalize=args.normalize,
-				   augmentation=AUGMENTATIONS_TRAIN,
+																	 normalize=args.normalize,
+																	 augmentation=AUGMENTATIONS_TRAIN,
                                    to_fit=True, augment=args.augment, shuffle=True)
   
   val_generator = ImageGenerator(image_list=X_val,
@@ -43,8 +43,8 @@ def train_val_generator(args):
                                  output_shape=args.output_dims,
                                  num_channels=args.num_channels,
                                  num_classes=args.num_classes,
-                                 batch_size=args.batch_size,
-				 normalize=args.normalize,
+                                 batch_size=args.batch_size, 
+																 normalize=args.normalize,
                                  augmentation=None,
                                  to_fit=True, augment=False, shuffle=True)
   
@@ -56,7 +56,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
   model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
   
   # add regularization to layers
-  regularizer = l2(0.01)
+  regularizer = l1(0.01)
   for layer in model.layers:
     for attr in ['kernel_regularizer']:
       if hasattr(layer, attr):
@@ -71,7 +71,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
-                loss=focal_loss,
+                loss=combined_loss,
                 metrics=['accuracy'])
   print(model.summary())
   print('Model has compiled\n')
@@ -154,8 +154,8 @@ if __name__=='__main__':
                       help="Learning rate for the model")
   parser.add_argument('--epochs', default=500, type=int, 
                       help="Number of epochs to train the model")
-  parser.add_argument('--normalize', dest='normalize', action='store_true',
-		      help="Pass --normalize to normalize the images. By default, images will not be normalized")
+  parser.add_argument('--normalize', dest='normalize', action='store_true', 
+									    help="Pass --normalize to normalize the images. By default, images will not be normalized")
   parser.add_argument('--fine_tune', dest='fine_tune', action='store_true',
                       help="Pass --fine_tune to load a previous model and fine tune. By default, this is set to False")
   parser.add_argument('--weights_path', default='~/workspace/weights/unet.h5', type=str,
@@ -173,18 +173,20 @@ if __name__=='__main__':
   train_gen, val_gen = train_val_generator(args)
   
   # build the model
-  model = build_model(input_shape=args.input_dims,
-		      num_channels=args.num_channels,
-		      output_shape=args.output_dims,
-		      num_classes=args.num_classes,
-		      learn_rate=args.lr,
-                      fine_tune=args.fine_tune,
-                      path_to_weights=args.weights_path)
+  model = build_model(input_shape=args.input_dims, 
+									    num_channels=args.num_channels, 
+											output_shape=args.output_dims, 
+											num_classes=args.num_classes, 
+											learn_rate=args.lr, 
+											fine_tune=args.fine_tune, 
+											path_to_weights=args.weights_path)
   
   trained_model = train_model(model, 
-			      model_dir=args.model_dir,
+									            model_dir=args.model_dir,
                               filename=args.model_name,
                               train_generator=train_gen,
                               val_generator=val_gen,
                               batch_size=args.batch_size,
                               epochs=args.epochs)
+
+	
