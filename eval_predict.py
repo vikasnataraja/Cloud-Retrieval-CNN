@@ -27,6 +27,16 @@ def preprocess(img, resize_dims=None, normalize=False):
 def predict_random_validation(input_data, gt_data, model, keyname=None):
   """
   Predict COT for a random validation image and visualize it.
+  Args:
+      - input_data: dict, dictionary that contains the input data
+      - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
+      - model: keras.models.Model object, the model loaded from keras
+      - keyname: str, the specific image's key in the dictionaries of input_data and gt_data to visualize that image.
+                By default, a random validation image is visualized and therefore this arg is set to None.
+                Pass a string like 'data_977' to visualize the plots for a particular image
+  Returns:
+      Does not return a variable
+
   """
   
   if keyname is not None:
@@ -59,6 +69,13 @@ def predict_random_validation(input_data, gt_data, model, keyname=None):
 def predict_cot_on_image(input_img, model, ground_truth_img=None):
   """
   Predict the COT for an image (numpy array) and if ground truth is available, evaluate model performance.
+  Args:
+      - input_img: arr, a numpy array representing the input image for the model.
+      - model: keras.models.Model object, the model loaded using Keras.
+      - ground_truth_img: arr, a numpy array representing the ground truth image. If None, only the prediction
+                          on the image will be saved to file without plots.
+  Returns:
+      Does not return a variable
   """
   # pre-process the image and resize to model's input dimensions
   img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
