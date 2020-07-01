@@ -1,4 +1,4 @@
-from keras.layers import MaxPooling2D, ZeroPadding2D, UpSampling2D, Cropping2D
+from keras.layers import MaxPooling2D,AveragePooling2D, ZeroPadding2D, UpSampling2D, Cropping2D
 from keras.layers import Conv2D, Conv2DTranspose
 from keras.layers import BatchNormalization, Activation, Dropout
 from keras.layers import Concatenate, Add, Multiply, Input
