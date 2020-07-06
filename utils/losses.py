@@ -66,3 +66,25 @@ def combined_loss(y_true, y_pred, focal_loss_weight=0.25):
   return focal_loss_weight*focal_loss(y_true, y_pred) + (1. - focal_loss_weight)*focal_tversky_loss(y_true, y_pred)
 
 
+def contour_loss(y_true, y_pred): 
+ 
+  # length term
+  x = y_pred[:,:,1:,:] - y_pred[:,:,:-1,:] # horizontal and vertical directions 
+  y = y_pred[:,:,:,1:] - y_pred[:,:,:,:-1]
+
+  delta_x = x[:,:,1:,:-2]**2
+  delta_y = y[:,:,:-2,1:]**2
+  delta_u = K.abs(delta_x + delta_y) 
+  eps = K.epsilon()
+  length = K.mean(K.sqrt(delta_u + eps)) # equ.(11) in the paper
+  
+  # region term
+  C_1 = np.ones((y_pred.shape[1], y_pred.shape[2], y_pred.shape[3]))
+  C_2 = np.zeros((y_pred.shape[1], y_pred.shape[2], y_pred.shape[3]))
+  
+  region_in = K.abs(K.mean(y_pred * ((y_true - C_1)**2))) # equ.(12) in the paper
+  region_out = K.abs(K.mean((1 - y_pred) * ((y_true - C_2)**2))) # equ.(12) in the paper
+
+  lambdaP = 1 # lambda parameter could be various.
+	
+  return length + lambdaP * (region_in + region_out)
