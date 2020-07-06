@@ -7,9 +7,8 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, C
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
 from models.unet import UNet, Experimental_UNet
-from models.pspnet import PSPNet
 from utils.utils import ImageGenerator
-from utils.losses import focal_loss, combined_loss
+from utils.losses import focal_loss, combined_loss, contour_loss
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
@@ -71,7 +70,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
-                loss=combined_loss,
+                loss=contour_loss,
                 metrics=['accuracy'])
   print(model.summary())
   print('Model has compiled\n')
