@@ -6,7 +6,7 @@ from keras.regularizers import l1, l2
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
-from models.unet import UNet, Experimental_UNet
+from models.unet import UNet
 from utils.utils import ImageGenerator
 from utils.losses import focal_loss, combined_loss, contour_loss
 
@@ -70,7 +70,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
-                loss=contour_loss,
+                loss=focal_loss,
                 metrics=['accuracy'])
   print(model.summary())
   print('Model has compiled\n')
