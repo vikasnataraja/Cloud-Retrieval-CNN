@@ -8,7 +8,7 @@ from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBr
 from sklearn.model_selection import train_test_split
 from models.unet import UNet
 from utils.utils import ImageGenerator
-from utils.losses import focal_loss, combined_loss, contour_loss
+from utils.losses import focal_loss, combined_loss
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
