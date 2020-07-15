@@ -66,7 +66,7 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
     devs.append(np.std(input_img))
     means.append(np.mean(input_img))
   
-  plot_stat_metrics(slopes, devs, means, num_samples)
+  plot_stat_metrics(means, devs, slopes, num_samples)
 
 
 def predict_random_validation_image(input_data, gt_data, model, keyname=None):
