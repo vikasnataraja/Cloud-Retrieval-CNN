@@ -2,7 +2,7 @@ from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss, combined_loss
-from utils.eval_utils import plot_evaluation, visualize_prediction
+from utils.eval_utils import plot_evaluation, visualize_prediction, plot_stat_metrics
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import os
@@ -23,8 +23,40 @@ def preprocess(img, resize_dims=None, normalize=False):
     img = np.reshape(img, (1, img.shape[0], img.shape[1], 1))
   return img
 
+def predict_random_validation_set(input_data, gt_data, model, validation_list=None, num_samples=100):
 
-def predict_random_validation(input_data, gt_data, model, keyname=None):
+  devs, means, slopes = [], [], []
+  if validation_list is None:
+    validation_list = list(input_data.keys())
+
+  randkeys = np.random.choice(validation_list, num_samples) # choose random validation keys
+
+  for randkey in randkeys:
+    input_img = input_data[randkey]
+    gt_img = gt_data[randkey]
+    img = preprocess(input_img)
+
+    temp = model.predict(img)
+    temp = np.reshape(temp.flatten(), model.output_shape[1:])
+    prediction = np.argmax(temp, axis=-1)
+
+    flat_pred = prediction.flatten()
+    flat_gt = gt_img.flatten()
+
+    non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
+    non_zero_gt = flat_gt[non_zero_idx]
+    non_zero_prediction = flat_pred[non_zero_idx]
+
+    slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
+
+    slopes.append(np.mean(slope))
+    devs.append(np.std(input_img))
+    means.append(np.mean(input_img))
+  
+  plot_stat_metrics(slopes, devs, means, num_samples)
+
+
+def predict_random_validation_image(input_data, gt_data, model, keyname=None):
   """
   Predict COT for a random validation image and visualize it.
   Args:
@@ -40,14 +72,14 @@ def predict_random_validation(input_data, gt_data, model, keyname=None):
   """
   
   if keyname is not None:
-    random_img = keyname
+    random_img_key = keyname
   else:
     # split to training and validation
     X_train, X_val = train_test_split(list(input_data.keys()),shuffle=True, random_state=42, test_size=0.20)
-    random_img = np.random.choice(X_val)
+    random_img_key = np.random.choice(X_val)
 
-  input_img = input_data['{}'.format(random_img)]
-  gt_img = gt_data['{}'.format(random_img)]
+  input_img = input_data['{}'.format(random_img_key)]
+  gt_img = gt_data['{}'.format(random_img_key)]
 
   # pre-process the image and resize to model's input dimensions
   img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
@@ -61,7 +93,7 @@ def predict_random_validation(input_data, gt_data, model, keyname=None):
   # use argmax to get the image
   prediction = np.argmax(temp, axis=-1)
 
-  print('Visualizing image {}:\n'.format(random_img))
+  print('Visualizing image {}:\n'.format(random_img_key))
   visualize_prediction(input_img, gt_img, prediction)
   plot_evaluation(gt_img, prediction)
 
@@ -123,6 +155,6 @@ if __name__ == '__main__':
   else: # predict on validation
     in_data = np.load(args.input_file, allow_pickle=True).item()
     out_data = np.load(args.output_file, allow_pickle=True).item()
-    predict_random_validation(in_data, out_data, model, args.keyname)
+    predict_random_validation_image(in_data, out_data, model, args.keyname)
 
 

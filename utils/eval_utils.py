@@ -95,3 +95,35 @@ def plot_evaluation(target, prediction):
   plt.close();
 
 
+def plot_stat_metrics(means, stds, slopes, num_samples):
+  """ plot statistical metrics for a number of samples"""
+
+  rows = 1
+  cols = 3
+
+  fig = plt.figure(figsize=(16,6))
+  fig.add_subplot(rows, cols,1)
+  plt.scatter(means, stds, c='teal')
+  plt.xlabel('RadMean')
+  plt.ylabel('RadStd')
+  plt.title('STD vs Mean dependence over {} samples'.format(num_samples))
+
+  fig.add_subplot(rows, cols, 2)
+  plt.scatter(stds, slopes, c='teal')
+  plt.xlabel('RadStd')
+  plt.ylabel('Slope')
+  plt.title('STD vs Slope over {} samples'.format(num_samples))
+
+  fig.add_subplot(rows, cols, 3)
+  plt.scatter(means, slopes, c='teal')
+  plt.xlabel('RadMean')
+  plt.ylabel('Slope')
+  plt.title('Mean vs Slope over {} samples'.format(num_samples))
+
+  plt.show()
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/stat_evaluation.png', dpi=100)
+  print('Saved stat evaluation figure in "results/" as "stat_evaluation.png"')
+  plt.close();
+
