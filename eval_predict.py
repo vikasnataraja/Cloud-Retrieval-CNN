@@ -42,6 +42,7 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
   if validation_list is None:
     validation_list = list(input_data.keys())
 
+  np.random.seed(42) # set seed for reproducibility
   randkeys = np.random.choice(validation_list, num_samples) # choose random validation keys
 
   for randkey in randkeys:
