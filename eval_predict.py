@@ -69,6 +69,8 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
   
   plot_stat_metrics(means, devs, slopes, num_samples)
 
+  return means, devs, slopes
+
 
 def predict_random_validation_image(input_data, gt_data, model, keyname=None):
   """
