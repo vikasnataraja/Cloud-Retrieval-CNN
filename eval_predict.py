@@ -63,9 +63,9 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
 
     slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
 
-    slopes.append(np.mean(slope))
-    devs.append(np.std(input_img))
     means.append(np.mean(input_img))
+    devs.append(np.std(input_img))
+    slopes.append(np.mean(slope))
   
   plot_stat_metrics(means, devs, slopes, num_samples)
 
