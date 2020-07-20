@@ -35,7 +35,9 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
       - num_samples: int, number of samples to take for the visualization of the model performance
 
   Returns:
-      Does not return a variable
+      - means: list, python list of means of each input image
+      - devs: list, python list of standard deviations from mean of each input image
+      - slopes: list, python list of slopes calculated by np.mean((non-zero predictions)/(non-zero ground truths))
 
   """
   devs, means, slopes = [], [], []
@@ -60,6 +62,8 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
     non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
     non_zero_gt = flat_gt[non_zero_idx]
     non_zero_prediction = flat_pred[non_zero_idx]
+    if non_zero_prediction.shape[0]==0: # break current iteration if all classes are zero
+      continue
 
     slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
 
@@ -67,7 +71,7 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
     devs.append(np.std(input_img))
     slopes.append(np.mean(slope))
   
-  plot_stat_metrics(means, devs, slopes, num_samples)
+  plot_stat_metrics(means, devs, slopes, num_samples=len(means))
 
   return means, devs, slopes
 
