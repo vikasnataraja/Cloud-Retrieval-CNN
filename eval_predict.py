@@ -23,16 +23,16 @@ def preprocess(img, resize_dims=None, normalize=False):
     img = np.reshape(img, (1, img.shape[0], img.shape[1], 1))
   return img
 
-def predict_random_validation_set(input_data, gt_data, model, validation_list=None, num_samples=100):
+
+def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
   """
-  Predict for a number of validation images or samples and visualize the peformance of the model statistically.
+  Predict for the entire set of validation images or samples and visualize the peformance of the model statistically.
   Args:
       - input_data: dict, dictionary that contains the input data
       - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
       - model: keras.models.Model object, the model loaded from keras
       - validation_list: list, a python list containing the keys to the validation set like ['data_10', 'data_100'...].
 			 If None, then all the keys from the original input_data will be used instead.
-      - num_samples: int, number of samples to take for the visualization of the model performance
 
   Returns:
       - means: list, python list of means of each input image
@@ -44,10 +44,7 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
   if validation_list is None:
     validation_list = list(input_data.keys())
 
-  np.random.seed(42) # set seed for reproducibility
-  randkeys = np.random.choice(validation_list, num_samples, replace=False) # choose random validation keys
-
-  for randkey in randkeys:
+  for randkey in validation_list:
     input_img = input_data[randkey]
     gt_img = gt_data[randkey]
     img = preprocess(input_img)
@@ -71,12 +68,12 @@ def predict_random_validation_set(input_data, gt_data, model, validation_list=No
     devs.append(np.std(input_img))
     slopes.append(np.mean(slope))
   
-  plot_stat_metrics(means, devs, slopes, num_samples=len(means))
+  plot_stat_metrics(means, devs, slopes)
 
   return means, devs, slopes
 
 
-def predict_random_validation_image(input_data, gt_data, model, keyname=None):
+def predict_on_random_validation_image(input_data, gt_data, model, keyname=None):
   """
   Predict COT for a random validation image and visualize it.
   Args:

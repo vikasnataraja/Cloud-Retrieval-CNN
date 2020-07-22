@@ -95,11 +95,12 @@ def plot_evaluation(target, prediction):
   plt.close();
 
 
-def plot_stat_metrics(means, stds, slopes, num_samples):
-  """ plot statistical metrics for a number of samples"""
+def plot_stat_metrics(means, stds, slopes):
+  """ plot statistical metrics for a given set"""
 
   rows = 1
   cols = 3
+  num_samples = len(means)
 
   fig = plt.figure(figsize=(16,6))
   fig.add_subplot(rows, cols,1)
