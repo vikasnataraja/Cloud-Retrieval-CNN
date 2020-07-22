@@ -26,7 +26,7 @@ def preprocess(img, resize_dims=None, normalize=False):
 
 def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
   """
-  Predict for the entire set of validation images or samples and visualize the peformance of the model statistically.
+  Predict for a set of validation images or samples and visualize the peformance of the model statistically.
   Args:
       - input_data: dict, dictionary that contains the input data
       - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
@@ -77,15 +77,15 @@ def predict_on_random_validation_image(input_data, gt_data, model, keyname=None)
   """
   Predict COT for a random validation image and visualize it.
   Args:
-      - input_data: dict, dictionary that contains the input data
-      - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
-      - model: keras.models.Model object, the model loaded from keras
+      - input_data: dict, dictionary that contains the input data.
+      - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`.
+      - model: keras.models.Model object, the model loaded from keras.
       - keyname: str, the specific image's key in the dictionaries of input_data and gt_data to visualize that image.
                 By default, a random validation image is visualized and therefore this arg is set to None.
-                Pass a string like 'data_977' to visualize the plots for a particular image
+                Pass a string like 'data_977' to visualize the plots for a particular image.
 
   Returns:
-      Does not return a variable
+      - prediction: arr, a numpy array with the same shape as input image.
 
   """
   
@@ -114,6 +114,8 @@ def predict_on_random_validation_image(input_data, gt_data, model, keyname=None)
   print('Visualizing image {}:\n'.format(random_img_key))
   visualize_prediction(input_img, gt_img, prediction)
   plot_evaluation(gt_img, prediction)
+  
+  return prediction
 
 
 def predict_cot_on_image(input_img, model, ground_truth_img=None):
@@ -126,7 +128,7 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
                           on the image will be saved to file without plots.
 
   Returns:
-      Does not return a variable
+      - prediction: arr, a numpy array with the same shape as input_img.
   """
   # pre-process the image and resize to model's input dimensions
   img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
@@ -147,6 +149,8 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
   if ground_truth_img is not None:
     visualize_prediction(input_img, ground_truth_img, prediction)
     plot_evaluation(ground_truth_img, prediction)
+
+  return prediction
 
 
 if __name__ == '__main__':
@@ -170,10 +174,11 @@ if __name__ == '__main__':
     else:
       ground_truth = None
  
-    predict_cot_on_image(img, model, ground_truth)
+    prediction = predict_cot_on_image(img, model, ground_truth)
+  
   else: # predict on validation
     in_data = np.load(args.input_file, allow_pickle=True).item()
     out_data = np.load(args.output_file, allow_pickle=True).item()
-    predict_random_validation_image(in_data, out_data, model, args.keyname)
+    prediction = predict_random_validation_image(in_data, out_data, model, args.keyname)
 
 
