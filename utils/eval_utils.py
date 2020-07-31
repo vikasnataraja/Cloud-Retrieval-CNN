@@ -129,7 +129,7 @@ def plot_stat_metrics(means, stds, slopes):
   plt.close();
 
 
-def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize=(16,6):
+def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize=(16,6)):
   """ plot statistical metrics for 3D and 1D retrievals"""
   
   rows = 1
