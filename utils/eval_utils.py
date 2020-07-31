@@ -128,3 +128,91 @@ def plot_stat_metrics(means, stds, slopes):
   print('Saved stat evaluation figure in "results/" as "stat_evaluation.png"')
   plt.close();
 
+
+def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize-(16,6):
+  """ plot statistical metrics for 3D and 1D retrievals"""
+  
+  rows = 1
+  cols = 3
+  num_samples = len(means)
+
+  fig = plt.figure(figsize=figsize)
+  fig.add_subplot(rows, cols,1)
+  plt.scatter(means, stds, c='gold')
+  plt.xlabel('RadMean')
+  plt.ylabel('RadStd')
+  plt.title('RadStd vs RadMean over {} samples'.format(num_samples))
+
+  fig.add_subplot(rows, cols, 2)
+  plt.scatter(stds, slopes1d, c='teal', label='1d_ret',alpha=0.5)
+  plt.scatter(stds, slopes3d, c='salmon', label='3d_ret',alpha=0.5)
+  plt.xlabel('RadStd')
+  plt.ylabel('Slope')
+  plt.title('RadStd vs Slope over {} samples'.format(num_samples))
+  plt.legend()
+
+  fig.add_subplot(rows, cols, 3)
+  plt.scatter(means, slopes1d, c='teal', label='1d_ret',alpha=0.5)
+  plt.scatter(means, slopes3d, c='salmon', label='3d_ret',alpha=0.5)
+  plt.xlabel('RadMean')
+  plt.ylabel('Slope')
+  plt.title('RadMean vs Slope over {} samples'.format(num_samples))
+  plt.legend()
+  plt.show()
+
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/1d_3d_comparison.png', dpi=100)
+  print('Saved figure in "results/" as "1d_3d_comparison.png"')
+  plt.close();
+
+
+def draw_heatmap(means, devs, slopes1d, slopes3d, binsize=(50,50)):
+  """ draw heatmap for 1D vs 3D retrievals """
+
+  num_samples = len(means)
+        
+  fig = plt.figure(figsize=(15,25))
+  ax1 = fig.add_subplot(3,1,1)
+  ax1.scatter(means, devs, c='gold')
+  ax1.set_title('Mean vs STD')
+  ax1.set_xlabel('Mean')
+  ax1.set_ylabel('RadStd')
+
+  ax2 = fig.add_subplot(3,1,2)
+  ax2.scatter(devs, slopes1d, c='teal', label='1d_ret')
+  ax2.scatter(devs, slopes3d, c='salmon', label='3d_ret')
+  ax2.set_xlabel('RadStd')
+  ax2.set_ylabel('Slope')
+  ax2.set_title('STD vs Slope over {} samples'.format(num_samples))
+  ax2.legend()
+
+  # ax3 = fig.add_subplot(4,2,4)
+  # ax3.scatter(means, slopes1d, c='teal', label='1d_ret')
+  # ax3.scatter(means, slopes3d, c='salmon', label='3d_ret')
+  # ax3.set_xlabel('RadMean')
+  # ax3.set_ylabel('Slope')
+  # ax3.set_title('Mean vs Slope over {} samples'.format(num_samples))
+  # ax3.legend()
+
+  ax4 = fig.add_subplot(3,2,5)
+  _, _ , _ , z1 = ax4.hist2d(devs, slopes1d, bins=binsize, cmap='jet')
+  # ax4.set_xlim([-0.02, 0.17])
+  ax4.set_xlabel('RadStd')
+  ax4.set_ylabel('Slope')
+  ax4.set_title('RadStd vs Slope Heatmap for 1D')
+  fig.colorbar(z1, ax=ax4)
+
+  ax6 = fig.add_subplot(3,2,6)
+  _, _ , _ , z3 = ax6.hist2d(devs, slopes3d, bins=binsize, cmap='jet')
+  ax6.set_xlabel('RadStd')
+  ax6.set_ylabel('Slope')
+  ax6.set_title('RadStd vs Slope Heatmap for 3D')
+  fig.colorbar(z3, ax=ax6)
+  plt.show()
+
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/heatmap.png', dpi=100)
+  print('Saved heatmap figure in "results/" as "heatmap.png"')
+  plt.close();
