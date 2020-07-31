@@ -68,7 +68,7 @@ def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
     devs.append(np.std(input_img))
     slopes.append(np.mean(slope))
   
-  plot_stat_metrics(means, devs, slopes)
+  # plot_stat_metrics(means, devs, slopes)
 
   return means, devs, slopes
 
