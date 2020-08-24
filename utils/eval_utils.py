@@ -47,8 +47,8 @@ def visualize_prediction(input_img, target, prediction):
     os.makedirs('results/')
   fig.savefig('results/visualization.png', dpi=100)
   print('Saved visualized figure in "results/" as "visualization.png"')
-
   plt.close();
+
 
 def plot_evaluation(target, prediction):
   """ plot the evaluation metrics """
@@ -216,3 +216,5 @@ def draw_heatmap(means, devs, slopes1d, slopes3d, binsize=(50,50)):
   fig.savefig('results/heatmap.png', dpi=100)
   print('Saved heatmap figure in "results/" as "heatmap.png"')
   plt.close();
+
+
