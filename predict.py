@@ -9,6 +9,16 @@ import os
 import numpy as np
 import argparse
 import cv2
+from time import perf_counter
+
+def get_progress(start, total, current_count):
+  if current_count == 0: current_count = 1 # avoid division by zero
+  stop = perf_counter()
+  remaining = round((stop - start) * (total/(current_count) - 1))
+  progress = 100 * current_count / total
+  if progress % 20 == 0: 
+    print('Progress: {}%, Estimated Time Remaining: {}s'.format(progress, remaining))
+
 
 def preprocess(img, resize_dims=None, normalize=False):
   
@@ -43,8 +53,10 @@ def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
   devs, means, slopes = [], [], []
   if validation_list is None:
     validation_list = list(input_data.keys())
-
-  for randkey in validation_list:
+  
+  print('Starting evaluation on {} images'.format(len(validation_list)))
+  start = perf_counter()
+  for count, randkey in enumerate(validation_list):
     input_img = input_data[randkey]
     gt_img = gt_data[randkey]
     img = preprocess(input_img)
@@ -67,9 +79,8 @@ def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
     means.append(np.mean(input_img))
     devs.append(np.std(input_img))
     slopes.append(np.mean(slope))
-  
-  # plot_stat_metrics(means, devs, slopes)
-
+    
+    get_progress(start, len(validation_list), count)
   return means, devs, slopes
 
 
