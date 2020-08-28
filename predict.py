@@ -14,10 +14,13 @@ from time import perf_counter
 def get_progress(start, total, current_count):
   if current_count == 0: current_count = 1 # avoid division by zero
   stop = perf_counter()
-  remaining = round((stop - start) * (total/(current_count) - 1))
+  remaining = round((stop - start) * ((total/current_count) - 1))
   progress = 100 * current_count / total
-  if progress % 20 == 0: 
-    print('Progress: {}%, Estimated Time Remaining: {}s'.format(progress, remaining))
+  if progress % 20 == 0:
+      if remaining > 70:
+        print('Progress: {}%, Estimated Time Remaining: {:0.2f} min'.format(progress, remaining/60))
+      else:
+        print('Progress: {}%, Estimated Time Remaining: {}s'.format(progress, remaining))
 
 
 def preprocess(img, resize_dims=None, normalize=False):
