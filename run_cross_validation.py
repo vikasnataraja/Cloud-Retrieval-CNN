@@ -88,7 +88,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
     args = parser.parse_args()
 
-    main(args.input_file, args.file_1d, args.file_3d, args.modelpath)
+    main(args.input_file, args.file_1d, args.file_3d, args.model_path)
 
 
 
