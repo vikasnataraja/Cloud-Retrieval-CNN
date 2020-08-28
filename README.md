@@ -2,8 +2,8 @@
 Repo to maintain codebase for the CNN model we're developing.
 
 
-### PSPNet-based Model Architecture
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/full_model.png" width="900" height="800" align="middle">
+<!--- ### PSPNet-based Model Architecture
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/full_model.png" width="900" height="800" align="middle"> -->
 
 
 ### UNet Model Architecture
