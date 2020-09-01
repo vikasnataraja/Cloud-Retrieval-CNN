@@ -1,51 +1,51 @@
 from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
-from utils.losses import focal_loss, combined_loss
-from utils.eval_utils import plot_evaluation, visualize_prediction, plot_stat_metrics
+from utils.losses import focal_loss
+from utils.eval_utils import plot_evaluation, visualize_prediction, plot_stat_metrics, plot_1d_3d
 from sklearn.model_selection import train_test_split
+from time import perf_counter
 import tensorflow as tf
-import os
 import numpy as np
+import os
 import argparse
 import cv2
-from time import perf_counter
 
 def get_progress(start, total, current_count):
   if current_count == 0: current_count = 1 # avoid division by zero
   stop = perf_counter()
   remaining = round((stop - start) * ((total/current_count) - 1))
   progress = 100 * current_count / total
-  if progress % 20 == 0:
-      if remaining > 70:
-        print('Progress: {}%, Estimated Time Remaining: {:0.2f} min'.format(progress, remaining/60))
+  if current_count % np.floor(total/5) == 0:
+      if remaining > 60:
+          print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
       else:
-        print('Progress: {}%, Estimated Time Remaining: {}s'.format(progress, remaining))
+          print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
 def preprocess(img, resize_dims=None, normalize=False):
-  
+  """ Pre-processing steps for an image """
   if normalize:
     img = standard_normalize(img)
   if resize_dims is not None:
-    img = resize_img(img,resize_dims)
+    img = resize_img(img, resize_dims)
 
-  if len(img.shape)>2:
+  if len(img.shape) > 2:
     img = np.reshape(img, (1, img.shape[0], img.shape[1], img.shape[2]))
   else:
     img = np.reshape(img, (1, img.shape[0], img.shape[1], 1))
   return img
 
 
-def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
+def predict_on_validation_set(input_data, gt_data, model, image_list=None):
   """
   Predict for a set of validation images or samples and visualize the peformance of the model statistically.
   Args:
       - input_data: dict, dictionary that contains the input data
       - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
       - model: keras.models.Model object, the model loaded from keras
-      - validation_list: list, a python list containing the keys to the validation set like ['data_10', 'data_100'...].
-			 If None, then all the keys from the original input_data will be used instead.
+      - image_list: list, a python list containing the keys to a subset set like ['data_10', 'data_100'...].
+			 If None, then all the keys from the original input_data will be used.
 
   Returns:
       - means: list, python list of means of each input image
@@ -54,82 +54,56 @@ def predict_on_validation_set(input_data, gt_data, model, validation_list=None):
 
   """
   devs, means, slopes = [], [], []
-  if validation_list is None:
-    validation_list = list(input_data.keys())
+  if image_list is None:
+    image_list = list(input_data.keys())
   
-  print('Starting evaluation on {} images'.format(len(validation_list)))
+  print('Starting evaluation on {} images'.format(len(image_list)))
   start = perf_counter()
-  for count, randkey in enumerate(validation_list):
+  for count, randkey in enumerate(image_list):
     input_img = input_data[randkey]
-    gt_img = gt_data[randkey]
-    img = preprocess(input_img)
 
-    temp = model.predict(img)
-    temp = np.reshape(temp.flatten(), model.output_shape[1:])
+    temp = model.predict(preprocess(input_img))
+    temp = np.reshape(temp.ravel(), model.output_shape[1:])
     prediction = np.argmax(temp, axis=-1)
 
-    flat_pred = prediction.flatten()
-    flat_gt = gt_img.flatten()
+    flat_pred = prediction.ravel()
+    flat_gt = gt_data[randkey].ravel()
 
     non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
     non_zero_gt = flat_gt[non_zero_idx]
     non_zero_prediction = flat_pred[non_zero_idx]
-    if non_zero_prediction.shape[0]==0: # break current iteration if all classes are zero
-      continue
-
-    slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
-
-    means.append(np.mean(input_img))
-    devs.append(np.std(input_img))
-    slopes.append(np.mean(slope))
+    if non_zero_prediction.shape[0] != 0: # if all classes are zero, don't add to list
+      slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
+      means.append(np.mean(input_img))
+      devs.append(np.std(input_img))
+      slopes.append(np.mean(slope))
     
-    get_progress(start, len(validation_list), count)
+    get_progress(start, len(image_list), count)
+
   return means, devs, slopes
 
 
-def predict_on_random_validation_image(input_data, gt_data, model, keyname=None):
-  """
-  Predict COT for a random validation image and visualize it.
-  Args:
-      - input_data: dict, dictionary that contains the input data.
-      - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`.
-      - model: keras.models.Model object, the model loaded from keras.
-      - keyname: str, the specific image's key in the dictionaries of input_data and gt_data to visualize that image.
-                By default, a random validation image is visualized and therefore this arg is set to None.
-                Pass a string like 'data_977' to visualize the plots for a particular image.
+def get_1d_retrievals(input_data, cot_1d, cot_3d, image_list=None):
+  """ Retrieve the 1D retrievals from the data and calculate the slope, mean and std. dev """
 
-  Returns:
-      - prediction: arr, a numpy array with the same shape as input image.
+  if image_list is None:
+    image_list = list(input_data.keys())
+  slopes1d, devs1d, means1d = [], [], []
+  for i in image_list:
+    rad = input_data[i]
+    flat_pred = cot_1d[i].ravel()
+    flat_gt = cot_3d[i].ravel()
 
-  """
-  
-  if keyname is not None:
-    random_img_key = keyname
-  else:
-    # split to training and validation
-    X_train, X_val = train_test_split(list(input_data.keys()),shuffle=True, random_state=42, test_size=0.20)
-    random_img_key = np.random.choice(X_val)
+    non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
+    non_zero_gt = flat_gt[non_zero_idx]
+    non_zero_prediction = flat_pred[non_zero_idx]
+    if non_zero_prediction.shape[0] != 0:
+      slope = non_zero_prediction/non_zero_gt
+      slopes1d.append(np.mean(slope))
+      devs1d.append(np.std(rad))
+      means1d.append(np.mean(rad))
 
-  input_img = input_data['{}'.format(random_img_key)]
-  gt_img = gt_data['{}'.format(random_img_key)]
-
-  # pre-process the image and resize to model's input dimensions
-  img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
-
-  # make the prediction
-  temp = model.predict(img)
-  
-  # resize to output dimensions
-  temp = np.reshape(temp.flatten(), model.output_shape[1:])
-  
-  # use argmax to get the image
-  prediction = np.argmax(temp, axis=-1)
-
-  print('Visualizing image {}:\n'.format(random_img_key))
-  visualize_prediction(input_img, gt_img, prediction)
-  plot_evaluation(gt_img, prediction)
-  
-  return prediction
+  return means1d, devs1d, slopes1d
 
 
 def predict_cot_on_image(input_img, model, ground_truth_img=None):
@@ -167,32 +141,30 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
   return prediction
 
 
+def main(input_file, file_1d, file_3d, modelpath):
+    radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
+    cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
+    cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
+
+    model = load_model('{}'.format(modelpath), custom_objects={"tf":tf, "focal_loss":focal_loss})
+
+    means3d, devs3d, slopes3d = predict_on_validation_set(radiances, cot_3d, model)
+    print('\nThe mean slope of 3D retrievals is {}\n'.format(np.mean(slopes3d)))
+
+    means1d, devs1d, slopes1d = get_1d_retrievals(radiances, cot_1d=cot_1d, cot_3d=cot_3d)
+    print('The mean slope of 1D retrievals is {}\n'.format(np.mean(slopes1d)))
+
+    plot_1d_3d(means1d, devs1d, slopes1d, slopes3d, label1='1d_ret', label2='3d_ret')
+
+
 if __name__ == '__main__':
-  
-  parser = argparse.ArgumentParser()
-  parser.add_argument("--model_path", default='weights/model.h5', type=str, help="Path to the trained model")
-  parser.add_argument("--image_path", default=None, type=str, help="Path to the image")
-  parser.add_argument("--ground_truth_path", default=None, type=str, help="Path to the ground truth image, will also calculate the iou between predicted image and the ground truth image")
-  parser.add_argument("--input_file", default=None, type=str, help="Path to the npy file containing input data")
-  parser.add_argument("--output_file", default=None, type=str, help="Path to the npy file containing ground truth data")
-  parser.add_argument("--keyname", default=None, type=str, help="Key of the specific image to display among the validation image. For example, 'data_977', 'data_34' etc. By default, this is set to None to use a random validation image")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_file', default='data/single_channel/input_radiance.npy', type=str,
+                        help="Path to numpy input images file")
+    parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
+    parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
+    parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
+    args = parser.parse_args()
 
-  args = parser.parse_args()
-
-  model = load_model(args.model_path, custom_objects={"tf":tf, "focal_loss":focal_loss})
-  
-  if args.image_path is not None: # predict for a given image
-    img = plt.imread(args.image_path)
-    if args.ground_truth_path is not None:
-      ground_truth = plt.imread(args.ground_truth_path)
-    else:
-      ground_truth = None
- 
-    prediction = predict_cot_on_image(img, model, ground_truth)
-  
-  else: # predict on validation
-    in_data = np.load(args.input_file, allow_pickle=True).item()
-    out_data = np.load(args.output_file, allow_pickle=True).item()
-    prediction = predict_random_validation_image(in_data, out_data, model, args.keyname)
-
+    main(args.input_file, args.file_1d, args.file_3d, args.model_path)
 

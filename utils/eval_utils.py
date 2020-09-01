@@ -128,35 +128,37 @@ def plot_stat_metrics(means, stds, slopes):
   print('Saved stat evaluation figure in "results/" as "stat_evaluation.png"')
   plt.close();
 
-
-def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize=(16,6)):
+def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize=(16,6),
+               label1='label_1', label2='label_2', transparency=0.5, markersize=1.8):
   """ plot statistical metrics for 3D and 1D retrievals"""
-  
+
   rows = 1
   cols = 3
   num_samples = len(means)
 
   fig = plt.figure(figsize=figsize)
-  fig.add_subplot(rows, cols,1)
-  plt.scatter(means, stds, c='gold')
+  fig.add_subplot(rows, cols, 1)
+  plt.scatter(means, stds, c='gold', s=markersize)
   plt.xlabel('RadMean')
   plt.ylabel('RadStd')
-  plt.title('RadStd vs RadMean over {} samples'.format(num_samples))
+  plt.title('RadMean vs RadStd over {} samples'.format(num_samples))
 
   fig.add_subplot(rows, cols, 2)
-  plt.scatter(stds, slopes1d, c='teal', label='1d_ret',alpha=0.5)
-  plt.scatter(stds, slopes3d, c='salmon', label='3d_ret',alpha=0.5)
+  plt.scatter(stds, slopes1d, c='teal', label=label1, alpha=transparency, s=markersize)
+  plt.scatter(stds, slopes3d, c='salmon', label=label2, alpha=transparency, s=markersize)
   plt.xlabel('RadStd')
   plt.ylabel('Slope')
   plt.title('RadStd vs Slope over {} samples'.format(num_samples))
+  plt.grid()
   plt.legend()
 
   fig.add_subplot(rows, cols, 3)
-  plt.scatter(means, slopes1d, c='teal', label='1d_ret',alpha=0.5)
-  plt.scatter(means, slopes3d, c='salmon', label='3d_ret',alpha=0.5)
+  plt.scatter(means, slopes1d, c='teal', label=label1, alpha=transparency, s=markersize)
+  plt.scatter(means, slopes3d, c='salmon', label=label2, alpha=transparency, s=markersize)
   plt.xlabel('RadMean')
   plt.ylabel('Slope')
   plt.title('RadMean vs Slope over {} samples'.format(num_samples))
+  plt.grid()
   plt.legend()
   plt.show()
 
@@ -164,7 +166,6 @@ def plot_1d_3d(means, stds, slopes1d, slopes3d, figsize=(16,6)):
     os.makedirs('results/')
   fig.savefig('results/1d_3d_comparison.png', dpi=100)
   print('Saved figure in "results/" as "1d_3d_comparison.png"')
-  plt.close();
 
 
 def draw_heatmap(means, devs, slopes1d, slopes3d, binsize=(50,50)):
