@@ -12,14 +12,23 @@ import argparse
 import cv2
 
 def get_progress(start, total, current_count):
+  """
+  Get progress of prediction for large files and print to stdout.
+  
+  Args:
+    - start: float, time at which operation started.
+    - total: int, total number of iterations in the loop.
+    - current_count: int, current iteration.
+  """
+
   if current_count == 0: current_count = 1 # avoid division by zero
   stop = perf_counter()
   remaining = round((stop - start) * ((total/current_count) - 1))
   progress = 100 * current_count / total
-  if current_count % np.floor(total/5) == 0:
-      if remaining > 60:
+  if current_count % np.floor(total/5) == 0: # print at 20, 40, 60, 80% progress
+      if remaining > 60: # print in min 
           print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
-      else:
+      else:  # print in seconds
           print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
@@ -41,16 +50,16 @@ def predict_on_validation_set(input_data, gt_data, model, image_list=None):
   """
   Predict for a set of validation images or samples and visualize the peformance of the model statistically.
   Args:
-      - input_data: dict, dictionary that contains the input data
-      - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
-      - model: keras.models.Model object, the model loaded from keras
-      - image_list: list, a python list containing the keys to a subset set like ['data_10', 'data_100'...].
-			 If None, then all the keys from the original input_data will be used.
+    - input_data: dict, dictionary that contains the input data
+    - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
+    - model: keras.models.Model object, the model loaded from keras
+    - image_list: list, a python list containing the keys to a subset set like ['data_10', 'data_100'...].
+                  If None, then all the keys from the original input_data will be used.
 
   Returns:
-      - means: list, python list of means of each input image
-      - devs: list, python list of standard deviations from mean of each input image
-      - slopes: list, python list of slopes calculated by np.mean((non-zero predictions)/(non-zero ground truths))
+    - means: list, python list of means of each input image
+    - devs: list, python list of standard deviations from mean of each input image
+    - slopes: list, python list of slopes calculated by np.mean((non-zero predictions)/(non-zero ground truths))
 
   """
   devs, means, slopes = [], [], []
@@ -58,7 +67,7 @@ def predict_on_validation_set(input_data, gt_data, model, image_list=None):
     image_list = list(input_data.keys())
   
   print('Starting evaluation on {} images'.format(len(image_list)))
-  start = perf_counter()
+  start = perf_counter() # start timer
   for count, randkey in enumerate(image_list):
     input_img = input_data[randkey]
 
@@ -69,7 +78,7 @@ def predict_on_validation_set(input_data, gt_data, model, image_list=None):
     flat_pred = prediction.ravel()
     flat_gt = gt_data[randkey].ravel()
 
-    non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
+    non_zero_idx = np.where(flat_gt > 0)[0] # indices that have non-zero classes
     non_zero_gt = flat_gt[non_zero_idx]
     non_zero_prediction = flat_pred[non_zero_idx]
     if non_zero_prediction.shape[0] != 0: # if all classes are zero, don't add to list
@@ -94,7 +103,7 @@ def get_1d_retrievals(input_data, cot_1d, cot_3d, image_list=None):
     flat_pred = cot_1d[i].ravel()
     flat_gt = cot_3d[i].ravel()
 
-    non_zero_idx = np.where(flat_gt>0)[0] # indices that have non-zero classes
+    non_zero_idx = np.where(flat_gt > 0)[0] # indices that have non-zero classes
     non_zero_gt = flat_gt[non_zero_idx]
     non_zero_prediction = flat_pred[non_zero_idx]
     if non_zero_prediction.shape[0] != 0:
