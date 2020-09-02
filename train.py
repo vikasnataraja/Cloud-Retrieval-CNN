@@ -2,19 +2,21 @@ import os
 import numpy as np
 import argparse
 from keras.optimizers import Adam
-from keras.regularizers import l1, l2 
+from keras.regularizers import l1 
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
 from models.unet import UNet
 from utils.utils import ImageGenerator
-from utils.losses import focal_loss, combined_loss
+from utils.losses import focal_loss
+
 
 def train_val_generator(args):
-  X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item()
+  X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item() # load inputs and ground truth
   y_dict = np.load('{}'.format(args.output_file),allow_pickle=True).item()
   assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
   print('Total number of data files available for training = {}\n\n'.format(int((1-args.test_size)*len(X_dict))))
+  # split to training and validation, set random state to 42 for reproducibility
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
@@ -77,15 +79,14 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
 
   return model
 
-def train_model(model, model_dir, filename, 
-                train_generator, val_generator,
-                batch_size, epochs):
+
+def train_model(model, model_dir, filename, train_generator, val_generator, batch_size, epochs):
   
   checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
-                               save_best_only=True, verbose=1)
+                               save_best_only=True, verbose=1) # save checkpoints
 
-  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=15, verbose=1)
-  csv = CSVLogger(filename='{}.csv'.format(os.path.splitext(filename)[0]), separator=',', append=True)
+  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=15, verbose=1) # decaying lr
+  csv = CSVLogger(filename='{}.csv'.format(os.path.splitext(filename)[0]), separator=',', append=True) # log training
   call_list = [checkpoint, lr]
   print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
   model.fit_generator(train_generator,
