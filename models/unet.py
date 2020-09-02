@@ -1,13 +1,14 @@
-from keras.layers import MaxPooling2D,AveragePooling2D, ZeroPadding2D, UpSampling2D, Cropping2D
+from keras.layers import MaxPooling2D, UpSampling2D
 from keras.layers import Conv2D, Conv2DTranspose
-from keras.layers import BatchNormalization, Activation, Dropout
-from keras.layers import Concatenate, Add, Multiply, Input
+from keras.layers import Activation, Dropout
+from keras.layers import Concatenate, Input
 from keras.models import Model
 from utils.model_utils import BatchNorm, UpSample
 import keras.backend as K
 
 
 def UpSampleTranspose(layer, filters, kernel_size, strides=(1,1),  pad_type='same', method='bilinear'):
+  """ Upsampling block with bilinear interpolation and transposed convolution """
   x = UpSampling2D(size=(2,2), interpolation=method)(layer)
   x = Conv2DTranspose(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(x)
   x = BatchNorm()(x)
@@ -15,6 +16,7 @@ def UpSampleTranspose(layer, filters, kernel_size, strides=(1,1),  pad_type='sam
   return x
 
 def UpSampleConv(layer, filters, kernel_size, strides=(1,1), pad_type='same', method='bilinear'):
+  """ Upsampling Block with bilinear interpolation and convolution """
   x = UpSampling2D(size=(2,2), interpolation=method)(layer)
   x = Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(x)
   x = BatchNorm()(x)
@@ -22,6 +24,7 @@ def UpSampleConv(layer, filters, kernel_size, strides=(1,1), pad_type='same', me
   return x
 
 def ConvBlock(layer, filters, kernel_size, strides=(1,1), pad_type='same'):
+  """ Convolutional Block consisting of Conv -> BN -> ReLU -> Conv -> BN -> ReLU """
   x = Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(layer)
   x = BatchNorm()(x)
   x = Activation('relu')(x)
@@ -31,7 +34,8 @@ def ConvBlock(layer, filters, kernel_size, strides=(1,1), pad_type='same'):
   return x
   
 def UNet(input_shape, num_channels, num_classes, final_activation_fn):
-  input_layer = Input((input_shape,input_shape,num_channels))
+  """ Build UNet """
+  input_layer = Input((input_shape, input_shape, num_channels))
   
   conv1 = ConvBlock(layer=input_layer, filters=64, kernel_size=(3,3), strides=(1,1), pad_type='same')
   pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv1)
