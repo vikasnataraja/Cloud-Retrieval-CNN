@@ -34,16 +34,16 @@ def UNet(input_shape, num_channels, num_classes, final_activation_fn):
   input_layer = Input((input_shape,input_shape,num_channels))
   
   conv1 = ConvBlock(layer=input_layer, filters=64, kernel_size=(3,3), strides=(1,1), pad_type='same')
-  pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+  pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv1)
   
   conv2 = ConvBlock(layer=pool1, filters=128, kernel_size=(3,3), strides=(1,1), pad_type='same')
-  pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+  pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv2)
   
   conv3 = ConvBlock(layer=pool2, filters=256, kernel_size=(3,3), strides=(1,1), pad_type='same')
-  pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+  pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv3)
   
   conv4 = ConvBlock(layer=pool3, filters=512, kernel_size=(3,3), strides=(1,1), pad_type='same')
-  pool4 = MaxPooling2D(pool_size=(2, 2))(conv4)
+  pool4 = MaxPooling2D(pool_size=(2, 2), strides=(2,2))(conv4)
 
   conv5 = ConvBlock(layer=pool4, filters=1024, kernel_size=(3,3), strides=(1,1), pad_type='same')
   up6 = UpSampleTranspose(layer=conv5, filters=512, kernel_size=(2,2), strides=(1,1), pad_type='same')
@@ -66,7 +66,7 @@ def UNet(input_shape, num_channels, num_classes, final_activation_fn):
   concat9 = Concatenate(axis=-1)([conv1, up9])
 
   conv9 = ConvBlock(layer=concat9, filters=64, kernel_size=(3,3), strides=(1,1), pad_type='same')
-  conv10 = Conv2D(num_classes, kernel_size=(1,1))(conv9)
+  conv10 = Conv2D(filters=num_classes, kernel_size=(1,1))(conv9)
   conv10 = Activation(final_activation_fn)(conv10)
   
   model = Model(inputs=input_layer, outputs=conv10)
