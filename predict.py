@@ -127,14 +127,11 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
   Returns:
       - prediction: arr, a numpy array with the same shape as input_img.
   """
-  # pre-process the image and resize to model's input dimensions
-  img = preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])) 
-
   # make the prediction
-  temp = model.predict(img)
+  temp = model.predict(preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])))
   
   # resize to output dimensions
-  temp = np.reshape(temp.flatten(), model.output_shape[1:])
+  temp = np.reshape(temp.ravel(), model.output_shape[1:])
   
   # use argmax to get the image
   prediction = np.argmax(temp, axis=-1) 
