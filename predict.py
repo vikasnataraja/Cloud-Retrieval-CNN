@@ -2,7 +2,7 @@ from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss
-from utils.eval_utils import plot_evaluation, visualize_prediction, plot_stat_metrics, plot_1d_3d
+from utils.plot_utils import plot_evaluation, visualize_prediction, plot_stat_metrics, plot_1d_3d
 from sklearn.model_selection import train_test_split
 from time import perf_counter
 import tensorflow as tf
