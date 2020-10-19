@@ -12,7 +12,7 @@ def iou(target, prediction):
   return iou_score
 
 
-def precision_recall_dice_support(target, prediction):
+def get_precision_recall_dice_support(target, prediction):
   """ calculate precision, recall, f1_score and support """
   return precision_recall_fscore_support(target.flatten(), prediction.flatten(),
 					 average=None, zero_division=0)
@@ -54,7 +54,7 @@ def plot_evaluation(target, prediction):
   """ plot the evaluation metrics """
   target_vals = np.unique(target)
   pred_vals = np.unique(prediction)
-  precision, recall, f1_score, support = precision_recall_dice_support(target, prediction)
+  precision, recall, f1_score, support = get_precision_recall_dice_support(target, prediction)
 
   fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(16,14))
   ax[0,0].plot(precision*100, c='teal')
