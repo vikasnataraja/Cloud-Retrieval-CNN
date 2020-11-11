@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 from keras.optimizers import Adam
 from keras.regularizers import l1 
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
 from models.unet import UNet
@@ -68,7 +68,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
   if fine_tune:
     model.load_weights(path_to_weights)
     print('Pre-trained weights loaded to model\n')
-    for layer in model.layers[:-2]:
+    for layer in model.layers[:35]: # [:35] to freeze encoder
       layer.trainable = False
   
   model.compile(optimizer=optimizer,
@@ -82,13 +82,16 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
 
 def train_model(model, model_dir, filename, train_generator, val_generator, batch_size, epochs):
   
-  checkpoint = ModelCheckpoint(os.path.join(model_dir,filename),
+  checkpoint = ModelCheckpoint(os.path.join(model_dir, filename),
                                save_best_only=True, verbose=1) # save checkpoints
 
-  lr = ReduceLROnPlateau(monitor='val_loss',factor=0.8, patience=15, verbose=1) # decaying lr
-  csv = CSVLogger(filename='{}.csv'.format(os.path.splitext(filename)[0]), separator=',', append=True) # log training
-  call_list = [checkpoint, lr]
+  lr = ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=15, verbose=1) # decaying lr
+
+  stop = EarlyStopping(monitor='val_loss', patience=60, verbose=1, restore_best_weights=True) # early stopping
+
+  call_list = [checkpoint, lr, stop] # list of callbacks
   print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
+
   model.fit_generator(train_generator,
                       validation_data=val_generator,
                       callbacks=call_list,
