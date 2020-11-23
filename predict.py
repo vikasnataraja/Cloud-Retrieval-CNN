@@ -2,7 +2,7 @@ from keras.models import load_model
 from utils.utils import standard_normalize, resize_img
 # from utils.model_utils import UpSample
 from utils.losses import focal_loss
-from utils.plot_utils import plot_evaluation, visualize_prediction, plot_stat_metrics, plot_1d_3d
+from utils.plot_utils import plot_evaluation, visualize_prediction, plot_stat_metrics, plot_model_comparison
 from sklearn.model_selection import train_test_split
 from time import perf_counter
 import tensorflow as tf
@@ -147,30 +147,39 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
   return prediction
 
 
-def main(input_file, file_1d, file_3d, modelpath):
-    radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
-    cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
-    cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
+def main(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare):
+  radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
+  cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
+  cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
+  
+  model_1 = load_model('{}'.format(modelpath_1), custom_objects={"tf":tf, "focal_loss":focal_loss})
+  means3d_1, devs3d_1, slopes3d_1 = predict_on_validation_set(radiances, cot_3d, model_1)
 
-    model = load_model('{}'.format(modelpath), custom_objects={"tf":tf, "focal_loss":focal_loss})
+  means1d, devs1d, slopes1d = get_1d_retrievals(radiances, cot_1d=cot_1d, cot_3d=cot_3d)
+  print('\nThe mean slope of 3D retrievals for model_1 is {}\n'.format(np.mean(slopes3d_1)))
+  print('The mean slope of 1D retrievals is {}\n'.format(np.mean(slopes1d)))
 
-    means3d, devs3d, slopes3d = predict_on_validation_set(radiances, cot_3d, model)
-    print('\nThe mean slope of 3D retrievals is {}\n'.format(np.mean(slopes3d)))
+  if not compare:
+    plot_model_comparison(means1d, devs1d, slopes1d, slopes3d_1, label1='1d_ret', label2='3d_ret')
 
-    means1d, devs1d, slopes1d = get_1d_retrievals(radiances, cot_1d=cot_1d, cot_3d=cot_3d)
-    print('The mean slope of 1D retrievals is {}\n'.format(np.mean(slopes1d)))
-
-    plot_1d_3d(means1d, devs1d, slopes1d, slopes3d, label1='1d_ret', label2='3d_ret')
+  else:
+    model_2 = load_model('{}'.format(modelpath_2), custom_objects={"tf":tf, "focal_loss":focal_loss})
+    means3d_2, devs3d_2, slopes3d_2 = predict_on_validation_set(radiances, cot_3d, model_2)
+    print('\nThe mean slope of 3D retrievals for model_2 is {}\n'.format(np.mean(slopes3d_2)))
+    plot_model_comparison(means1d, devs1d, slopes3d_1, slopes3d_2, label1='model_1', label2='model_2')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_file', default='data/single_channel/input_radiance.npy', type=str,
+    parser.add_argument('--input_file', default=None, type=str,
                         help="Path to numpy input images file")
     parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
     parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
-    parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
+    parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
+    parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
+    parser.add_argument('--compare_models', dest='compare', action='store_true',
+                      help="Pass --compare_models to compare two models. By default, only one model is used")
     args = parser.parse_args()
 
-    main(args.input_file, args.file_1d, args.file_3d, args.model_path)
+    main(args.input_file, args.file_1d, args.file_3d, args.model_1_path, args.model_2_path, args.compare)
 
