@@ -129,7 +129,7 @@ def plot_stat_metrics(means, stds, slopes):
   plt.close();
 
 
-def plot_model_comparison(means, stds, slopes_1, slopes_2, figsize=(16,6),
+def plot_model_comparison(means, stds, slopes_1, slopes_2, figname, figsize=(16,6),
                label1='label_1', label2='label_2', transparency=0.5, markersize=1.8):
   """ plot statistical metrics for two model retrievals"""
 
@@ -165,8 +165,8 @@ def plot_model_comparison(means, stds, slopes_1, slopes_2, figsize=(16,6),
 
   if not os.path.isdir('results/'):
     os.makedirs('results/')
-  fig.savefig('results/model_comparison.png', dpi=100)
-  print('Saved figure in "results/" as "model_comparison.png"')
+  fig.savefig('results/{}'.format(figname), dpi=100)
+  print('Saved figure in "results/" as "{}"'.format(figname))
 
 
 def draw_heatmap(means, devs, slopes1d, slopes3d, binsize=(50,50)):

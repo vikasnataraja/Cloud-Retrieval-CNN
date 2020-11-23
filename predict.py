@@ -147,7 +147,7 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
   return prediction
 
 
-def main(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare):
+def main(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare, figname):
   radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
   cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
   cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
@@ -156,18 +156,18 @@ def main(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare):
   means3d_1, devs3d_1, slopes3d_1 = predict_on_validation_set(radiances, cot_3d, model_1)
 
   means1d, devs1d, slopes1d = get_1d_retrievals(radiances, cot_1d=cot_1d, cot_3d=cot_3d)
-  print('\nThe mean slope of 3D retrievals for model_1 is {}\n'.format(np.mean(slopes3d_1)))
-  print('The mean slope of 1D retrievals is {}\n'.format(np.mean(slopes1d)))
 
   if not compare:
-    plot_model_comparison(means1d, devs1d, slopes1d, slopes3d_1, label1='1d_ret', label2='3d_ret')
+    plot_model_comparison(means1d, devs1d, slopes1d, slopes3d_1, label1='1d_ret', label2='3d_ret', figname=figname)
 
   else:
     model_2 = load_model('{}'.format(modelpath_2), custom_objects={"tf":tf, "focal_loss":focal_loss})
     means3d_2, devs3d_2, slopes3d_2 = predict_on_validation_set(radiances, cot_3d, model_2)
-    print('\nThe mean slope of 3D retrievals for model_2 is {}\n'.format(np.mean(slopes3d_2)))
-    plot_model_comparison(means1d, devs1d, slopes3d_1, slopes3d_2, label1='model_1', label2='model_2')
-
+    plot_model_comparison(means1d, devs1d, slopes3d_1, slopes3d_2, label1='model_1', label2='model_2', figname=figname)
+  
+  print('The mean slope of 1D retrievals is {:0.2f}\n'.format(np.mean(slopes1d)))
+  print('\nThe mean slope of 3D retrievals for model_1 is {:0.2f}\n'.format(np.mean(slopes3d_1)))
+  print('\nThe mean slope of 3D retrievals for model_2 is {:0.2f}\n'.format(np.mean(slopes3d_2)))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -177,9 +177,13 @@ if __name__ == '__main__':
     parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
     parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
     parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
+    parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
     parser.add_argument('--compare_models', dest='compare', action='store_true',
                       help="Pass --compare_models to compare two models. By default, only one model is used")
     args = parser.parse_args()
 
-    main(args.input_file, args.file_1d, args.file_3d, args.model_1_path, args.model_2_path, args.compare)
+    main(args.input_file, args.file_1d, args.file_3d,
+         args.model_1_path, args.model_2_path, 
+         args.compare, figname=args.save_figure_as)
+
 
