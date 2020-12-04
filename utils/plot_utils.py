@@ -1,7 +1,12 @@
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
+import h5py
 import os
+import matplotlib
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.gridspec as gridspec
+import numpy.polynomial.polynomial as poly
 
 
 def iou(target, prediction):
@@ -10,6 +15,31 @@ def iou(target, prediction):
   union = np.logical_or(target, prediction)
   iou_score = np.sum(intersection) / np.sum(union)
   return iou_score
+
+def correlation_coef(target, prediction):
+  """ COT space correlation coefficient """
+  return np.corrcoef(target.ravel(), prediction.ravel())[0,1]
+
+def linear_reg_coeffs(target, prediction, deg=1):
+  """ COT space linear regression coefficients -> A+Bx """
+  coeffs = poly.polyfit(target.ravel(), prediction.ravel(), deg)
+  return coeffs
+
+def intersection_over_union(target, prediction):
+  """ Class space IOU """
+  return iou(target, prediction)
+
+def slope(target, prediction):
+  """ COT space slope """
+
+  pred_flt = prediction.ravel()
+  target_flt = target.ravel()
+
+  non_zero_idx = np.where(target_flt > 0)[0] # indices that have non-zero classes
+  non_zero_target = target_flt[non_zero_idx]
+  non_zero_prediction = pred_flt[non_zero_idx]
+  if non_zero_prediction.shape[0] != 0: # if all classes are zero, don't add to list
+    return np.mean(non_zero_prediction/non_zero_target) # slope is element-wise division of non-zero classes
 
 
 def get_precision_recall_dice_support(target, prediction):
@@ -86,7 +116,7 @@ def plot_evaluation(target, prediction):
   ax[1,1].set_xticks(target_vals)
   ax[1,1].set_yticks(pred_vals)
   ax[1,1].set_title('Intersection over Union (IoU): {:0.2f}%'.format(iou(target, prediction)*100))
-  
+
   plt.show()
   if not os.path.isdir('results/'):
     os.makedirs('results/')
@@ -169,54 +199,130 @@ def plot_model_comparison(means, stds, slopes_1, slopes_2, figname, figsize=(16,
   print('Saved figure in "results/" as "{}"'.format(figname))
 
 
-def draw_heatmap(means, devs, slopes1d, slopes3d, binsize=(50,50)):
-  """ draw heatmap for 1D vs 3D retrievals """
+def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
+             prediction_cot_space, prediction_class_space,
+             cot_1d_cot_space, cot_1d_class_space,
+             rows, filename, random=False, hist_bins=None, dimensions='64x64',
+             figsize=(42,30)):
 
-  num_samples = len(means)
-        
-  fig = plt.figure(figsize=(15,25))
-  ax1 = fig.add_subplot(3,1,1)
-  ax1.scatter(means, devs, c='gold')
-  ax1.set_title('Mean vs STD')
-  ax1.set_xlabel('Mean')
-  ax1.set_ylabel('RadStd')
+  cols = 5
+  if hist_bins is None:
+    hist_bins = np.linspace(0.0, 100.0, 100)
 
-  ax2 = fig.add_subplot(3,1,2)
-  ax2.scatter(devs, slopes1d, c='teal', label='1d_ret')
-  ax2.scatter(devs, slopes3d, c='salmon', label='3d_ret')
-  ax2.set_xlabel('RadStd')
-  ax2.set_ylabel('Slope')
-  ax2.set_title('STD vs Slope over {} samples'.format(num_samples))
-  ax2.legend()
+  fig = plt.figure(figsize=figsize)
+  spec = fig.add_gridspec(nrows=rows, ncols=cols)
 
-  # ax3 = fig.add_subplot(4,2,4)
-  # ax3.scatter(means, slopes1d, c='teal', label='1d_ret')
-  # ax3.scatter(means, slopes3d, c='salmon', label='3d_ret')
-  # ax3.set_xlabel('RadMean')
-  # ax3.set_ylabel('Slope')
-  # ax3.set_title('Mean vs Slope over {} samples'.format(num_samples))
-  # ax3.legend()
+  for i in range(rows):
+    key = i
+    if random:
+        key = np.random.choice(list(prediction_cot_space.keys()))
 
-  ax4 = fig.add_subplot(3,2,5)
-  _, _ , _ , z1 = ax4.hist2d(devs, slopes1d, bins=binsize, cmap='jet')
-  # ax4.set_xlim([-0.02, 0.17])
-  ax4.set_xlabel('RadStd')
-  ax4.set_ylabel('Slope')
-  ax4.set_title('RadStd vs Slope Heatmap for 1D')
-  fig.colorbar(z1, ax=ax4)
+    input_img = rad_cot_space[key]
+    truth = cot_true_cot_space[key]
+    truth_class = cot_true_class_space[key]
+    pred_cnn = prediction_cot_space[key] #cot space
+    pred_cnn_class = prediction_class_space[key] #class space
 
-  ax6 = fig.add_subplot(3,2,6)
-  _, _ , _ , z3 = ax6.hist2d(devs, slopes3d, bins=binsize, cmap='jet')
-  ax6.set_xlabel('RadStd')
-  ax6.set_ylabel('Slope')
-  ax6.set_title('RadStd vs Slope Heatmap for 3D')
-  fig.colorbar(z3, ax=ax6)
-  plt.show()
+    pred_1d = cot_1d_cot_space[key] #cot space
+    pred_1d_class = cot_1d_class_space[key] #class space
 
+    normalize = matplotlib.colors.Normalize(vmin=0, vmax=max(truth.max(), pred_cnn.max(), pred_1d.max()))
+
+    ax0 = fig.add_subplot(spec[i, 0])
+    x = ax0.imshow(input_img, cmap='jet')
+    ax0.set_xticks([])
+    ax0.set_yticks([])
+    ax0.set_title('Radiance ({})'.format(dimensions), fontsize=15)
+
+    inner = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=3, subplot_spec=spec[i,1], wspace=0.2, hspace=0.2)
+
+    ax10 = fig.add_subplot(inner[0])
+    y = ax10.imshow(truth, cmap='jet', norm=normalize)
+    ax10.set_title('Gnd. Truth')
+    ax10.set_xticks([])
+    ax10.set_yticks([])
+    divider = make_axes_locatable(ax10)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(y, cax=cax, ax=ax10)
+
+    ax11 = fig.add_subplot(inner[1])
+    z = ax11.imshow(pred_1d, cmap='jet', norm=normalize)
+    ax11.set_title('1D COT')
+    ax11.set_xticks([])
+    ax11.set_yticks([])
+    divider = make_axes_locatable(ax11)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(z, cax=cax, ax=ax11)
+
+    ax12 = fig.add_subplot(inner[2])
+    z = ax12.imshow(pred_cnn, cmap='jet', norm=normalize)
+    ax12.set_title('Predicted COT')
+    ax12.set_xticks([])
+    ax12.set_yticks([])
+    divider = make_axes_locatable(ax12)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig.colorbar(z, cax=cax, ax=ax12)
+
+    ax3 = fig.add_subplot(spec[i, 2])
+    ax3.scatter(truth.ravel(), pred_cnn.ravel(), c='red', s=30, lw=0.0, alpha=0.8)
+    ax3.scatter(truth.ravel(), pred_1d.ravel(), c='green', s=30, lw=0.0, alpha=0.7)
+    ax3.plot([0, truth.max()], [0, max(pred_cnn.max(),pred_1d.max())], c='black', ls='--')
+    ax3.set_xlabel('cot ground truth')
+    ax3.set_ylabel('cot')
+    ax3.set_title('cot vs. ground truth', fontsize=15)
+    patches_legend = [
+                matplotlib.patches.Patch(color='red' , label='pred'),
+                matplotlib.patches.Patch(color='green' , label='1d retrv.'),
+                ]
+    ax3.legend(handles=patches_legend, loc='upper left', fontsize=12)
+
+    ax4 = fig.add_subplot(spec[i, 3])
+    ax4.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
+    ax4.hist(pred_1d.ravel() , bins=hist_bins, color='green', lw=2.0, alpha=0.8, density=True, histtype='step')
+    ax4.hist(pred_cnn.ravel(), bins=hist_bins, color='red' , lw=1.0, alpha=0.8, density=True, histtype='step')
+    background_pct = pred_1d[pred_1d<1].shape[0]*100/pred_1d.size
+    if background_pct < 70:
+      ax4.set_xlim((0, 100))
+    else:
+      ax4.set_xlim((0, 20))
+    #     ax[i,3].set_ylim((0.001, 1.0))
+    ax4.set_xlabel('COT')
+    ax4.set_ylabel('Linear frequency')
+    patches_legend = [
+                matplotlib.patches.Patch(color='black' , label='Gnd. truth'),
+                matplotlib.patches.Patch(color='green' , label='1D retrv.'),
+                matplotlib.patches.Patch(color='red'   , label='Pred'),
+                    ]
+    ax4.legend(handles=patches_legend, loc='upper right', fontsize=12)
+
+    ax5 = fig.add_subplot(spec[i, 4])
+    ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
+    ax5.hist(pred_1d.ravel() , bins=hist_bins, color='green', lw=2.0, alpha=0.8, density=True, histtype='step')
+    ax5.hist(pred_cnn.ravel(), bins=hist_bins, color='red' , lw=1.0, alpha=0.8, density=True, histtype='step')
+    ax5.set_yscale('log')
+    ax5.set_xlim((0, 100))
+    ax5.set_ylim((0.001, 1.0))
+    ax5.set_xlabel('COT')
+    ax5.set_ylabel('Log frequency')
+    ax5.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
+                  '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}), B: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
+                                                                                 correlation_coef(truth, pred_cnn),
+                                                                                 slope(truth, pred_cnn),
+                                                                                 linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
+                                                                                 intersection_over_union(truth_class, pred_1d_class),
+                                                                                 correlation_coef(truth, pred_1d),
+                                                                                 slope(truth, pred_1d),
+                                                                                 linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
+    ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
+
+
+
+  plt.subplots_adjust(wspace=0.15, hspace=0.3)
   if not os.path.isdir('results/'):
     os.makedirs('results/')
-  fig.savefig('results/heatmap.png', dpi=100)
-  print('Saved heatmap figure in "results/" as "heatmap.png"')
+  fig.savefig('results/{}'.format(filename), dpi=100)
+  print('Saved figure in "results/" as "{}"'.format(filename))
+  plt.show()
   plt.close();
 
 

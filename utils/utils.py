@@ -1,6 +1,9 @@
 import numpy as np
+import tensorflow as tf
+from utils.losses import focal_loss
 from keras.utils import Sequence
 from keras.utils import to_categorical
+from keras.models import load_model
 import os
 import h5py
 import cv2
@@ -22,6 +25,19 @@ def standard_normalize(img):
 def resize_img(img, resize_dims):
   return cv2.resize(img, resize_dims)
  
+def preprocess(img, resize_dims=None, normalize=False):
+  """ Pre-processing steps for an image """
+  if normalize:
+    img = standard_normalize(img)
+  if resize_dims is not None:
+    img = resize_img(img, resize_dims)
+
+  if len(img.shape) > 2:
+    img = np.reshape(img, (1, img.shape[0], img.shape[1], img.shape[2]))
+  else:
+    img = np.reshape(img, (1, img.shape[0], img.shape[1], 1))
+  return img
+  
 
 class ImageGenerator(Sequence):
   """ 
@@ -158,6 +174,30 @@ def crop_images(img_dict, crop_dims, fname_prefix):
 
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
+
+
+def get_class_space_data(input_file, file_3d, file_1d):
+  radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
+  cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
+  cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
+  return radiances, cot_3d, cot_1d
+
+
+def get_cot_space_data(fdir, fnames, rad_key='rad_3d', cot_true_key='cot_true', cot_1d_key='cot_1d'):
+  store_rads, store_cot_true, store_cot_1d = {}, {}, {}
+  for i in range(len(fnames)):
+    f = h5py.File(os.path.join(fdir, fnames[i]), 'r')
+    store_rads['{}'.format(i)] = np.array(f[rad_key], dtype='float64')
+    store_cot_true['{}'.format(i)] = np.array(f[cot_true_key], dtype='float64')
+    store_cot_1d['{}'.format(i)] = np.array(f[cot_1d_key], dtype='float64')
+
+  return (crop_images(store_rads, 64, 'data'),
+          crop_images(store_cot_true, 64, 'data'),
+          crop_images(store_cot_1d, 64, 'data'))
+
+
+def get_model(path):
+  return load_model('{}'.format(path), custom_objects={"tf":tf, "focal_loss":focal_loss})
 
 
 
