@@ -188,10 +188,10 @@ def compare_models(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compa
     model_2 = get_model(modelpath_2)
     means3d_2, devs3d_2, slopes3d_2 = predict_on_validation_set(radiances, cot_3d, model_2)
     plot_model_comparison(means1d, devs1d, slopes3d_1, slopes3d_2, label1='model_1', label2='model_2', figname=figname)
-  
+    print('\nThe mean slope of 3D retrievals for model_2 is {:0.2f}\n'.format(np.mean(slopes3d_2)))
+
   print('The mean slope of 1D retrievals is {:0.2f}\n'.format(np.mean(slopes1d)))
   print('\nThe mean slope of 3D retrievals for model_1 is {:0.2f}\n'.format(np.mean(slopes3d_1)))
-  print('\nThe mean slope of 3D retrievals for model_2 is {:0.2f}\n'.format(np.mean(slopes3d_2)))
 
 
 def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, figname):
@@ -236,12 +236,15 @@ if __name__ == '__main__':
     parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
     parser.add_argument('--compare_models', dest='compare', action='store_true',
                       help="Pass --compare_models to compare two models. By default, only one model is used")
+    parser.add_argument('--slope', dest='slope', action='store_true',
+                      help="Pass --slope to compare two models. By default, it is disabled")
     parser.add_argument('--metrics', dest='metrics', action='store_true',
                       help="Pass --metrics to plot model evaluation with all metrics")
     parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
                       help="Pass --reconstruct to plot evaluation for reconstructed scene")
     args = parser.parse_args()
-    if args.compare:
+
+    if (args.compare or args.slope):
       compare_models(args.input_file, args.file_1d, args.file_3d,
                      args.model_1_path, args.model_2_path, 
                      args.compare, figname=args.save_figure_as)
