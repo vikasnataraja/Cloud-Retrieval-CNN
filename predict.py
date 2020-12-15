@@ -218,7 +218,7 @@ def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstru
     plot_all(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
          recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
          recon_pred_1d_cot_space, recon_pred_1d_class_space,
-         rows=len(recon_input_radiance), random=False, dimensions='480x480', figsize=(42,38))
+         rows=len(recon_input_radiance), random=False, filename=figname, dimensions='480x480', figsize=(42,38))
   else:
     plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space, 
            prediction_cot_space, prediction_class_space,
