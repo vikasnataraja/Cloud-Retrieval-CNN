@@ -190,7 +190,7 @@ def get_cot_space_data(fdir, fnames, rad_key='rad_3d', cot_true_key='cot_true', 
     store_rads['{}'.format(i)] = np.array(f[rad_key], dtype='float64')
     store_cot_true['{}'.format(i)] = np.array(f[cot_true_key], dtype='float64')
     store_cot_1d['{}'.format(i)] = np.array(f[cot_1d_key], dtype='float64')
-
+  
   return (crop_images(store_rads, 64, 'data'),
           crop_images(store_cot_true, 64, 'data'),
           crop_images(store_cot_1d, 64, 'data'))

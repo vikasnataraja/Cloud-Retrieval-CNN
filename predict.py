@@ -159,7 +159,7 @@ def predict_on_dataset(input_data, model, use_argmax=False):
   return predictions
 
 
-def reconstruct(dictionary, num_scenes, dims): 
+def reconstruct_scenes(dictionary, num_scenes, dims): 
   keys = list(dictionary.keys())
   recon = np.zeros((num_scenes, dims-32, dims-32)) 
   idx = 0
@@ -205,16 +205,16 @@ def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstru
   prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True)
   
   if reconstruct:
-    recon_true_class_space = reconstruct(cot_true_class_space, num_scenes=5, dims=384)
-    recon_true_cot_space = reconstruct(cot_true_cot_space, num_scenes=5, dims=384)
+    recon_true_class_space = reconstruct_scenes(cot_true_class_space, num_scenes=5, dims=384)
+    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, num_scenes=5, dims=384)
 
-    recon_pred_1d_class_space = reconstruct(cot_1d_class_space, num_scenes=5, dims=384)
-    recon_pred_1d_cot_space = reconstruct(cot_1d_cot_space, num_scenes=5, dims=384)
+    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, num_scenes=5, dims=384)
+    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, num_scenes=5, dims=384)
 
-    recon_pred_cnn_class_space = reconstruct(prediction_class_space, num_scenes=5, dims=384)
-    recon_pred_cnn_cot_space = reconstruct(prediction_cot_space, num_scenes=5, dims=384)
+    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, num_scenes=5, dims=384)
+    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, num_scenes=5, dims=384)
 
-    recon_input_radiance = reconstruct(rad_class_space, num_scenes=5, dims=384)
+    recon_input_radiance = reconstruct_scenes(rad_class_space, num_scenes=5, dims=384)
     plot_all(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
          recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
          recon_pred_1d_cot_space, recon_pred_1d_class_space,
