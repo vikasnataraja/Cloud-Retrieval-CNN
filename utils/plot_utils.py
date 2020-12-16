@@ -267,12 +267,12 @@ def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
     ax3.scatter(truth.ravel(), pred_cnn.ravel(), c='red', s=30, lw=0.0, alpha=0.8)
     ax3.scatter(truth.ravel(), pred_1d.ravel(), c='green', s=30, lw=0.0, alpha=0.7)
     ax3.plot([0, truth.max()], [0, max(pred_cnn.max(),pred_1d.max())], c='black', ls='--')
-    ax3.set_xlabel('cot ground truth')
-    ax3.set_ylabel('cot')
-    ax3.set_title('cot vs. ground truth', fontsize=15)
+    ax3.set_xlabel('COT Gnd. Truth')
+    ax3.set_ylabel('Retrieved COT')
+    ax3.set_title('Gnd. Truth COTvs Retrieved COT', fontsize=12)
     patches_legend = [
-                matplotlib.patches.Patch(color='red' , label='pred'),
-                matplotlib.patches.Patch(color='green' , label='1d retrv.'),
+                matplotlib.patches.Patch(color='red' , label='Pred'),
+                matplotlib.patches.Patch(color='green' , label='1D Retrv.'),
                 ]
     ax3.legend(handles=patches_legend, loc='upper left', fontsize=12)
 
@@ -289,8 +289,8 @@ def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
     ax4.set_xlabel('COT')
     ax4.set_ylabel('Linear frequency')
     patches_legend = [
-                matplotlib.patches.Patch(color='black' , label='Gnd. truth'),
-                matplotlib.patches.Patch(color='green' , label='1D retrv.'),
+                matplotlib.patches.Patch(color='black' , label='Gnd. Truth'),
+                matplotlib.patches.Patch(color='green' , label='1D Retrv.'),
                 matplotlib.patches.Patch(color='red'   , label='Pred'),
                     ]
     ax4.legend(handles=patches_legend, loc='upper right', fontsize=12)
@@ -317,7 +317,7 @@ def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
 
 
 
-  plt.subplots_adjust(wspace=0.15, hspace=0.3)
+  plt.subplots_adjust(wspace=0.15, hspace=0.4)
   if not os.path.isdir('results/'):
     os.makedirs('results/')
   fig.savefig('results/{}'.format(filename), dpi=100)
