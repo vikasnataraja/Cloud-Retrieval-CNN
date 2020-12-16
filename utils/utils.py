@@ -185,6 +185,12 @@ def get_class_space_data(input_file, file_3d, file_1d):
 
 def get_cot_space_data(fdir, fnames, rad_key='rad_3d', cot_true_key='cot_true', cot_1d_key='cot_1d'):
   store_rads, store_cot_true, store_cot_1d = {}, {}, {}
+  temp = h5py.File(os.path.join(fdir, fnames[0]), 'r')
+  if len(temp.keys()) > 3: # original h5 files have different keys
+    rad_key = 'rad_mca_3d' # radiance key
+    cot_true_key = 'cot_inp_3d' # 3D COT ground truth
+    cot_1d_key = 'cot_ret_3d' # 1D COT
+
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(fdir, fnames[i]), 'r')
     store_rads['{}'.format(i)] = np.array(f[rad_key], dtype='float64')

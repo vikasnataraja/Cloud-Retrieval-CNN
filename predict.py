@@ -159,15 +159,20 @@ def predict_on_dataset(input_data, model, use_argmax=False):
   return predictions
 
 
-def reconstruct_scenes(dictionary, num_scenes, dims): 
+def reconstruct_scenes(dictionary, dims):
   keys = list(dictionary.keys())
+  if dims == 384:
+    num_scenes = int(len(keys)/(11*11))
+  else:
+    num_scenes = int(len(keys)/(14*14))
+  print('Total reconstructed scenes:',num_scenes)
   recon = np.zeros((num_scenes, dims-32, dims-32)) 
   idx = 0
   for up_idx in range(num_scenes):
     for i in range(0, dims-32, 32):
       for j in range(0, dims-32, 32):
         recon[up_idx, i:i+32, j:j+32] = dictionary[keys[idx]][:32,:32]
-        idx += 1                    
+        idx += 1
   return recon
 
 
@@ -205,16 +210,16 @@ def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstru
   prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True)
   
   if reconstruct:
-    recon_true_class_space = reconstruct_scenes(cot_true_class_space, num_scenes=5, dims=384)
-    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, num_scenes=5, dims=384)
+    recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims=384)
+    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims=384)
 
-    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, num_scenes=5, dims=384)
-    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, num_scenes=5, dims=384)
+    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims=384)
+    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims=384)
 
-    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, num_scenes=5, dims=384)
-    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, num_scenes=5, dims=384)
+    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims=384)
+    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims=384)
 
-    recon_input_radiance = reconstruct_scenes(rad_class_space, num_scenes=5, dims=384)
+    recon_input_radiance = reconstruct_scenes(rad_cot_space, dims=384)
     plot_all(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
          recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
          recon_pred_1d_cot_space, recon_pred_1d_class_space,
@@ -223,7 +228,7 @@ def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstru
     plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space, 
            prediction_cot_space, prediction_class_space,
            cot_1d_cot_space, cot_1d_class_space, filename=figname, rows=3, dimensions='64x64', random=True)
-
+  
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
