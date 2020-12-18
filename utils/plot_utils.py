@@ -326,3 +326,165 @@ def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
   plt.close();
 
 
+def plot_all_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
+             prediction_cot_space, prediction_class_space,
+             cot_1d_cot_space, cot_1d_class_space,
+             rows, random=False, hist_bins=None, xlim=None, ylim=None, dimensions='64x64', figsize=(42,30)):
+
+  cols = 5
+  if hist_bins is None:
+    hist_bins = np.linspace(0.0, 100.0, 100)
+  if xlim is None:
+    xlim = 100.0
+  if ylim is None:
+    ylim = 100.0
+
+  fig = plt.figure(figsize=figsize)
+  spec = fig.add_gridspec(nrows=rows, ncols=cols)
+
+  for i in range(rows):
+    key = i
+    if random:
+      key = np.random.choice(list(prediction_cot_space.keys()))
+      print('Key: ',key)
+      input_img = rad_cot_space[key]
+      truth = cot_true_cot_space[key]
+      truth_class = cot_true_class_space[key]
+      pred_cnn = prediction_cot_space[key] #cot space
+      pred_cnn_class = prediction_class_space[key] #class space
+
+      pred_1d = cot_1d_cot_space[key] #cot space
+      pred_1d_class = cot_1d_class_space[key] #class space
+
+      normalize = matplotlib.colors.Normalize(vmin=0, vmax=max(truth.max(), pred_cnn.max(), pred_1d.max()))
+
+      ax0 = fig.add_subplot(spec[i, 0])
+      x = ax0.imshow(input_img, cmap='jet')
+      ax0.set_xticks([])
+      ax0.set_yticks([])
+      ax0.set_title('Radiance ({})'.format(dimensions), fontsize=15)
+
+      inner = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=3,
+                      subplot_spec=spec[i,1], wspace=0.2, hspace=0.2)
+
+      ax10 = fig.add_subplot(inner[0])
+      y = ax10.imshow(truth, cmap='jet', norm=normalize)
+      ax10.set_title('Gnd. Truth')
+      ax10.set_xticks([])
+      ax10.set_yticks([])
+      divider = make_axes_locatable(ax10)
+      cax = divider.append_axes('right', size='5%', pad=0.05)
+      fig.colorbar(y, cax=cax, ax=ax10)
+
+      ax11 = fig.add_subplot(inner[1])
+      z = ax11.imshow(pred_1d, cmap='jet', norm=normalize)
+      ax11.set_title('1D COT')
+      ax11.set_xticks([])
+      ax11.set_yticks([])
+      divider = make_axes_locatable(ax11)
+      cax = divider.append_axes('right', size='5%', pad=0.05)
+      fig.colorbar(z, cax=cax, ax=ax11)
+
+      ax12 = fig.add_subplot(inner[2])
+      z = ax12.imshow(pred_cnn, cmap='jet', norm=normalize)
+      ax12.set_title('Predicted COT')
+      ax12.set_xticks([])
+      ax12.set_yticks([])
+      divider = make_axes_locatable(ax12)
+      cax = divider.append_axes('right', size='5%', pad=0.05)
+      fig.colorbar(z, cax=cax, ax=ax12)
+
+      ax3 = fig.add_subplot(spec[i, 2])
+      heatmap, xedges, yedges = np.histogram2d(truth.ravel(), pred_cnn.ravel(), bins=[hist_bins, hist_bins])
+      extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+      heat_norm = matplotlib.colors.LogNorm(vmin=1., vmax=heatmap.max())
+      hm = ax3.imshow(heatmap.T, extent=extent, origin='lower', cmap='jet', interpolation='nearest', norm=heat_norm)
+      ax3.plot([0, 100], [0, 100], c='black', ls='--')
+      ax3.set_xlim([0, xlim])
+      ax3.set_ylim([0, ylim])
+      divider = make_axes_locatable(ax3)
+      cax = divider.append_axes('right', size='5%', pad=0.05)
+      ax3.set_title('Heatmap - Prediction')
+      ax3.set_xlabel('COT Gnd. Truth')
+      ax3.set_ylabel('COT')
+      fig.colorbar(hm, cax=cax, ax=ax3)
+
+      ax4 = fig.add_subplot(spec[i, 3])
+      heatmap, xedges, yedges = np.histogram2d(truth.ravel(), pred_1d.ravel(), bins=[hist_bins, hist_bins])
+      hm = ax4.imshow(heatmap.T, extent=extent, origin='lower', cmap='jet', interpolation='nearest', norm=heat_norm)
+      ax4.plot([0, 100], [0, 100], c='black', ls='--')
+      ax4.set_xlim([0, xlim])
+      ax4.set_ylim([0, ylim])
+      divider = make_axes_locatable(ax4)
+      cax = divider.append_axes('right', size='5%', pad=0.05)
+      ax4.set_title('Heatmap - 1D retrieval')
+      ax4.set_xlabel('COT Gnd. Truth')
+      ax4.set_ylabel('COT')
+      fig.colorbar(hm, cax=cax, ax=ax4)
+
+
+#         ax5 = fig.add_subplot(spec[i, 3])
+#         ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
+#         ax5.hist(pred_1d.ravel() , bins=hist_bins, color='green', lw=2.0, alpha=0.8, density=True, histtype='step')
+#         ax5.hist(pred_cnn.ravel(), bins=hist_bins, color='red' , lw=1.0, alpha=0.8, density=True, histtype='step')
+#         background_pct = pred_1d[pred_1d<1].shape[0]*100/pred_1d.size
+#         if background_pct<70:
+#             ax5.set_xlim([0, 100])
+#         else:
+#             ax5.set_xlim([0, 20])
+#     #     ax[i,3].set_ylim((0.001, 1.0))
+#         ax5.set_xlabel('COT')
+#         ax5.set_ylabel('Linear frequency')
+# #         ax4.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f})\n'
+# #                           '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
+# #                                                                                  correlation_coef(truth, pred_cnn),
+# #                                                                                  slope(truth, pred_cnn),
+# #                                                                                  intersection_over_union(truth_class, pred_1d_class),
+# #                                                                                  correlation_coef(truth, pred_1d),
+# #                                                                                  slope(truth, pred_1d)))
+      patches_legend = [
+                  matplotlib.patches.Patch(color='black' , label='Gnd. truth'),
+                  matplotlib.patches.Patch(color='green' , label='1D retrv.'),
+                  matplotlib.patches.Patch(color='red'   , label='Pred'),
+                  ]
+#         ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
+
+      ax5 = fig.add_subplot(spec[i, 4])
+      ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
+      ax5.hist(pred_1d.ravel() , bins=hist_bins, color='green', lw=2.0, alpha=0.8, density=True, histtype='step')
+      ax5.hist(pred_cnn.ravel(), bins=hist_bins, color='red' , lw=1.0, alpha=0.8, density=True, histtype='step')
+      ax5.set_yscale('log')
+      ax5.set_xlim((0, 100))
+      ax5.set_ylim((0.001, 1.0))
+      ax5.set_xlabel('COT')
+      ax5.set_ylabel('Log frequency')
+      ax5.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
+                    '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
+                                                                               correlation_coef(truth, pred_cnn),
+                                                                               slope(truth, pred_cnn),
+                                                                               linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
+                                                                               intersection_over_union(truth_class, pred_1d_class),
+                                                                               correlation_coef(truth, pred_1d),
+                                                                               slope(truth, pred_1d),
+                                                                               linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
+      ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
+
+#         ax6 = fig.add_subplot(spec[i, 5])
+#         cfm_truth = confusion_matrix(truth_class.ravel(), truth_class.ravel())
+#         cfm_cnn = confusion_matrix(truth_class.ravel(), pred_cnn_class.ravel())
+#         cfm_1d = confusion_matrix(truth_class.ravel(), pred_1d_class.ravel())
+#         ax6.plot(cfm_truth.diagonal(), c='black', label='Gnd. truth')
+#         ax6.plot(cfm_cnn.diagonal(), c='red', label='Pred')
+#         ax6.plot(cfm_1d.diagonal(), c='green', label='1D retrv.')
+#         ax6.legend(handles=patches_legend, loc='upper right', fontsize=12)
+#         ax6.set_xlabel('COT classes')
+#         ax6.set_ylabel('Number of pixels')
+#         ax6.legend(handles=patches_legend, loc='upper right', fontsize=12)
+#         ax6.set_title('Class')
+
+
+  plt.subplots_adjust(wspace=0.2, hspace=0.3)
+  plt.show();
+
+
+
