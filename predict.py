@@ -1,6 +1,6 @@
 from utils.utils import preprocess, get_class_space_data, get_cot_space_data, get_model
 # from utils.model_utils import UpSample
-from utils.plot_utils import plot_model_comparison, plot_all
+from utils.plot_utils import plot_model_comparison, plot_all_metrics, plot_slopes, plot_heatmap
 from time import perf_counter
 import tensorflow as tf
 import numpy as np
@@ -40,6 +40,28 @@ def get_progress(start, total, current_count):
           print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
       else:  # print in seconds
           print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
+
+
+def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
+    rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
+    if recon is True:
+        iter = radiance.shape[0]
+    for key in range(radiance.shape[0]):
+        input_img = radiance[key]
+        truth_cot = cot_true[key].ravel()
+        ret_1d = cot_1d[key].ravel()
+        pred_cot = cot_pred[key].ravel()
+        
+        non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have non-zero classes
+        non_zero_truth = truth_cot[non_zero_idx]
+        non_zero_prediction = pred_cot[non_zero_idx]
+        non_zero_1d = ret_1d[non_zero_idx]
+        if non_zero_prediction.shape[0] != 0:
+            rad_stds.append(np.std(input_img))
+            rad_means.append(np.mean(input_img))
+            slopes_cnn.append(np.mean(non_zero_prediction/non_zero_truth))
+            slopes_1d.append(np.mean(non_zero_1d/non_zero_truth))
+    return rad_means, rad_stds, slopes_cnn, slopes_1d
 
 
 def predict_on_validation_set(input_data, gt_data, model, image_list=None):
@@ -176,6 +198,49 @@ def reconstruct_scenes(dictionary, dims):
   return recon
 
 
+def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, figname):
+
+  fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
+  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir, fnames)
+  rad_class_space, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file,
+                                                                                   file_3d, 
+                                                                                   file_1d)
+  model = get_model(path_to_model)
+  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False)
+  prediction_class_space = predict_on_dataset(rad_class_space, model, use_argmax=True)
+  
+  recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
+  recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
+
+  recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
+  recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
+
+  recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
+  recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
+
+  recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
+  
+  rad_means_cot, rad_stds_cot, slopes_cnn_cot_space, slopes_1d_cot_space = get_slopes(recon_input_radiance,
+                                                       recon_true_cot_space,
+                                                       recon_pred_cnn_cot_space,
+                                                       recon_pred_1d_cot_space, thresh=0.5)
+
+  rad_means_class, _, slopes_cnn_class_space, slopes_1d_class_space = get_slopes(recon_input_radiance, 
+                                                       recon_true_class_space, 
+                                                       recon_pred_cnn_class_space, 
+                                                       recon_pred_1d_class_space, thresh=0)
+  plot_slopes(rad_means_class, rad_means_cot,
+            slopes_cnn_class_space, slopes_1d_class_space,
+            slopes_cnn_cot_space, slopes_1d_cot_space,
+            recon_true_class_space, recon_pred_cnn_class_space, recon_pred_1d_class_space,
+            recon_true_cot_space, recon_pred_cnn_cot_space, recon_pred_1d_cot_space, filename=figname, recon=True)
+  
+  plot_heatmap(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
+         recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
+         recon_pred_1d_cot_space, recon_pred_1d_class_space,
+         rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
+
+
 def compare_models(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare, figname):
   radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
   cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
@@ -199,7 +264,7 @@ def compare_models(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compa
   print('\nThe mean slope of 3D retrievals for model_1 is {:0.2f}\n'.format(np.mean(slopes3d_1)))
 
 
-def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, figname):
+def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, dims, figname):
 
   fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
 
@@ -210,22 +275,22 @@ def predict_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstru
   prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True)
   
   if reconstruct:
-    recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims=384)
-    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims=384)
+    recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
+    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
 
-    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims=384)
-    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims=384)
+    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
+    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
 
-    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims=384)
-    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims=384)
+    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
+    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
 
-    recon_input_radiance = reconstruct_scenes(rad_cot_space, dims=384)
-    plot_all(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
+    recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
+    plot_all_metrics(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
          recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
          recon_pred_1d_cot_space, recon_pred_1d_class_space,
          rows=len(recon_input_radiance), random=False, filename=figname, dimensions='480x480', figsize=(42,38))
   else:
-    plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space, 
+    plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space, 
            prediction_cot_space, prediction_class_space,
            cot_1d_cot_space, cot_1d_class_space, filename=figname, rows=3, dimensions='64x64', random=True)
   
@@ -236,6 +301,7 @@ if __name__ == '__main__':
     parser.add_argument('--input_file', default=None, type=str,help="Path to numpy input images file")
     parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
     parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
+    parser.add_argument('--dims', default=480, type=int, help="Dimensions of the original scenes")
     parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
     parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
     parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
@@ -245,6 +311,8 @@ if __name__ == '__main__':
                       help="Pass --slope to compare two models. By default, it is disabled")
     parser.add_argument('--metrics', dest='metrics', action='store_true',
                       help="Pass --metrics to plot model evaluation with all metrics")
+    parser.add_argument('--heatmap', dest='heatmap', action='store_true',
+                      help="Pass --heatmap to plot heatmap for scene")
     parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
                       help="Pass --reconstruct to plot evaluation for reconstructed scene")
     args = parser.parse_args()
@@ -255,7 +323,11 @@ if __name__ == '__main__':
                      args.compare, figname=args.save_figure_as)
 
     if args.metrics:
-      predict_metrics(args.model_1_path, args.h5dir, args.input_file,
-                      args.file_1d, args.file_3d, args.reconstruct, args.save_figure_as)
+      predict_with_metrics(args.model_1_path, args.h5dir, args.input_file,
+                           args.file_1d, args.file_3d, args.reconstruct, args.dims, args.save_figure_as)
+
+    if args.heatmap:
+      plot_heatmap_slopes(args.model_1_path, args.h5dir, args.input_file,
+                          args.file_1d, args.file_3d, args.dims, args.save_figure_as)
 
 

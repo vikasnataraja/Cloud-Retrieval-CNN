@@ -16,6 +16,10 @@ def iou(target, prediction):
   iou_score = np.sum(intersection) / np.sum(union)
   return iou_score
 
+def root_mse(target, prediction):
+    """ COT space RMSE"""
+    return mean_squared_error(target.ravel(), prediction.ravel(), squared=False)
+
 def correlation_coef(target, prediction):
   """ COT space correlation coefficient """
   return np.corrcoef(target.ravel(), prediction.ravel())[0,1]
@@ -199,11 +203,11 @@ def plot_model_comparison(means, stds, slopes_1, slopes_2, figname, figsize=(16,
   print('Saved figure in "results/" as "{}"'.format(figname))
 
 
-def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
-             prediction_cot_space, prediction_class_space,
-             cot_1d_cot_space, cot_1d_class_space,
-             rows, filename, random=False, hist_bins=None, dimensions='64x64',
-             figsize=(42,30)):
+def plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space,
+                     prediction_cot_space, prediction_class_space,
+                     cot_1d_cot_space, cot_1d_class_space,
+                     rows, filename, random=False, hist_bins=None, dimensions='64x64',
+                     figsize=(42,30)):
 
   cols = 5
   if hist_bins is None:
@@ -326,10 +330,10 @@ def plot_all(rad_cot_space, cot_true_cot_space, cot_true_class_space,
   plt.close();
 
 
-def plot_all_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
+def plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
              prediction_cot_space, prediction_class_space,
              cot_1d_cot_space, cot_1d_class_space,
-             rows, random=False, hist_bins=None, xlim=None, ylim=None, dimensions='64x64', figsize=(42,30)):
+             filename, rows, random=False, hist_bins=None, xlim=None, ylim=None, dimensions='64x64', figsize=(42,30)):
 
   cols = 5
   if hist_bins is None:
@@ -423,31 +427,11 @@ def plot_all_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
       fig.colorbar(hm, cax=cax, ax=ax4)
 
 
-#         ax5 = fig.add_subplot(spec[i, 3])
-#         ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
-#         ax5.hist(pred_1d.ravel() , bins=hist_bins, color='green', lw=2.0, alpha=0.8, density=True, histtype='step')
-#         ax5.hist(pred_cnn.ravel(), bins=hist_bins, color='red' , lw=1.0, alpha=0.8, density=True, histtype='step')
-#         background_pct = pred_1d[pred_1d<1].shape[0]*100/pred_1d.size
-#         if background_pct<70:
-#             ax5.set_xlim([0, 100])
-#         else:
-#             ax5.set_xlim([0, 20])
-#     #     ax[i,3].set_ylim((0.001, 1.0))
-#         ax5.set_xlabel('COT')
-#         ax5.set_ylabel('Linear frequency')
-# #         ax4.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f})\n'
-# #                           '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
-# #                                                                                  correlation_coef(truth, pred_cnn),
-# #                                                                                  slope(truth, pred_cnn),
-# #                                                                                  intersection_over_union(truth_class, pred_1d_class),
-# #                                                                                  correlation_coef(truth, pred_1d),
-# #                                                                                  slope(truth, pred_1d)))
       patches_legend = [
                   matplotlib.patches.Patch(color='black' , label='Gnd. truth'),
                   matplotlib.patches.Patch(color='green' , label='1D retrv.'),
                   matplotlib.patches.Patch(color='red'   , label='Pred'),
                   ]
-#         ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
 
       ax5 = fig.add_subplot(spec[i, 4])
       ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
@@ -458,33 +442,100 @@ def plot_all_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
       ax5.set_ylim((0.001, 1.0))
       ax5.set_xlabel('COT')
       ax5.set_ylabel('Log frequency')
-      ax5.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
-                    '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
+      ax5.set_title('CNN:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
+                    '1D:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})'.format(root_mse(truth, pred_cnn),
                                                                                correlation_coef(truth, pred_cnn),
                                                                                slope(truth, pred_cnn),
                                                                                linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
-                                                                               intersection_over_union(truth_class, pred_1d_class),
+                                                                               root_mse(truth, pred_1d),
                                                                                correlation_coef(truth, pred_1d),
                                                                                slope(truth, pred_1d),
                                                                                linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
       ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
-
-#         ax6 = fig.add_subplot(spec[i, 5])
-#         cfm_truth = confusion_matrix(truth_class.ravel(), truth_class.ravel())
-#         cfm_cnn = confusion_matrix(truth_class.ravel(), pred_cnn_class.ravel())
-#         cfm_1d = confusion_matrix(truth_class.ravel(), pred_1d_class.ravel())
-#         ax6.plot(cfm_truth.diagonal(), c='black', label='Gnd. truth')
-#         ax6.plot(cfm_cnn.diagonal(), c='red', label='Pred')
-#         ax6.plot(cfm_1d.diagonal(), c='green', label='1D retrv.')
-#         ax6.legend(handles=patches_legend, loc='upper right', fontsize=12)
-#         ax6.set_xlabel('COT classes')
-#         ax6.set_ylabel('Number of pixels')
-#         ax6.legend(handles=patches_legend, loc='upper right', fontsize=12)
-#         ax6.set_title('Class')
-
-
+  
   plt.subplots_adjust(wspace=0.2, hspace=0.3)
-  plt.show();
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/{}'.format(filename), dpi=100)
+  print('Saved figure in "results/" as "{}"'.format(filename))
+  plt.show()
+  plt.close();
 
 
 
+def plot_slopes(rad_means_class, rad_means_cot, 
+                slopes_cnn_class_space, slopes_1d_class_space, 
+                slopes_cnn_cot_space, slopes_1d_cot_space,
+                cot_gnd_truth_class_space, cot_cnn_class_space, cot_1d_class_space,
+                cot_gnd_truth_cot_space, cot_cnn_cot_space, cot_1d_cot_space, filename, recon=False):
+    
+  rows = 3
+  fig = plt.figure(figsize=(20, 14))
+  spec = fig.add_gridspec(nrows=rows, ncols=4)
+  nums = [276, 486, 261]
+  keys = ['data_276', 'data_486', 'data_261']
+  if recon is True:
+    nums = np.random.choice(np.arange(len(slopes_cnn_class_space)), 3, replace=False)
+    keys = nums
+  patches_legend = [
+              matplotlib.patches.Patch(color='green', label='1D Retrv.'),
+              matplotlib.patches.Patch(color='red', label='CNN Pred.'),
+              ]
+  patches_legend_2 = [
+              matplotlib.patches.Patch(color='green', label='1D Retrv.'),
+              matplotlib.patches.Patch(color='red', label='CNN Pred.'),
+              matplotlib.lines.Line2D([0], [0], marker='*',markersize=12, color='red', label='Selected Sample')
+              ]
+  for i in range(rows):
+    ax0 = fig.add_subplot(spec[i, 0])
+    ax0.scatter(rad_means_class, slopes_cnn_class_space, c='red', alpha=0.2)
+    ax0.scatter(rad_means_class, slopes_1d_class_space, c='green', alpha=0.2)
+    ax0.scatter(rad_means_class[nums[i]], slopes_cnn_class_space[nums[i]], c='red', marker='*', s=160)
+    ax0.set_xlabel('Radiance - Mean')
+    ax0.set_ylabel('Slope (Fidelity)')
+    ax0.set_title('Class Space')
+    ax0.legend(handles=patches_legend_2, loc='lower right')
+        
+    ax1 = fig.add_subplot(spec[i, 1])
+    ax1.scatter(rad_means_cot, slopes_cnn_cot_space, c='red', alpha=0.2)
+    ax1.scatter(rad_means_cot, slopes_1d_cot_space, c='green', alpha=0.2)
+    ax1.scatter(rad_means_cot[nums[i]], slopes_cnn_cot_space[nums[i]], c='red', marker='*', s=160)
+    ax1.set_xlabel('Radiance - Mean')
+    ax1.set_ylabel('Slope (Fidelity)')
+    ax1.set_title('COT Space')
+    ax1.legend(handles=patches_legend_2, loc='lower right')
+
+    ax2 = fig.add_subplot(spec[i, 2])
+    ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_cnn_class_space[keys[i]], c='red', alpha=0.2)
+    ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_1d_class_space[keys[i]], c='green', alpha=0.2)
+    stop = max(max(cot_gnd_truth_class_space[keys[i]].ravel()), max(cot_cnn_class_space[keys[i]].ravel()), max(cot_1d_class_space[keys[i]].ravel()))
+    ax2.plot([0, stop],[0, stop], c='black', ls='--')
+    ax2.set_xlabel('COT Gnd. Truth')
+    ax2.set_ylabel('COT')
+    ax2.set_title('Class Space: 1D Slope:' 
+                  '{:0.2f}, CNN Slope: {:0.2f}'.format(slopes_1d_class_space[nums[i]], slopes_cnn_class_space[nums[i]]))
+    ax2.legend(handles=patches_legend, loc='upper right')
+        
+    ax3 = fig.add_subplot(spec[i, 3])
+    ax3.scatter(cot_gnd_truth_cot_space[keys[i]], cot_cnn_cot_space[keys[i]], c='red', alpha=0.2)
+    ax3.scatter(cot_gnd_truth_cot_space[keys[i]], cot_1d_cot_space[keys[i]], c='green', alpha=0.2)
+    stop = max(max(cot_gnd_truth_cot_space[keys[i]].ravel()), max(cot_cnn_cot_space[keys[i]].ravel()), max(cot_1d_cot_space[keys[i]].ravel()))
+    ax3.plot([0, stop],[0, stop], c='black', ls='--')
+    ax3.set_xlabel('COT Gnd. Truth')
+    ax3.set_ylabel('COT')
+    ax3.set_title('COT Space: 1D Slope:' 
+                  '{:0.2f}, CNN Slope: {:0.2f}'.format(slopes_1d_cot_space[nums[i]], slopes_cnn_cot_space[nums[i]]))
+    ax3.legend(handles=patches_legend, loc='upper right', fontsize=12)
+        
+  plt.subplots_adjust(wspace=0.3, hspace=0.3)
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/{}'.format(filename), dpi=100)
+  print('Saved figure in "results/" as "{}"'.format(filename))
+  plt.show()
+  plt.close();
+
+
+
+    
+ 
