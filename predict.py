@@ -68,11 +68,11 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
     ret_1d = cot_1d[key].ravel()
     pred_cot = cot_pred[key].ravel()
         
-    non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have non-zero classes
+    non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have pixels > thresh to avoid zero division
     non_zero_truth = truth_cot[non_zero_idx]
     non_zero_prediction = pred_cot[non_zero_idx]
     non_zero_1d = ret_1d[non_zero_idx]
-    if non_zero_prediction.shape[0] != 0:
+    if non_zero_prediction.shape[0] != 0: # confirm that it is not an empty image
       rad_stds.append(np.std(input_img))
       rad_means.append(np.mean(input_img))
       slopes_cnn.append(np.mean(non_zero_prediction/non_zero_truth))
@@ -80,54 +80,8 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
     return rad_means, rad_stds, slopes_cnn, slopes_1d
 
 
-def predict_on_validation_set(input_data, gt_data, model, image_list=None):
-  """
-  Predict for a set of validation images or samples and visualize the peformance of the model statistically.
-  Args:
-    - input_data: dict, dictionary that contains the input data
-    - gt_data: dict, dictionary that contains the ground truth data with same keys as `input_data`
-    - model: keras.models.Model object, the model loaded from keras
-    - image_list: list, a python list containing the keys to a subset set like ['data_10', 'data_100'...].
-                  If None, then all the keys from the original input_data will be used.
-
-  Returns:
-    - means: list, python list of means of each input image
-    - devs: list, python list of standard deviations from mean of each input image
-    - slopes: list, python list of slopes calculated by np.mean((non-zero predictions)/(non-zero ground truths))
-
-  """
-  devs, means, slopes = [], [], []
-  if image_list is None:
-    image_list = list(input_data.keys())
-  
-  print('Starting evaluation on {} images'.format(len(image_list)))
-  start = perf_counter() # start timer
-  for count, randkey in enumerate(image_list):
-    input_img = input_data[randkey]
-
-    temp = model.predict(preprocess(input_img))
-    temp = np.reshape(temp.ravel(), model.output_shape[1:])
-    prediction = np.argmax(temp, axis=-1)
-
-    flat_pred = prediction.ravel()
-    flat_gt = gt_data[randkey].ravel()
-
-    non_zero_idx = np.where(flat_gt > 0)[0] # indices that have non-zero classes
-    non_zero_gt = flat_gt[non_zero_idx]
-    non_zero_prediction = flat_pred[non_zero_idx]
-    if non_zero_prediction.shape[0] != 0: # if all classes are zero, don't add to list
-      slope = non_zero_prediction/non_zero_gt # slope is element-wise division of non-zero classes
-      means.append(np.mean(input_img))
-      devs.append(np.std(input_img))
-      slopes.append(np.mean(slope))
-    
-    get_progress(start, len(image_list), count)
-
-  return means, devs, slopes
-
-
 def get_1d_retrievals(input_data, cot_1d, cot_3d, image_list=None):
-  """ Retrieve the 1D retrievals from the data and calculate the slope, mean and std. dev """
+  """ Get the 1D retrievals from the data and calculate the slope, mean and std. dev """
 
   if image_list is None:
     image_list = list(input_data.keys())
@@ -149,57 +103,31 @@ def get_1d_retrievals(input_data, cot_1d, cot_3d, image_list=None):
   return means1d, devs1d, slopes1d
 
 
-def predict_cot_on_image(input_img, model, ground_truth_img=None):
-  """
-  Predict the COT for an image (numpy array) and if ground truth is available, evaluate model performance.
+def predict_on_single_image(img, model, use_argmax):
+  """ Predict on a single image with argmax or weighted means 
   Args:
-      - input_img: arr, a numpy array representing the input image for the model.
-      - model: keras.models.Model object, the model loaded using Keras.
-      - ground_truth_img: arr, a numpy array representing the ground truth image. If None, only the prediction
-                          on the image will be saved to file without plots.
-
+    - img: arr, input image of size (model.input_shape[1] x model.input_shape[2]).
+    - model: trained model.
+    - use_argmax: bool, set to True to use argmax method, False to use weighted means method.
   Returns:
-      - prediction: arr, a numpy array with the same shape as input_img.
+    - predicted COT image of size (model.output_shape[1] x model.output_shape[2]).
   """
-  # make the prediction
-  temp = model.predict(preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])))
-  
-  # resize to output dimensions
+  temp = model.predict(preprocess(img, resize_dims=(model.input_shape[1], model.input_shape[2])))
   temp = np.reshape(temp.ravel(), model.output_shape[1:])
-  
-  # use argmax to get the image
-  prediction = np.argmax(temp, axis=-1) 
-  
-  # write to file
-  cv2.imwrite('results/prediction.png', prediction)
-  print('Saved predicted image in "results/" as "prediction.png"')
-  
-  if ground_truth_img is not None:
-    visualize_prediction(input_img, ground_truth_img, prediction)
-    plot_evaluation(ground_truth_img, prediction)
-
-  return prediction
+  if use_argmax:
+    return np.argmax(temp, axis=-1) # use argmax to get the image
+  return np.dot(temp, cot_class_mid)
 
 
 def predict_on_dataset(input_data, model, use_argmax=False):
   """ Predict on dictionary of input data using model """
-  
-  # ====================================================== #
-  def predict_on_image(input_img, model, use_argmax):
-    """ Predict on each image with argmax or weighted means """
-    temp = model.predict(preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])))
-    temp = np.reshape(temp.ravel(), model.output_shape[1:])
-    if use_argmax:
-      return np.argmax(temp, axis=-1) # use argmax to get the image
-    return np.dot(temp, cot_class_mid)
-  # ====================================================== #
-  
+
   predictions = {}
   start = perf_counter() # start timer
   for idx, key in enumerate(list(input_data.keys())):
     input_img = input_data[key]
-    predictions['data_{}'.format(idx)] = predict_on_image(input_img, model, use_argmax=use_argmax)
-    get_progress(start, len(input_data), idx)
+    predictions['data_{}'.format(idx)] = predict_on_single_image(input_img, model, use_argmax=use_argmax)
+    get_progress(start, len(input_data), idx) # report progress
   return predictions
 
 
