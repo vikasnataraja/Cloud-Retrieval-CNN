@@ -19,12 +19,13 @@ def train_val_generator(args):
   # split to training and validation, set random state to 42 for reproducibility
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
+  # data augmentation via albumentations (currently not used in any of the models)
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
                                  RandomContrast(limit=0.2, p=0.5), 
                                  RandomBrightness(limit=0.2, p=0.5), 
                                  GaussNoise(p=0.25), 
                                  ShiftScaleRotate(p=0.5, rotate_limit=20)])
-
+  # training data generator
   train_generator = ImageGenerator(image_list=X_train,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
@@ -37,6 +38,7 @@ def train_val_generator(args):
                                    augmentation=AUGMENTATIONS_TRAIN,
                                    to_fit=True, augment=args.augment, shuffle=True)
   
+  # validation data generator
   val_generator = ImageGenerator(image_list=X_val,
                                  image_dict=X_dict,
                                  label_dict=y_dict,
@@ -65,7 +67,7 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
 
   optimizer = Adam(learning_rate=learn_rate, clipnorm=1.0, clipvalue=0.5)
   
-  if fine_tune:
+  if fine_tune: # load pre-trained model and freeze layers for fine-tuning
     model.load_weights(path_to_weights)
     print('Pre-trained weights loaded to model\n')
     for layer in model.layers[:35]: # [:35] to freeze encoder
@@ -92,6 +94,7 @@ def train_model(model, model_dir, filename, train_generator, val_generator, batc
   call_list = [checkpoint, lr, stop] # list of callbacks
   print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
 
+  # fit model
   model.fit_generator(train_generator,
                       validation_data=val_generator,
                       callbacks=call_list,
