@@ -43,24 +43,40 @@ def get_progress(start, total, current_count):
 
 
 def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
-    rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
-    if recon is True:
-        iter = radiance.shape[0]
-    for key in range(radiance.shape[0]):
-        input_img = radiance[key]
-        truth_cot = cot_true[key].ravel()
-        ret_1d = cot_1d[key].ravel()
-        pred_cot = cot_pred[key].ravel()
+  """ Get fidelity slope metric for data.
+  
+  Args:
+    - radiance: dict, dictionary containing radiance data.
+    - cot_true: dict, ground truth dictionary.
+    - cot_1d: dict, 1D retrieval data dictionary.
+    - thresh: float, threshold to prevent zero division above which slopes will be calculated.
+    - recon: bool, reconstruction flag, set to True if input is reconstructed scenes.
+  
+  Returns:
+    - rad_means: list of mean values of radiance.
+    - rad_stds: list of standard deviation values of radiance.
+    - slopes_cnn: list of fidelity values based on CNN prediction.
+    - slopes_1d: list of fidelity values based on 1D retrievals.
+  """
+
+  rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
+  if recon is True:
+    iter = radiance.shape[0]
+  for key in range(radiance.shape[0]):
+    input_img = radiance[key]
+    truth_cot = cot_true[key].ravel()
+    ret_1d = cot_1d[key].ravel()
+    pred_cot = cot_pred[key].ravel()
         
-        non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have non-zero classes
-        non_zero_truth = truth_cot[non_zero_idx]
-        non_zero_prediction = pred_cot[non_zero_idx]
-        non_zero_1d = ret_1d[non_zero_idx]
-        if non_zero_prediction.shape[0] != 0:
-            rad_stds.append(np.std(input_img))
-            rad_means.append(np.mean(input_img))
-            slopes_cnn.append(np.mean(non_zero_prediction/non_zero_truth))
-            slopes_1d.append(np.mean(non_zero_1d/non_zero_truth))
+    non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have non-zero classes
+    non_zero_truth = truth_cot[non_zero_idx]
+    non_zero_prediction = pred_cot[non_zero_idx]
+    non_zero_1d = ret_1d[non_zero_idx]
+    if non_zero_prediction.shape[0] != 0:
+      rad_stds.append(np.std(input_img))
+      rad_means.append(np.mean(input_img))
+      slopes_cnn.append(np.mean(non_zero_prediction/non_zero_truth))
+      slopes_1d.append(np.mean(non_zero_1d/non_zero_truth))
     return rad_means, rad_stds, slopes_cnn, slopes_1d
 
 
@@ -166,40 +182,49 @@ def predict_cot_on_image(input_img, model, ground_truth_img=None):
 
 
 def predict_on_dataset(input_data, model, use_argmax=False):
+  """ Predict on dictionary of input data using model """
+  
   # ====================================================== #
   def predict_on_image(input_img, model, use_argmax):
+    """ Predict on each image with argmax or weighted means """
     temp = model.predict(preprocess(input_img, resize_dims=(model.input_shape[1], model.input_shape[2])))
     temp = np.reshape(temp.ravel(), model.output_shape[1:])
     if use_argmax:
       return np.argmax(temp, axis=-1) # use argmax to get the image
     return np.dot(temp, cot_class_mid)
   # ====================================================== #
+  
   predictions = {}
+  start = perf_counter() # start timer
   for idx, key in enumerate(list(input_data.keys())):
     input_img = input_data[key]
     predictions['data_{}'.format(idx)] = predict_on_image(input_img, model, use_argmax=use_argmax)
+    get_progress(start, len(input_data), idx)
   return predictions
 
 
-def reconstruct_scenes(dictionary, dims):
-  keys = list(dictionary.keys())
+def reconstruct_scenes(data_dictionary, dims):
+  """ Reconstruct sub-scenes of 64x64 back to original dimensions"""
+  
+  keys = list(data_dictionary.keys())
   if dims == 384:
     num_scenes = int(len(keys)/(11*11))
   else:
     num_scenes = int(len(keys)/(14*14))
-  print('Total reconstructed scenes:',num_scenes)
+  print('Total reconstructed scenes:', num_scenes)
   recon = np.zeros((num_scenes, dims-32, dims-32)) 
   idx = 0
   for up_idx in range(num_scenes):
     for i in range(0, dims-32, 32):
       for j in range(0, dims-32, 32):
-        recon[up_idx, i:i+32, j:j+32] = dictionary[keys[idx]][:32,:32]
+        recon[up_idx, i:i+32, j:j+32] = data_dictionary[keys[idx]][:32, :32]
         idx += 1
   return recon
 
 
 def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, figname):
-
+  """ Plot a figure with heatmap and metrics to evaluate model """
+  
   fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir, fnames)
   rad_class_space, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file,
@@ -241,31 +266,8 @@ def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims,
          rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
 
 
-def compare_models(input_file, file_1d, file_3d, modelpath_1, modelpath_2, compare, figname):
-  radiances = np.load('{}'.format(input_file), allow_pickle=True).item()
-  cot_1d = np.load('{}'.format(file_1d), allow_pickle=True).item()
-  cot_3d = np.load('{}'.format(file_3d), allow_pickle=True).item()
-  
-  model_1 = get_model(modelpath_1)
-  means3d_1, devs3d_1, slopes3d_1 = predict_on_validation_set(radiances, cot_3d, model_1)
-
-  means1d, devs1d, slopes1d = get_1d_retrievals(radiances, cot_1d=cot_1d, cot_3d=cot_3d)
-
-  if not compare:
-    plot_model_comparison(means1d, devs1d, slopes1d, slopes3d_1, label1='1d_ret', label2='3d_ret', figname=figname)
-
-  else:
-    model_2 = get_model(modelpath_2)
-    means3d_2, devs3d_2, slopes3d_2 = predict_on_validation_set(radiances, cot_3d, model_2)
-    plot_model_comparison(means1d, devs1d, slopes3d_1, slopes3d_2, label1='model_1', label2='model_2', figname=figname)
-    print('\nThe mean slope of 3D retrievals for model_2 is {:0.2f}\n'.format(np.mean(slopes3d_2)))
-
-  print('The mean slope of 1D retrievals is {:0.2f}\n'.format(np.mean(slopes1d)))
-  print('\nThe mean slope of 3D retrievals for model_1 is {:0.2f}\n'.format(np.mean(slopes3d_1)))
-
-
 def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, dims, figname):
-
+  """ Predict on data and plot evaluation figures """
   fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
 
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir, fnames)
@@ -296,38 +298,29 @@ def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reco
   
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--h5dir', default=None, type=str, help="Path to the directory containing h5 files")
-    parser.add_argument('--input_file', default=None, type=str,help="Path to numpy input images file")
-    parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
-    parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
-    parser.add_argument('--dims', default=480, type=int, help="Dimensions of the original scenes")
-    parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
-    parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
-    parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
-    parser.add_argument('--compare_models', dest='compare', action='store_true',
-                      help="Pass --compare_models to compare two models. By default, only one model is used")
-    parser.add_argument('--slope', dest='slope', action='store_true',
-                      help="Pass --slope to compare two models. By default, it is disabled")
-    parser.add_argument('--metrics', dest='metrics', action='store_true',
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--h5dir', default=None, type=str, help="Path to the directory containing h5 files")
+  parser.add_argument('--input_file', default=None, type=str,help="Path to numpy input images file")
+  parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
+  parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
+  parser.add_argument('--dims', default=480, type=int, help="Dimensions of the original scenes")
+  parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
+  parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
+  parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
+  parser.add_argument('--metrics', dest='metrics', action='store_true',
                       help="Pass --metrics to plot model evaluation with all metrics")
-    parser.add_argument('--heatmap', dest='heatmap', action='store_true',
+  parser.add_argument('--heatmap', dest='heatmap', action='store_true',
                       help="Pass --heatmap to plot heatmap for scene")
-    parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
+  parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
                       help="Pass --reconstruct to plot evaluation for reconstructed scene")
-    args = parser.parse_args()
+  args = parser.parse_args()
 
-    if (args.compare or args.slope):
-      compare_models(args.input_file, args.file_1d, args.file_3d,
-                     args.model_1_path, args.model_2_path, 
-                     args.compare, figname=args.save_figure_as)
+  if args.metrics:
+    predict_with_metrics(args.model_1_path, args.h5dir, args.input_file,
+                         args.file_1d, args.file_3d, args.reconstruct, args.dims, args.save_figure_as)
 
-    if args.metrics:
-      predict_with_metrics(args.model_1_path, args.h5dir, args.input_file,
-                           args.file_1d, args.file_3d, args.reconstruct, args.dims, args.save_figure_as)
-
-    if args.heatmap:
-      plot_heatmap_slopes(args.model_1_path, args.h5dir, args.input_file,
-                          args.file_1d, args.file_3d, args.dims, args.save_figure_as)
+  if args.heatmap:
+    plot_heatmap_slopes(args.model_1_path, args.h5dir, args.input_file,
+                        args.file_1d, args.file_3d, args.dims, args.save_figure_as)
 
 
