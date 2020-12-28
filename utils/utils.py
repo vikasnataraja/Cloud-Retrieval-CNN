@@ -118,15 +118,27 @@ cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
 pxvals = np.arange(0, cot_bins.shape[0]) 
 
 
-def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_short_idx=False):
+def get_data(fdir, rad_keyname, cot_keyname):
+  """ Combine h5 files to get radiance and COT data as dictionaries 
+  Args:
+    - fdir: str, directory containing h5 files.
+    - rad_keyname: str, key for radiance data in h5 files.
+    - cot_keyname: str, key for COT data in h5 files.
+
+  Returns:
+    - store_rads: dict, dictionary containing radiance data.
+    - store_cots: dict, dictionary containing COT data.
   
+  """
+
+  fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
   store_rads = {}
   store_cots = {}
   
   for i in range(len(fnames)):
-    f = h5py.File(os.path.join(data_dir,fnames[i]), 'r')
+    f = h5py.File(os.path.join(fdir,fnames[i]), 'r')
     
-    if not use_short_idx:
+    if len(f) <= 3: # coarsened data files only have 3 keys and are stored in different format
       cot = f['{}'.format(cot_keyname)][...][:, :, 0, 2]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
@@ -139,7 +151,7 @@ def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_short_idx=False):
       rad = f['{}'.format(rad_keyname)][...]
       store_rads['{}'.format(fnames[i])] = np.float32(rad[:, :, 0, 2])
     
-    else:
+    else: # for original data/7 SEAS data
       cot = f['{}'.format(cot_keyname)]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
@@ -152,10 +164,21 @@ def get_data(data_dir, fnames, rad_keyname, cot_keyname, use_short_idx=False):
       rad = f['{}'.format(rad_keyname)]
       store_rads['{}'.format(fnames[i])] = np.float32(rad)
 
-  return store_rads,store_cots
+  return store_rads, store_cots
 
 
 def crop_images(img_dict, crop_dims, fname_prefix):
+  """ Crop images in a dictionary to given dimensions. Currently uses 50% overlap and discards right and bottom pixels.
+  
+  Args:
+    - img_dict: dict, dictionary containing keys-value pairs of original dimensions
+    - crop_dims: int, dimensions to which images must be cropped
+    - fname_prefix: str, string value to use as keynames (prefix for number)
+  
+  Returns:
+    - return_imgs: dict, dictionary containing cropped images 
+  
+  """
   imgs = np.array(list(img_dict.values()))
   img_names_length = len(img_dict)
   width, height = imgs.shape[1:]
