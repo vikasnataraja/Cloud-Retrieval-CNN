@@ -153,14 +153,13 @@ def reconstruct_scenes(data_dictionary, dims):
 def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, figname):
   """ Plot a figure with heatmap and metrics to evaluate model """
   
-  fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
-  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir, fnames)
+  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
   rad_class_space, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file,
                                                                                    file_3d, 
                                                                                    file_1d)
   model = get_model(path_to_model)
-  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False)
-  prediction_class_space = predict_on_dataset(rad_class_space, model, use_argmax=True)
+  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) # use weighted means to get cot space predictions
+  prediction_class_space = predict_on_dataset(rad_class_space, model, use_argmax=True) # use argmax to get class space predictions
   
   recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
   recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
@@ -196,13 +195,12 @@ def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims,
 
 def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, dims, figname):
   """ Predict on data and plot evaluation figures """
-  fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
 
-  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir, fnames)
+  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
   _, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file, file_3d, file_1d)
   model = get_model(path_to_model)
-  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False)
-  prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True)
+  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) #use weighted means to get cot space predictions
+  prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True) #use argmax to get class space predictions
   
   if reconstruct:
     recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
