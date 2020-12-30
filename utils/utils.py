@@ -138,7 +138,7 @@ def get_data(fdir, rad_keyname, cot_keyname):
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(fdir,fnames[i]), 'r')
     
-    if len(f) <= 3: # coarsened data files only have 3 keys and are stored in different format
+    if len(f) > 3: # original 7 SEAS data has 6 keys
       cot = f['{}'.format(cot_keyname)][...][:, :, 0, 2]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
@@ -151,7 +151,7 @@ def get_data(fdir, rad_keyname, cot_keyname):
       rad = f['{}'.format(rad_keyname)][...]
       store_rads['{}'.format(fnames[i])] = np.float32(rad[:, :, 0, 2])
     
-    else: # for original data/7 SEAS data
+    else: # coarsened data has only 3 keys
       cot = f['{}'.format(cot_keyname)]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
