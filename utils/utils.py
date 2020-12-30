@@ -118,7 +118,7 @@ cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
 pxvals = np.arange(0, cot_bins.shape[0]) 
 
 
-def get_data(fdir, rad_keyname, cot_keyname):
+def get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_true'):
   """ Combine h5 files to get radiance and COT data as dictionaries 
   Args:
     - fdir: str, directory containing h5 files.
@@ -138,7 +138,10 @@ def get_data(fdir, rad_keyname, cot_keyname):
   for i in range(len(fnames)):
     f = h5py.File(os.path.join(fdir,fnames[i]), 'r')
     
-    if len(f) > 3: # original 7 SEAS data has 6 keys
+    if len(f.keys()) > 3: # original 7 SEAS data has 6 keys
+      rad_keyname = 'rad_mca_3d' # radiance key
+      cot_keyname = 'cot_inp_3d' # 3D COT ground truth
+
       cot = f['{}'.format(cot_keyname)][...][:, :, 0, 2]
       classmap = np.zeros((cot.shape[0],cot.shape[1]),dtype='uint8')
       for k in range(pxvals.size):
@@ -207,6 +210,7 @@ def get_class_space_data(input_file, file_3d, file_1d):
 
 
 def get_cot_space_data(fdir, rad_key='rad_3d', cot_true_key='cot_true', cot_1d_key='cot_1d'):
+  """ Get radianace, ground truth COT and 1D COT stored in COT space """
   store_rads, store_cot_true, store_cot_1d = {}, {}, {}
   fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')] # h5 file names
   for i in range(len(fnames)):
