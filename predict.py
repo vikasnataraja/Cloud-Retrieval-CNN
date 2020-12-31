@@ -80,13 +80,11 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
     return rad_means, rad_stds, slopes_cnn, slopes_1d
 
 
-def get_1d_retrievals(input_data, cot_1d, cot_3d, image_list=None):
-  """ Get the 1D retrievals from the data and calculate the slope, mean and std. dev """
+def get_1d_retrievals(input_data, cot_1d, cot_3d):
+  """ Get the 1D retrievals from the data and calculate the slope(fidelity), mean and std. dev """
 
-  if image_list is None:
-    image_list = list(input_data.keys())
   slopes1d, devs1d, means1d = [], [], []
-  for i in image_list:
+  for i in list(input_data.keys()):
     rad = input_data[i]
     flat_pred = cot_1d[i].ravel()
     flat_gt = cot_3d[i].ravel()
