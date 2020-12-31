@@ -36,10 +36,10 @@ def get_progress(start, total, current_count):
   remaining = round((stop - start) * ((total/current_count) - 1))
   progress = 100 * current_count / total
   if current_count % np.floor(total/5) == 0: # print at 20, 40, 60, 80% progress
-      if remaining > 60: # print in min 
-          print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
-      else:  # print in seconds
-          print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
+    if remaining > 60: # print in min 
+      print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
+    else:  # print in seconds
+      print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
 def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
