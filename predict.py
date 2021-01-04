@@ -80,7 +80,16 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
 
 
 def get_1d_retrievals(input_data, cot_1d, cot_3d):
-  """ Get the 1D retrievals from the data and calculate the slope(fidelity), mean and std. dev """
+  """ Get the 1D retrievals from the data and calculate the slope(fidelity), mean and std. dev 
+  Args:
+    - input_data: dict, dictionary containing radiance data.
+    - cot_1d: dict, dictionary containing 1D COT retrieval data.
+    - cot_3d: dict, dictionary containing 3D COT retrieval data.
+  Returns:
+    - means1d: list, list of mean value of each radiance image in `input_data`.
+    - devs1d: list, list of standard deviation value of each radiance image in `input_data`.
+    - slopes1d: list, list of slopes/fidelity calculated values for each retrieval.
+  """
 
   slopes1d, devs1d, means1d = [], [], []
   for i in list(input_data.keys()):
