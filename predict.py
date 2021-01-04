@@ -1,13 +1,9 @@
 from utils.utils import preprocess, get_class_space_data, get_cot_space_data, get_model
-# from utils.model_utils import UpSample
 from utils.plot_utils import plot_model_comparison, plot_all_metrics, plot_slopes, plot_heatmap
 from time import perf_counter
-import tensorflow as tf
 import numpy as np
 import os
 import argparse
-import cv2
-import h5py
 
 cot_class_l = np.concatenate((np.arange(0.0, 1.0, 0.1),
                                np.arange(1.0, 10.0, 1.0),
@@ -21,6 +17,7 @@ cot_class_r = np.append(cot_class_l[1:], 200.0)
 # COT classes (use middle)
 cot_class_mid = (cot_class_l+cot_class_r)/2.0
 
+
 def get_progress(start, total, current_count):
   """
   Get progress of prediction for large files and print to stdout.
@@ -29,6 +26,8 @@ def get_progress(start, total, current_count):
     - start: float, time at which operation started.
     - total: int, total number of iterations in the loop.
     - current_count: int, current iteration.
+  Returns:
+    Prints to stdout.
   """
 
   if current_count == 0: current_count = 1 # avoid division by zero
