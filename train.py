@@ -12,9 +12,9 @@ from utils.losses import focal_loss
 
 
 def train_val_generator(args):
-  X_dict = np.load('{}'.format(args.input_file),allow_pickle=True).item() # load inputs and ground truth
-  y_dict = np.load('{}'.format(args.output_file),allow_pickle=True).item()
-  assert list(X_dict.keys())==list(y_dict.keys()),'Image names of X and y are different'
+  X_dict = np.load('{}'.format(args.input_file), allow_pickle=True).item() # load inputs and ground truth
+  y_dict = np.load('{}'.format(args.output_file), allow_pickle=True).item()
+  assert list(X_dict.keys()) == list(y_dict.keys()), 'Image names of X and y are different'
   print('Total number of data files available for training = {}\n\n'.format(int((1-args.test_size)*len(X_dict))))
   # split to training and validation, set random state to 42 for reproducibility
   X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
@@ -195,4 +195,5 @@ if __name__=='__main__':
                               batch_size=args.batch_size,
                               epochs=args.epochs)
 
+  print('Finished training model, exiting ...\n')
   
