@@ -138,12 +138,18 @@ def predict_on_dataset(input_data, model, use_argmax=False):
 
 
 def reconstruct_scenes(data_dictionary, dims):
-  """ Reconstruct sub-scenes of 64x64 back to original dimensions"""
-  
+  """ Reconstruct sub-scenes of 64x64 back to original dimensions.
+  Args:
+    - data_dictionary: dict, dictionary containing key-value pairs of data to be reconstructed.
+                       The order of the keys is assumed to be the order of reconstruction.
+    - dims: int, the dimensions of the reconstructed scene.
+  Returns:
+    - recon: dict, dictionary of reconstructed scenes with keys being numbered from 0.
+  """
   keys = list(data_dictionary.keys())
-  if dims == 384:
+  if dims == 384: # Test scenes max out at 384x384
     num_scenes = int(len(keys)/(11*11))
-  else:
+  else: # Other data is usually 480x480
     num_scenes = int(len(keys)/(14*14))
   print('Total reconstructed scenes:', num_scenes)
   recon = np.zeros((num_scenes, dims-32, dims-32)) 
