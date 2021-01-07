@@ -90,18 +90,18 @@ class ImageGenerator(Sequence):
       # (width x height) to (width x height x num_classes) with 1s and 0s
       label = np.uint8(to_categorical(label, num_classes=self.num_classes))
       y[i] = label
-    return X,y
+    return X, y
 
   def __len__(self):
     return int(np.floor(len(self.image_list)/self.batch_size))
   
   def __getitem__(self, index):
-    indices = self.indices[index*self.batch_size:(index+1)*self.batch_size]
+    indices = self.indices[index * self.batch_size : (index + 1) * self.batch_size]
     batch_images = [self.image_list[k] for k in indices]
  
     # Generate data and ground truth
-    X,y = self._data_generator(batch_images)
-    return X,y
+    X, y = self._data_generator(batch_images)
+    return X, y
   
   def on_epoch_end(self):
     self.indices = np.arange(len(self.image_list))

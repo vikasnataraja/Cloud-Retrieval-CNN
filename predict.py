@@ -1,5 +1,5 @@
 from utils.utils import preprocess, get_class_space_data, get_cot_space_data, get_model
-from utils.plot_utils import plot_model_comparison, plot_all_metrics, plot_slopes, plot_heatmap
+from utils.plot_utils import plot_all_metrics, plot_slopes, plot_heatmap
 from time import perf_counter
 import numpy as np
 import os
@@ -110,7 +110,7 @@ def get_1d_retrievals(input_data, cot_1d, cot_3d):
 
 
 def predict_on_single_image(img, model, use_argmax):
-  """ Predict on a single image with argmax or weighted means 
+  """ Predict on a single image with argmax or weighted means.
   Args:
     - img: arr, input image of size (model.input_shape[1] x model.input_shape[2]).
     - model: trained model.
@@ -126,8 +126,14 @@ def predict_on_single_image(img, model, use_argmax):
 
 
 def predict_on_dataset(input_data, model, use_argmax=False):
-  """ Predict on dictionary of input data using model """
-
+  """ Predict on dictionary of input data using model.
+  Args:
+    - input_data: dict, dictionary containing radiance data.
+    - model: trained model.
+    - use_argmax: bool, set to True to use argmax methid, False to use weighted means method.
+  Returns:
+    - predictions: dict, dictionary of predicted COT arrays with same keys as `input_data`
+  """
   predictions = {}
   start = perf_counter() # start timer
   for idx, key in enumerate(list(input_data.keys())):
