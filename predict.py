@@ -41,7 +41,7 @@ def get_progress(start, total, current_count):
       print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
-def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
+def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh):
   """ Get fidelity slope metric for data.
   
   Args:
@@ -49,7 +49,6 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
     - cot_true: dict, ground truth dictionary.
     - cot_1d: dict, 1D retrieval data dictionary.
     - thresh: float, threshold to prevent zero division above which slopes will be calculated.
-    - recon: bool, reconstruction flag, set to True if input is reconstructed scenes.
   
   Returns:
     - rad_means: list of mean values of radiance.
@@ -59,8 +58,6 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh, recon=False):
   """
 
   rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
-  if recon is True:
-    iter = radiance.shape[0]
   for key in range(radiance.shape[0]):
     input_img = radiance[key]
     truth_cot = cot_true[key].ravel()
@@ -179,36 +176,37 @@ def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims,
   prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) # use weighted means to get cot space predictions
   prediction_class_space = predict_on_dataset(rad_class_space, model, use_argmax=True) # use argmax to get class space predictions
   
-  recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
-  recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
+  if reconstruct:
+    cot_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
+    cot_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
 
-  recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
-  recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
+    cot_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
+    cot_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
 
-  recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
-  recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
+    prediction_class_space = reconstruct_scenes(prediction_class_space, dims)
+    prediction_cot_space = reconstruct_scenes(prediction_cot_space, dims)
 
-  recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
+    rad_cot_space = reconstruct_scenes(rad_cot_space, dims)
   
-  rad_means_cot, rad_stds_cot, slopes_cnn_cot_space, slopes_1d_cot_space = get_slopes(recon_input_radiance,
-                                                       recon_true_cot_space,
-                                                       recon_pred_cnn_cot_space,
-                                                       recon_pred_1d_cot_space, thresh=0.5)
+  rad_means_cot, rad_stds_cot, slopes_cnn_cot_space, slopes_1d_cot_space = get_slopes(rad_cot_space,
+                                                                                      cot_true_cot_space,
+                                                                                      prediction_cot_space,
+                                                                                      cot_1d_cot_space, thresh=0.5)
 
-  rad_means_class, _, slopes_cnn_class_space, slopes_1d_class_space = get_slopes(recon_input_radiance, 
-                                                       recon_true_class_space, 
-                                                       recon_pred_cnn_class_space, 
-                                                       recon_pred_1d_class_space, thresh=0)
+  rad_means_class, _, slopes_cnn_class_space, slopes_1d_class_space = get_slopes(rad_cot_space, 
+                                                                                 cot_true_class_space, 
+                                                                                 prediction_class_space, 
+                                                                                 cot_1d_class_space, thresh=0)
   plot_slopes(rad_means_class, rad_means_cot,
-            slopes_cnn_class_space, slopes_1d_class_space,
-            slopes_cnn_cot_space, slopes_1d_cot_space,
-            recon_true_class_space, recon_pred_cnn_class_space, recon_pred_1d_class_space,
-            recon_true_cot_space, recon_pred_cnn_cot_space, recon_pred_1d_cot_space, filename=figname, recon=True)
+              slopes_cnn_class_space, slopes_1d_class_space,
+              slopes_cnn_cot_space, slopes_1d_cot_space,
+              cot_true_class_space, prediction_class_space, cot_1d_class_space,
+              cot_true_cot_space, prediction_cot_space, cot_1d_cot_space, filename=figname, recon=True)
   
-  plot_heatmap(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
-         recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
-         recon_pred_1d_cot_space, recon_pred_1d_class_space,
-         rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
+  plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
+               prediction_cot_space, prediction_class_space,
+               cot_1d_cot_space, cot_1d_class_space,
+               rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
 
 
 def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, dims, figname):
