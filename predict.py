@@ -165,7 +165,7 @@ def reconstruct_scenes(data_dictionary, dims):
   return recon
 
 
-def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, figname):
+def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, reconstruct, figname):
   """ Plot a figure with heatmap and metrics to evaluate model """
   
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
@@ -254,7 +254,7 @@ if __name__ == '__main__':
   parser.add_argument('--heatmap', dest='heatmap', action='store_true',
                       help="Pass --heatmap to plot heatmap for scene")
   parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
-                      help="Pass --reconstruct to plot evaluation for reconstructed scene")
+                      help="Pass --reconstruct to plot evaluation for reconstructed scenes")
   args = parser.parse_args()
 
   if args.metrics:
@@ -263,6 +263,6 @@ if __name__ == '__main__':
 
   if args.heatmap:
     plot_heatmap_slopes(args.model_1_path, args.h5dir, args.input_file,
-                        args.file_1d, args.file_3d, args.dims, args.save_figure_as)
+                        args.file_1d, args.file_3d, args.dims, args.reconstruct, args.save_figure_as)
 
 
