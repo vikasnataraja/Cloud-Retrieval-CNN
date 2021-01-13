@@ -7,7 +7,7 @@ import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.gridspec as gridspec
 import numpy.polynomial.polynomial as poly
-
+from sklearn.metrics import mean_squared_error
 
 def iou(target, prediction):
   """ calculate the iou between ground truth (target) and the predicted image """
