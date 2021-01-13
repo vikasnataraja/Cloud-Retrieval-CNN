@@ -58,7 +58,7 @@ def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh):
   """
 
   rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
-  for key in range(radiance.shape[0]):
+  for key in list(radiance.keys()):
     input_img = radiance[key]
     truth_cot = cot_true[key].ravel()
     ret_1d = cot_1d[key].ravel()
