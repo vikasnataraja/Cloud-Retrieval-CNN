@@ -203,10 +203,9 @@ def plot_model_comparison(means, stds, slopes_1, slopes_2, figname, figsize=(16,
   print('Saved figure in "results/" as "{}"'.format(figname))
 
 
-def plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space,
-                     prediction_cot_space, prediction_class_space,
-                     cot_1d_cot_space, cot_1d_class_space,
-                     rows, filename, random=False, hist_bins=None, dimensions='64x64',
+def plot_all_metrics(rad_cot_space, cot_true_cot_space,
+                     prediction_cot_space, cot_1d_cot_space, rows, filename,
+                     random=False, hist_bins=None, dimensions='64x64',
                      figsize=(42,30)):
 
   cols = 5
@@ -223,12 +222,8 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space,
 
     input_img = rad_cot_space[key]
     truth = cot_true_cot_space[key]
-    truth_class = cot_true_class_space[key]
     pred_cnn = prediction_cot_space[key] #cot space
-    pred_cnn_class = prediction_class_space[key] #class space
-
     pred_1d = cot_1d_cot_space[key] #cot space
-    pred_1d_class = cot_1d_class_space[key] #class space
 
     normalize = matplotlib.colors.Normalize(vmin=0, vmax=max(truth.max(), pred_cnn.max(), pred_1d.max()))
 
@@ -308,15 +303,15 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space,
     ax5.set_ylim((0.001, 1.0))
     ax5.set_xlabel('COT')
     ax5.set_ylabel('Log frequency')
-    ax5.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
-                  '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}), B: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
-                                                                                 correlation_coef(truth, pred_cnn),
-                                                                                 slope(truth, pred_cnn),
-                                                                                 linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
-                                                                                 intersection_over_union(truth_class, pred_1d_class),
-                                                                                 correlation_coef(truth, pred_1d),
-                                                                                 slope(truth, pred_1d),
-                                                                                 linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
+  #  ax5.set_title('CNN:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
+  #                '1D:(IoU: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}), B: {:0.2f})'.format(intersection_over_union(truth_class, pred_cnn_class),
+  #                                                                               correlation_coef(truth, pred_cnn),
+  #                                                                               slope(truth, pred_cnn),
+  #                                                                               linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
+  #                                                                               intersection_over_union(truth_class, pred_1d_class),
+  #                                                                               correlation_coef(truth, pred_1d),
+  #                                                                               slope(truth, pred_1d),
+  #                                                                               linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
     ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
 
 
@@ -330,10 +325,10 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space,
   plt.close();
 
 
-def plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
-             prediction_cot_space, prediction_class_space,
-             cot_1d_cot_space, cot_1d_class_space,
-             filename, rows, random=False, hist_bins=None, xlim=None, ylim=None, dimensions='64x64', figsize=(42,30)):
+def plot_heatmap(rad_cot_space, cot_true_cot_space, 
+                 prediction_cot_space, cot_1d_cot_space,
+                 filename, rows, random=False, hist_bins=None, 
+                 xlim=None, ylim=None, dimensions='64x64', figsize=(42,30)):
 
   cols = 5
   if hist_bins is None:
@@ -353,12 +348,8 @@ def plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
       print('Key: ',key)
       input_img = rad_cot_space[key]
       truth = cot_true_cot_space[key]
-      truth_class = cot_true_class_space[key]
       pred_cnn = prediction_cot_space[key] #cot space
-      pred_cnn_class = prediction_class_space[key] #class space
-
       pred_1d = cot_1d_cot_space[key] #cot space
-      pred_1d_class = cot_1d_class_space[key] #class space
 
       normalize = matplotlib.colors.Normalize(vmin=0, vmax=max(truth.max(), pred_cnn.max(), pred_1d.max()))
 
@@ -442,15 +433,15 @@ def plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
       ax5.set_ylim((0.001, 1.0))
       ax5.set_xlabel('COT')
       ax5.set_ylabel('Log frequency')
-      ax5.set_title('CNN:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
-                    '1D:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})'.format(root_mse(truth, pred_cnn),
-                                                                               correlation_coef(truth, pred_cnn),
-                                                                               slope(truth, pred_cnn),
-                                                                               linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
-                                                                               root_mse(truth, pred_1d),
-                                                                               correlation_coef(truth, pred_1d),
-                                                                               slope(truth, pred_1d),
-                                                                               linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
+      # ax5.set_title('CNN:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})\n'
+      #               '1D:(RMSE: {:0.2f}, r: {:0.2f}, Slope: {:0.2f}, A: {:0.2f}, B: {:0.2f})'.format(root_mse(truth, pred_cnn),
+      #                                                                          correlation_coef(truth, pred_cnn),
+      #                                                                          slope(truth, pred_cnn),
+      #                                                                          linear_reg_coeffs(truth, pred_cnn)[0], linear_reg_coeffs(truth, pred_cnn)[1],
+      #                                                                          root_mse(truth, pred_1d),
+      #                                                                          correlation_coef(truth, pred_1d),
+      #                                                                          slope(truth, pred_1d),
+      #                                                                          linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
       ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
   
   plt.subplots_adjust(wspace=0.2, hspace=0.3)
