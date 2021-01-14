@@ -135,7 +135,7 @@ def predict_on_dataset(input_data, model, use_argmax=False):
   start = perf_counter() # start timer
   for idx, key in enumerate(list(input_data.keys())):
     input_img = input_data[key]
-    predictions['data_{}'.format(idx)] = predict_on_single_image(input_img, model, use_argmax=use_argmax)
+    predictions[key] = predict_on_single_image(input_img, model, use_argmax=use_argmax)
     get_progress(start, len(input_data), idx) # report progress
   return predictions
 
