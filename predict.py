@@ -213,30 +213,30 @@ def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reco
   """ Predict on data and plot evaluation figures """
 
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
-  _, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file, file_3d, file_1d)
+  # _, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file, file_3d, file_1d)
   model = get_model(path_to_model)
   prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) #use weighted means to get cot space predictions
-  prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True) #use argmax to get class space predictions
+  # prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True) #use argmax to get class space predictions
   
   if reconstruct:
-    recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
+    # recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
     recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
 
-    recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
+    # recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
     recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
 
-    recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
+    # recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
     recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
 
     recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
-    plot_all_metrics(recon_input_radiance, recon_true_cot_space, recon_true_class_space,
-         recon_pred_cnn_cot_space, recon_pred_cnn_class_space,
-         recon_pred_1d_cot_space, recon_pred_1d_class_space,
-         rows=len(recon_input_radiance), random=False, filename=figname, dimensions='480x480', figsize=(42,38))
+    plot_all_metrics(recon_input_radiance, recon_true_cot_space,
+                     recon_pred_cnn_cot_space, recon_pred_1d_cot_space, 
+                     rows=len(recon_input_radiance), random=False, 
+                     filename=figname, dimensions='480x480', figsize=(42,38))
   else:
-    plot_all_metrics(rad_cot_space, cot_true_cot_space, cot_true_class_space, 
-           prediction_cot_space, prediction_class_space,
-           cot_1d_cot_space, cot_1d_class_space, filename=figname, rows=3, dimensions='64x64', random=True)
+    plot_all_metrics(rad_cot_space, cot_true_cot_space,
+                     prediction_cot_space, cot_1d_cot_space, 
+                     filename=figname, rows=3, dimensions='64x64', random=True)
   
 
 if __name__ == '__main__':
