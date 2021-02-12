@@ -165,27 +165,16 @@ def reconstruct_scenes(data_dictionary, dims):
   return recon
 
 
-def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims, reconstruct, figname):
+def plot_heatmap_slopes(path_to_model, fdir, dims, reconstruct, figname):
   """ Plot a figure with heatmap and metrics to evaluate model """
   
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
-  rad_class_space, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file,
-                                                                                   file_3d, 
-                                                                                   file_1d)
   model = get_model(path_to_model)
   prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) # use weighted means to get cot space predictions
-  prediction_class_space = predict_on_dataset(rad_class_space, model, use_argmax=True) # use argmax to get class space predictions
-  
   if reconstruct:
-    cot_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
     cot_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
-
-    cot_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
     cot_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
-
-    prediction_class_space = reconstruct_scenes(prediction_class_space, dims)
     prediction_cot_space = reconstruct_scenes(prediction_cot_space, dims)
-
     rad_cot_space = reconstruct_scenes(rad_cot_space, dims)
   
   rad_means_cot, rad_stds_cot, slopes_cnn_cot_space, slopes_1d_cot_space = get_slopes(rad_cot_space,
@@ -193,42 +182,28 @@ def plot_heatmap_slopes(path_to_model, fdir, input_file, file_1d, file_3d, dims,
                                                                                       prediction_cot_space,
                                                                                       cot_1d_cot_space, thresh=0.5)
 
-  rad_means_class, _, slopes_cnn_class_space, slopes_1d_class_space = get_slopes(rad_cot_space, 
-                                                                                 cot_true_class_space, 
-                                                                                 prediction_class_space, 
-                                                                                 cot_1d_class_space, thresh=0)
-  plot_slopes(rad_means_class, rad_means_cot,
-              slopes_cnn_class_space, slopes_1d_class_space,
-              slopes_cnn_cot_space, slopes_1d_cot_space,
-              cot_true_class_space, prediction_class_space, cot_1d_class_space,
-              cot_true_cot_space, prediction_cot_space, cot_1d_cot_space, filename=figname, recon=True)
+  plot_slopes(rad_means_cot, slopes_cnn_cot_space, slopes_1d_cot_space,
+              cot_true_cot_space, prediction_cot_space, cot_1d_cot_space, 
+              filename=figname, recon=True)
   
-  plot_heatmap(rad_cot_space, cot_true_cot_space, cot_true_class_space,
-               prediction_cot_space, prediction_class_space,
-               cot_1d_cot_space, cot_1d_class_space,
+  plot_heatmap(rad_cot_space, cot_true_cot_space,
+               prediction_cot_space, cot_1d_cot_space, 
                rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
 
 
-def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reconstruct, dims, figname):
+def predict_with_metrics(path_to_model, fdir, reconstruct, dims, figname):
   """ Predict on data and plot evaluation figures """
 
   rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
-  # _, cot_true_class_space, cot_1d_class_space = get_class_space_data(input_file, file_3d, file_1d)
   model = get_model(path_to_model)
   prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) #use weighted means to get cot space predictions
-  # prediction_class_space = predict_on_dataset(rad_cot_space, model, use_argmax=True) #use argmax to get class space predictions
   
   if reconstruct:
-    # recon_true_class_space = reconstruct_scenes(cot_true_class_space, dims)
     recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
-
-    # recon_pred_1d_class_space = reconstruct_scenes(cot_1d_class_space, dims)
     recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
-
-    # recon_pred_cnn_class_space = reconstruct_scenes(prediction_class_space, dims)
     recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
-
     recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
+
     plot_all_metrics(recon_input_radiance, recon_true_cot_space,
                      recon_pred_cnn_cot_space, recon_pred_1d_cot_space, 
                      rows=len(recon_input_radiance), random=False, 
@@ -242,12 +217,8 @@ def predict_with_metrics(path_to_model, fdir, input_file, file_1d, file_3d, reco
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--h5dir', default=None, type=str, help="Path to the directory containing h5 files")
-  parser.add_argument('--input_file', default=None, type=str,help="Path to numpy input images file")
-  parser.add_argument('--file_1d', default=None, type=str, help="Path to the 1D retrievals numpy file")
-  parser.add_argument('--file_3d', default=None, type=str, help="Path to the 3D retrievals numpy file")
   parser.add_argument('--dims', default=480, type=int, help="Dimensions of the original scenes")
-  parser.add_argument('--model_1_path', default=None, type=str, help="Path to the first model")
-  parser.add_argument('--model_2_path', default=None, type=str, help="Path to the second model, optional")
+  parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
   parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
   parser.add_argument('--metrics', dest='metrics', action='store_true',
                       help="Pass --metrics to plot model evaluation with all metrics")
@@ -258,11 +229,9 @@ if __name__ == '__main__':
   args = parser.parse_args()
 
   if args.metrics:
-    predict_with_metrics(args.model_1_path, args.h5dir, args.input_file,
-                         args.file_1d, args.file_3d, args.reconstruct, args.dims, args.save_figure_as)
+    predict_with_metrics(args.model_path, args.h5dir, args.reconstruct, args.dims, args.save_figure_as)
 
   if args.heatmap:
-    plot_heatmap_slopes(args.model_1_path, args.h5dir, args.input_file,
-                        args.file_1d, args.file_3d, args.dims, args.reconstruct, args.save_figure_as)
+    plot_heatmap_slopes(args.model_path, args.h5dir, args.dims, args.reconstruct, args.save_figure_as)
 
 

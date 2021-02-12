@@ -454,19 +454,16 @@ def plot_heatmap(rad_cot_space, cot_true_cot_space,
 
 
 
-def plot_slopes(rad_means_class, rad_means_cot, 
-                slopes_cnn_class_space, slopes_1d_class_space, 
-                slopes_cnn_cot_space, slopes_1d_cot_space,
-                cot_gnd_truth_class_space, cot_cnn_class_space, cot_1d_class_space,
+def plot_slopes(rad_means_cot, slopes_cnn_cot_space, slopes_1d_cot_space,
                 cot_gnd_truth_cot_space, cot_cnn_cot_space, cot_1d_cot_space, filename, recon=False):
     
   rows = 3
   fig = plt.figure(figsize=(20, 14))
-  spec = fig.add_gridspec(nrows=rows, ncols=4)
+  spec = fig.add_gridspec(nrows=rows, ncols=2)
   nums = [276, 486, 261]
   keys = ['data_276', 'data_486', 'data_261']
   if recon is True:
-    nums = np.random.choice(np.arange(len(slopes_cnn_class_space)), 3, replace=False)
+    nums = np.random.choice(np.arange(len(slopes_cnn_cot_space)), 3, replace=False)
     keys = nums
   patches_legend = [
               matplotlib.patches.Patch(color='green', label='1D Retrv.'),
@@ -478,16 +475,16 @@ def plot_slopes(rad_means_class, rad_means_cot,
               matplotlib.lines.Line2D([0], [0], marker='*',markersize=12, color='red', label='Selected Sample')
               ]
   for i in range(rows):
-    ax0 = fig.add_subplot(spec[i, 0])
-    ax0.scatter(rad_means_class, slopes_cnn_class_space, c='red', alpha=0.2)
-    ax0.scatter(rad_means_class, slopes_1d_class_space, c='green', alpha=0.2)
-    ax0.scatter(rad_means_class[nums[i]], slopes_cnn_class_space[nums[i]], c='red', marker='*', s=160)
-    ax0.set_xlabel('Radiance - Mean')
-    ax0.set_ylabel('Slope (Fidelity)')
-    ax0.set_title('Class Space')
-    ax0.legend(handles=patches_legend_2, loc='lower right')
+    # ax0 = fig.add_subplot(spec[i, 0])
+    # ax0.scatter(rad_means_class, slopes_cnn_class_space, c='red', alpha=0.2)
+    # ax0.scatter(rad_means_class, slopes_1d_class_space, c='green', alpha=0.2)
+    # ax0.scatter(rad_means_class[nums[i]], slopes_cnn_class_space[nums[i]], c='red', marker='*', s=160)
+    # ax0.set_xlabel('Radiance - Mean')
+    # ax0.set_ylabel('Slope (Fidelity)')
+    # ax0.set_title('Class Space')
+    # ax0.legend(handles=patches_legend_2, loc='lower right')
         
-    ax1 = fig.add_subplot(spec[i, 1])
+    ax1 = fig.add_subplot(spec[i, 0])
     ax1.scatter(rad_means_cot, slopes_cnn_cot_space, c='red', alpha=0.2)
     ax1.scatter(rad_means_cot, slopes_1d_cot_space, c='green', alpha=0.2)
     ax1.scatter(rad_means_cot[nums[i]], slopes_cnn_cot_space[nums[i]], c='red', marker='*', s=160)
@@ -496,18 +493,18 @@ def plot_slopes(rad_means_class, rad_means_cot,
     ax1.set_title('COT Space')
     ax1.legend(handles=patches_legend_2, loc='lower right')
 
-    ax2 = fig.add_subplot(spec[i, 2])
-    ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_cnn_class_space[keys[i]], c='red', alpha=0.2)
-    ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_1d_class_space[keys[i]], c='green', alpha=0.2)
-    stop = max(max(cot_gnd_truth_class_space[keys[i]].ravel()), max(cot_cnn_class_space[keys[i]].ravel()), max(cot_1d_class_space[keys[i]].ravel()))
-    ax2.plot([0, stop],[0, stop], c='black', ls='--')
-    ax2.set_xlabel('COT Gnd. Truth')
-    ax2.set_ylabel('COT')
-    ax2.set_title('Class Space: 1D Slope:' 
-                  '{:0.2f}, CNN Slope: {:0.2f}'.format(slopes_1d_class_space[nums[i]], slopes_cnn_class_space[nums[i]]))
-    ax2.legend(handles=patches_legend, loc='upper right')
+    # ax2 = fig.add_subplot(spec[i, 2])
+    # ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_cnn_class_space[keys[i]], c='red', alpha=0.2)
+    # ax2.scatter(cot_gnd_truth_class_space[keys[i]], cot_1d_class_space[keys[i]], c='green', alpha=0.2)
+    # stop = max(max(cot_gnd_truth_class_space[keys[i]].ravel()), max(cot_cnn_class_space[keys[i]].ravel()), max(cot_1d_class_space[keys[i]].ravel()))
+    # ax2.plot([0, stop],[0, stop], c='black', ls='--')
+    # ax2.set_xlabel('COT Gnd. Truth')
+    # ax2.set_ylabel('COT')
+    # ax2.set_title('Class Space: 1D Slope:' 
+    #               '{:0.2f}, CNN Slope: {:0.2f}'.format(slopes_1d_class_space[nums[i]], slopes_cnn_class_space[nums[i]]))
+    # ax2.legend(handles=patches_legend, loc='upper right')
         
-    ax3 = fig.add_subplot(spec[i, 3])
+    ax3 = fig.add_subplot(spec[i, 1])
     ax3.scatter(cot_gnd_truth_cot_space[keys[i]], cot_cnn_cot_space[keys[i]], c='red', alpha=0.2)
     ax3.scatter(cot_gnd_truth_cot_space[keys[i]], cot_1d_cot_space[keys[i]], c='green', alpha=0.2)
     stop = max(max(cot_gnd_truth_cot_space[keys[i]].ravel()), max(cot_cnn_cot_space[keys[i]].ravel()), max(cot_1d_cot_space[keys[i]].ravel()))
