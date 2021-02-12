@@ -206,7 +206,7 @@ def plot_model_comparison(means, stds, slopes_1, slopes_2, figname, figsize=(16,
 def plot_all_metrics(rad_cot_space, cot_true_cot_space,
                      prediction_cot_space, cot_1d_cot_space, rows, filename,
                      random=False, hist_bins=None, dimensions='64x64',
-                     figsize=(42,30)):
+                     figsize=(46,30)):
 
   cols = 5
   if hist_bins is None:
@@ -233,11 +233,11 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
     ax0.set_yticks([])
     ax0.set_title('Radiance ({})'.format(dimensions), fontsize=15)
 
-    inner = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=3, subplot_spec=spec[i,1], wspace=0.2, hspace=0.2)
+    inner = gridspec.GridSpecFromSubplotSpec(ncols=1, nrows=3, subplot_spec=spec[i,1], wspace=0.1, hspace=0.5)
 
     ax10 = fig.add_subplot(inner[0])
     y = ax10.imshow(truth, cmap='jet', norm=normalize)
-    ax10.set_title('Gnd. Truth')
+    ax10.set_title('Gnd. Truth', fontsize=8)
     ax10.set_xticks([])
     ax10.set_yticks([])
     divider = make_axes_locatable(ax10)
@@ -246,7 +246,7 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
 
     ax11 = fig.add_subplot(inner[1])
     z = ax11.imshow(pred_1d, cmap='jet', norm=normalize)
-    ax11.set_title('1D COT')
+    ax11.set_title('1D COT', fontsize=8)
     ax11.set_xticks([])
     ax11.set_yticks([])
     divider = make_axes_locatable(ax11)
@@ -255,7 +255,7 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
 
     ax12 = fig.add_subplot(inner[2])
     z = ax12.imshow(pred_cnn, cmap='jet', norm=normalize)
-    ax12.set_title('Predicted COT')
+    ax12.set_title('Predicted COT', fontsize=8)
     ax12.set_xticks([])
     ax12.set_yticks([])
     divider = make_axes_locatable(ax12)
@@ -263,17 +263,20 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
     fig.colorbar(z, cax=cax, ax=ax12)
 
     ax3 = fig.add_subplot(spec[i, 2])
+    stop = int(max(truth.max(), pred_cnn.max(), pred_1d.max())) # use same stopping point for x and y axes
     ax3.scatter(truth.ravel(), pred_cnn.ravel(), c='red', s=30, lw=0.0, alpha=0.8)
     ax3.scatter(truth.ravel(), pred_1d.ravel(), c='green', s=30, lw=0.0, alpha=0.7)
-    ax3.plot([0, truth.max()], [0, max(pred_cnn.max(),pred_1d.max())], c='black', ls='--')
+    ax3.plot([0, stop], [0, stop], c='black', ls='--')
     ax3.set_xlabel('COT Gnd. Truth')
     ax3.set_ylabel('Retrieved COT')
-    ax3.set_title('Gnd. Truth COTvs Retrieved COT', fontsize=12)
+    ax3.set_xlim([0, stop])
+    ax3.set_ylim([0, stop])
+    ax3.set_title('Gnd. Truth COT vs Retrieved COT', fontsize=12)
     patches_legend = [
                 matplotlib.patches.Patch(color='red' , label='Pred'),
                 matplotlib.patches.Patch(color='green' , label='1D Retrv.'),
                 ]
-    ax3.legend(handles=patches_legend, loc='upper left', fontsize=12)
+    ax3.legend(handles=patches_legend, loc='upper left', fontsize=10)
 
     ax4 = fig.add_subplot(spec[i, 3])
     ax4.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
@@ -292,7 +295,7 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
                 matplotlib.patches.Patch(color='green' , label='1D Retrv.'),
                 matplotlib.patches.Patch(color='red'   , label='Pred'),
                     ]
-    ax4.legend(handles=patches_legend, loc='upper right', fontsize=12)
+    ax4.legend(handles=patches_legend, loc='upper right', fontsize=10)
 
     ax5 = fig.add_subplot(spec[i, 4])
     ax5.hist(truth.ravel(), bins=hist_bins, color='black', lw=0.0, alpha=0.5, density=True, histtype='stepfilled')
@@ -312,11 +315,11 @@ def plot_all_metrics(rad_cot_space, cot_true_cot_space,
   #                                                                               correlation_coef(truth, pred_1d),
   #                                                                               slope(truth, pred_1d),
   #                                                                               linear_reg_coeffs(truth, pred_1d)[0], linear_reg_coeffs(truth, pred_1d)[1]))
-    ax5.legend(handles=patches_legend, loc='upper right', fontsize=12)
+    ax5.legend(handles=patches_legend, loc='upper right', fontsize=10)
 
 
 
-  plt.subplots_adjust(wspace=0.15, hspace=0.4)
+  plt.subplots_adjust(wspace=0.3, hspace=0.4)
   if not os.path.isdir('results/'):
     os.makedirs('results/')
   fig.savefig('results/{}'.format(filename), dpi=100)
