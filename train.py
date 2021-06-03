@@ -17,7 +17,7 @@ def train_val_generator(args):
   assert list(X_dict.keys()) == list(y_dict.keys()), 'Image names of X and y are different'
   print('Total number of data files available for training = {}\n\n'.format(int((1-args.test_size)*len(X_dict))))
   # split to training and validation, set random state to 42 for reproducibility
-  X_train, X_val = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
+  train_keys, val_keys = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
   # data augmentation via albumentations (currently not used in any of the models)
   AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
@@ -26,7 +26,7 @@ def train_val_generator(args):
                                  GaussNoise(p=0.25), 
                                  ShiftScaleRotate(p=0.5, rotate_limit=20)])
   # training data generator
-  train_generator = ImageGenerator(image_list=X_train,
+  train_generator = ImageGenerator(image_list=train_keys,
                                    image_dict=X_dict,
                                    label_dict=y_dict,
                                    input_shape=args.input_dims,
@@ -39,7 +39,7 @@ def train_val_generator(args):
                                    to_fit=True, augment=args.augment, shuffle=True)
   
   # validation data generator
-  val_generator = ImageGenerator(image_list=X_val,
+  val_generator = ImageGenerator(image_list=val_keys,
                                  image_dict=X_dict,
                                  label_dict=y_dict,
                                  input_shape=args.input_dims,
