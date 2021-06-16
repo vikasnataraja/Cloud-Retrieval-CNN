@@ -132,6 +132,7 @@ def get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_true'):
   """
 
   fnames = [file for file in os.listdir(fdir) if file.endswith('.h5')]
+  fnames.sort() # sort for uniformity and tracking down the line
   store_rads = {}
   store_cots = {}
   
@@ -200,6 +201,19 @@ def crop_images(img_dict, crop_dims, fname_prefix):
 
   print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
+
+
+def create_npy_data(fdir, dest, crop=False):
+  radiances, cot_1d = get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_1d')
+  _, cot_true = get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_true')
+  if crop:
+    radiances = crop_images(radiances, 64, 'data')
+    cot_1d = crop_images(cot_1d, 64, 'data')
+    cot_true = crop_images(cot_rue, 64, 'data')
+  np.save(os.path.join(dest, 'inp_radiance.npy'), radiances)
+  np.save(os.path.join(dest, 'out_cot_1d.npy'), cot_1d)
+  np.save(os.path.join(dest, 'out_cot_3d.npy'), cot_true)
+  print('Finished saving data files\n')
 
 
 def get_class_space_data(input_file, file_3d, file_1d):

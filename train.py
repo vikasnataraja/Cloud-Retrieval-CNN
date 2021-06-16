@@ -3,13 +3,13 @@ import numpy as np
 import argparse
 from keras.optimizers import Adam
 from keras.regularizers import l1 
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
 from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
 from models.unet import UNet
 from utils.utils import ImageGenerator
 from utils.losses import focal_loss
-
+from utils.plot_utils import plot_training
 
 def train_val_generator(args):
   X_dict = np.load('{}'.format(args.input_file), allow_pickle=True).item() # load inputs and ground truth
@@ -91,20 +91,22 @@ def train_model(model, model_dir, filename, train_generator, val_generator, batc
 
   stop = EarlyStopping(monitor='val_loss', patience=60, verbose=1, restore_best_weights=True) # early stopping
 
-  call_list = [checkpoint, lr, stop] # list of callbacks
+  logger = CSVLogger('{}.csv'.format(os.path.splitext(filename)[0]), separator=",", append=False)
+
+  call_list = [checkpoint, lr, stop, logger] # list of callbacks
   print('Model will be saved in directory: {} as {}\n'.format(model_dir, filename))
 
   # fit model
-  model.fit_generator(train_generator,
-                      validation_data=val_generator,
-                      callbacks=call_list,
-                      epochs=epochs,
-                      verbose=1,
-                      max_queue_size=10,
-                      workers=1)
-  
+  history = model.fit_generator(train_generator,
+                                validation_data=val_generator,
+                                callbacks=call_list,
+                                epochs=epochs,
+                                verbose=1,
+                                max_queue_size=10,
+                                workers=1)
+  plot_training(history)
   print('Finished training model. Exiting function ...\n')
-  return model
+  return history
 
 def args_checks_reports(args):
   """ Function to check and print command line arguments """

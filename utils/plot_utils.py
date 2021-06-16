@@ -52,6 +52,23 @@ def get_precision_recall_dice_support(target, prediction):
 					 average=None, zero_division=0)
 
 
+def plot_training(history):
+  """ plot training and validation losses over epochs """
+  fig = plt.figure(figsize=(20,16))
+  
+  plt.plot(history.history['loss'], c='blue', label='Training')
+  plt.plot(history.history['val_loss'], c='orange', label='Validation')
+  plt.title('Model Loss')
+  plt.ylabel('Loss')
+  plt.xlabel('Epoch')
+  plt.legend()
+  if not os.path.isdir('results/'):
+    os.makedirs('results/')
+  fig.savefig('results/losses.png', dpi=100)
+  print('Saved figure in "results/" as "losses.png"')
+  plt.close();
+
+
 def visualize_prediction(input_img, target, prediction):
   """ visualize the input img, ground truth, predicted img and the diff"""
 
