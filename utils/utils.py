@@ -41,6 +41,8 @@ def preprocess(img, resize_dims=None, normalize=False):
 
 class ImageGenerator(Sequence):
   """ 
+  Generator inherited from keras.utils.Sequence, used to feed batch-wise data to model during run.
+
   Adapted from sources: 
   https://github.com/Vladkryvoruchko/PSPNet-Keras-tensorflow/blob/master/utils/preprocessing.py
   https://stanford.edu/~shervine/blog/keras-how-to-generate-data-on-the-fly
@@ -109,6 +111,7 @@ class ImageGenerator(Sequence):
       np.random.shuffle(self.indices)
 
 
+# binning for conversion from COT-space to discrete class space
 cot_bins = np.concatenate((np.arange(0.0, 1.0, 0.1),
                            np.arange(1.0, 10.0, 1.0),
                            np.arange(10.0, 20.0, 2.0),
@@ -119,11 +122,11 @@ pxvals = np.arange(0, cot_bins.shape[0])
 
 
 def get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_true'):
-  """ Combine h5 files to get radiance and COT data as dictionaries 
+  """ Combines HDF5 files to get radiance and COT data as dictionaries 
   Args:
-    - fdir: str, directory containing h5 files.
-    - rad_keyname: str, key for radiance data in h5 files.
-    - cot_keyname: str, key for COT data in h5 files.
+    - fdir: str, directory containing HDF5 files.
+    - rad_keyname: str, key for radiance data in HDF5 files.
+    - cot_keyname: str, key for COT data in HDF5 files.
 
   Returns:
     - store_rads: dict, dictionary containing radiance data.
@@ -204,6 +207,18 @@ def crop_images(img_dict, crop_dims, fname_prefix):
 
 
 def create_npy_data(fdir, dest, crop=False):
+  """ Creates radiance and COT data from HDF5 files in `fdir` and saves them as npy data files.
+  Optionally crops them if the original HDF5 files are already not.
+  
+  Args:
+    - fdir: str, path to directory containing hdf5 files
+    - dest: str, path to directory where npy data files will be saved
+    - crop: bool, set to True if images need to be cropped to 64x64
+  
+  Returns:
+      None, saves files directly in `dest`
+  
+  """
   radiances, cot_1d = get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_1d')
   _, cot_true = get_data(fdir, rad_keyname='rad_3d', cot_keyname='cot_true')
   if crop:
