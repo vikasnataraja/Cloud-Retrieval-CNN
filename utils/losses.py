@@ -24,7 +24,6 @@ def jaccard_distance_loss(y_true, y_pred, smooth=100.):
   jac = (intersection + smooth) / (union - intersection + smooth)
   return (1 - jac) * smooth
 
-
 def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
   """ Focal loss for object detection and semantic segmentation.
   Reference: Lin et al., 2018, "Focal Loss for Dense Object Detection"
@@ -36,7 +35,8 @@ def focal_loss(y_true, y_pred, alpha=0.25, gamma=2.):
   y_pred /= K.sum(y_pred, axis=-1, keepdims=True)
   epsilon = K.epsilon()
   y_pred = K.clip(y_pred, epsilon, 1. - epsilon)
-  loss = -alpha * K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred)
+  alpha_t = y_true * alpha + (1 - y_true) * (1 - alpha)
+  loss = -alpha_t * K.pow(1. - y_pred, gamma) * y_true * K.log(y_pred)
   return K.mean(loss, axis=-1)
 
 def combined_loss(y_true, y_pred, focal_loss_weight=0.25):
