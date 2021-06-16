@@ -475,14 +475,14 @@ def plot_heatmap(rad_cot_space, cot_true_cot_space,
 
 
 def plot_slopes(rad_means_cot, slopes_cnn_cot_space, slopes_1d_cot_space,
-                cot_gnd_truth_cot_space, cot_cnn_cot_space, cot_1d_cot_space, filename, recon=False):
+                cot_gnd_truth_cot_space, cot_cnn_cot_space, cot_1d_cot_space, filename, recon):
     
   rows = 3
   fig = plt.figure(figsize=(20, 14))
   spec = fig.add_gridspec(nrows=rows, ncols=2)
   nums = [276, 486, 261]
   keys = ['data_276', 'data_486', 'data_261']
-  if recon is True:
+  if recon:
     nums = np.random.choice(np.arange(len(slopes_cnn_cot_space)), 3, replace=False)
     keys = nums
   patches_legend = [

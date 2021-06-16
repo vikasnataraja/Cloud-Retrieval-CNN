@@ -184,7 +184,7 @@ def plot_heatmap_slopes(path_to_model, fdir, dims, reconstruct, figname):
 
   plot_slopes(rad_means_cot, slopes_cnn_cot_space, slopes_1d_cot_space,
               cot_true_cot_space, prediction_cot_space, cot_1d_cot_space, 
-              filename=figname, recon=True)
+              filename=figname, recon=reconstruct)
   
   plot_heatmap(rad_cot_space, cot_true_cot_space,
                prediction_cot_space, cot_1d_cot_space, 
