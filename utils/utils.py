@@ -202,7 +202,7 @@ def crop_images(img_dict, crop_dims, fname_prefix):
           return_imgs['{}_{}'.format(fname_prefix,counter)] = cropped_img
           counter += 1
 
-  print('Total number of images = {}'.format(len(return_imgs)))
+  # print('Total number of images = {}'.format(len(return_imgs)))
   return return_imgs
 
 
