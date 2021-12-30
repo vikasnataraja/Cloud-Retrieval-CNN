@@ -1,5 +1,4 @@
 from utils.utils import preprocess, get_model
-from time import perf_counter
 import numpy as np
 import os
 import argparse
@@ -17,30 +16,6 @@ cot_class_r = np.append(cot_class_l[1:], 200.0)
 
 # COT classes (use middle)
 cot_class_mid = (cot_class_l+cot_class_r)/2.0
-
-
-def get_progress(start, total, current_count):
-    """
-    Get progress of prediction for large files and print to stdout.
-
-    Args:
-        - start: (float) time at which operation started.
-        - total: (int) total number of iterations in the loop.
-        - current_count: (int) current iteration.
-    Returns:
-        Prints to stdout.
-    """
-
-    if current_count == 0:
-        return # avoid division by zero
-    stop = perf_counter()
-    remaining = round((stop - start) * ((total/current_count) - 1))
-    progress = 100 * current_count / total
-    if current_count % np.floor(total/5) == 0: # print at 20, 40, 60, 80% progress
-        if remaining > 60: # print in min
-            print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
-        else:  # print in seconds
-            print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
 def predict_on_single_image(img, model, use_argmax):
