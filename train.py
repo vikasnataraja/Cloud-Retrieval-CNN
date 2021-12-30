@@ -162,8 +162,7 @@ if __name__ == '__main__':
     parser.add_argument('--cot_file', default='data/single_channel/output_cot.npy', type=str,
                         help="Path to numpy ground truth COT file")
     parser.add_argument('--model_dir', default='weights/', type=str,
-                        help="Directory where model will be saved."
-                        "If directory entered does not exist, it will be created")
+                        help="Directory where model will be saved.\nIf directory entered does not exist, one will be created")
     parser.add_argument('--model_name', default='cloud_cnn.h5', type=str,
                         help="Model name that will be saved in model_dir")
     parser.add_argument('--input_dims', default=64, type=int,
@@ -189,7 +188,7 @@ if __name__ == '__main__':
     parser.add_argument('--augment', dest='augment', action='store_true',
                         help="Pass --augment to use data augmentation. By default, no augmentation is used")
     parser.add_argument('--test_size', default=0.20, type=float,
-                        help="Fraction of training image to use for validation during training. Defaults to using 20% of the data")
+                        help="Fraction of training image to use for validation during training. Defaults to using 20%% of the data")
     args = parser.parse_args()
 
     # check to see if arguments are valid
