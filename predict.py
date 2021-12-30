@@ -1,9 +1,10 @@
-from utils.utils import preprocess, get_class_space_data, get_cot_space_data, get_model
-from utils.plot_utils import plot_all_metrics, plot_slopes, plot_heatmap
+from utils.utils import preprocess, get_model
 from time import perf_counter
 import numpy as np
 import os
 import argparse
+import h5py
+from utils.plot_utils import prediction_panel_viz
 
 cot_class_l = np.concatenate((np.arange(0.0, 1.0, 0.1),
                                np.arange(1.0, 10.0, 1.0),
@@ -19,219 +20,80 @@ cot_class_mid = (cot_class_l+cot_class_r)/2.0
 
 
 def get_progress(start, total, current_count):
-  """
-  Get progress of prediction for large files and print to stdout.
-  
-  Args:
-    - start: float, time at which operation started.
-    - total: int, total number of iterations in the loop.
-    - current_count: int, current iteration.
-  Returns:
-    Prints to stdout.
-  """
+    """
+    Get progress of prediction for large files and print to stdout.
 
-  if current_count == 0: current_count = 1 # avoid division by zero
-  stop = perf_counter()
-  remaining = round((stop - start) * ((total/current_count) - 1))
-  progress = 100 * current_count / total
-  if current_count % np.floor(total/5) == 0: # print at 20, 40, 60, 80% progress
-    if remaining > 60: # print in min 
-      print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
-    else:  # print in seconds
-      print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
+    Args:
+        - start: (float) time at which operation started.
+        - total: (int) total number of iterations in the loop.
+        - current_count: (int) current iteration.
+    Returns:
+        Prints to stdout.
+    """
 
-
-def get_slopes(radiance, cot_true, cot_pred, cot_1d, thresh):
-  """ Get fidelity slope metric for data.
-  
-  Args:
-    - radiance: dict, dictionary containing radiance data.
-    - cot_true: dict, ground truth dictionary.
-    - cot_1d: dict, 1D retrieval data dictionary.
-    - thresh: float, threshold to prevent zero division above which slopes will be calculated.
-  
-  Returns:
-    - rad_means: list of mean values of radiance.
-    - rad_stds: list of standard deviation values of radiance.
-    - slopes_cnn: list of fidelity values based on CNN prediction.
-    - slopes_1d: list of fidelity values based on 1D retrievals.
-  """
-
-  rad_means, rad_stds, slopes_cnn, slopes_1d = [], [], [], []
-  for key in list(radiance.keys()):
-    input_img = radiance[key]
-    truth_cot = cot_true[key].ravel()
-    ret_1d = cot_1d[key].ravel()
-    pred_cot = cot_pred[key].ravel()
-        
-    non_zero_idx = np.where(truth_cot > thresh)[0] # indices that have pixels > thresh to avoid zero division
-    non_zero_truth = truth_cot[non_zero_idx]
-    non_zero_prediction = pred_cot[non_zero_idx]
-    non_zero_1d = ret_1d[non_zero_idx]
-    if non_zero_prediction.shape[0] != 0: # confirm that it is not an empty image
-      rad_stds.append(np.std(input_img))
-      rad_means.append(np.mean(input_img))
-      slopes_cnn.append(np.mean(non_zero_prediction/non_zero_truth))
-      slopes_1d.append(np.mean(non_zero_1d/non_zero_truth))
-    return rad_means, rad_stds, slopes_cnn, slopes_1d
-
-
-def get_1d_retrievals(input_data, cot_1d, cot_3d):
-  """ Get the 1D retrievals from the data and calculate the slope(fidelity), mean and std. dev 
-  Args:
-    - input_data: dict, dictionary containing radiance data.
-    - cot_1d: dict, dictionary containing 1D COT retrieval data.
-    - cot_3d: dict, dictionary containing 3D COT retrieval data.
-  Returns:
-    - means1d: list, list of mean value of each radiance image in `input_data`.
-    - devs1d: list, list of standard deviation value of each radiance image in `input_data`.
-    - slopes1d: list, list of slopes/fidelity calculated values for each retrieval.
-  """
-
-  slopes1d, devs1d, means1d = [], [], []
-  for i in list(input_data.keys()):
-    rad = input_data[i]
-    flat_pred = cot_1d[i].ravel()
-    flat_gt = cot_3d[i].ravel()
-
-    non_zero_idx = np.where(flat_gt > 0)[0] # indices that have non-zero classes
-    non_zero_gt = flat_gt[non_zero_idx]
-    non_zero_prediction = flat_pred[non_zero_idx]
-    if non_zero_prediction.shape[0] != 0:
-      slope = non_zero_prediction/non_zero_gt
-      slopes1d.append(np.mean(slope))
-      devs1d.append(np.std(rad))
-      means1d.append(np.mean(rad))
-
-  return means1d, devs1d, slopes1d
+    if current_count == 0:
+        return # avoid division by zero
+    stop = perf_counter()
+    remaining = round((stop - start) * ((total/current_count) - 1))
+    progress = 100 * current_count / total
+    if current_count % np.floor(total/5) == 0: # print at 20, 40, 60, 80% progress
+        if remaining > 60: # print in min
+            print('Progress: {:.0f}%, ~ {:0.1f} min remaining'.format(np.ceil(progress), remaining/60))
+        else:  # print in seconds
+            print('Progress: {:.0f}%, ~ {}s remaining'.format(np.ceil(progress), remaining))
 
 
 def predict_on_single_image(img, model, use_argmax):
-  """ Predict on a single image with argmax or weighted means.
-  Args:
-    - img: arr, input image of size (model.input_shape[1] x model.input_shape[2]).
-    - model: trained model.
-    - use_argmax: bool, set to True to use argmax method, False to use weighted means method.
-  Returns:
-    - predicted COT image of size (model.output_shape[1] x model.output_shape[2]).
-  """
-  temp = model.predict(preprocess(img, resize_dims=(model.input_shape[1], model.input_shape[2])))
-  temp = np.reshape(temp.ravel(), model.output_shape[1:])
-  if use_argmax:
-    return np.argmax(temp, axis=-1) # use argmax to get the image
-  return np.dot(temp, cot_class_mid)
+    """ Predict on a single image with argmax or weighted means.
+    Args:
+        - img: (ndarray), input image of size (model.input_shape[1], model.input_shape[2]).
+        - model: (keras.Model) keras model object.
+        - use_argmax: (bool), set to True to use argmax method, False to use weighted means method.
+    Returns:
+        - (ndarray) predicted COT image of shape (model.output_shape[1], model.output_shape[2]).
+    """
+    temp = model.predict(preprocess(img, resize_dims=(model.input_shape[1], model.input_shape[2])))
+    temp = np.reshape(temp.ravel(), model.output_shape[1:])
+    if use_argmax:
+        return np.argmax(temp, axis=-1) # use argmax to get the image
+    return np.dot(temp, cot_class_mid)
 
 
-def predict_on_dataset(input_data, model, use_argmax=False):
-  """ Predict on dictionary of input data using model.
-  Args:
-    - input_data: dict, dictionary containing radiance data.
-    - model: trained model.
-    - use_argmax: bool, set to True to use argmax methid, False to use weighted means method.
-  Returns:
-    - predictions: dict, dictionary of predicted COT arrays with same keys as `input_data`
-  """
-  predictions = {}
-  start = perf_counter() # start timer
-  for idx, key in enumerate(list(input_data.keys())):
-    input_img = input_data[key]
-    predictions[key] = predict_on_single_image(input_img, model, use_argmax=use_argmax)
-    get_progress(start, len(input_data), idx) # report progress
-  return predictions
+def predict_at_once(data, model):
+    """
+    Predict on an array of radiance images using the weighted means method. Returns an array of the same length as `data`.
+
+    Args:
+        - data: (ndarray) a 4D array of radiance images, of shape (N, width, length, depth)
+        - model: (keras.Model) the keras model object.
+    Returns:
+        - (ndarray) an array of shape (N, model.output_shape[1], model.output_shape[2])
+    """
+
+    if data.shape[1:] != model.input_shape[1:]:
+        raise ValueError("Mismatched shapes, elements of input data are of shape {} but model expects {}".format(data.shape[1:], model.input_shape[1:]))
+    return np.dot(model.predict(data, verbose=1, batch_size=32), cot_class_mid)
 
 
-def reconstruct_scenes(data_dictionary, dims):
-  """ Reconstruct sub-scenes of 64x64 back to original dimensions.
-  Args:
-    - data_dictionary: dict, dictionary containing key-value pairs of data to be reconstructed.
-                       The order of the keys is assumed to be the order of reconstruction.
-    - dims: int, the dimensions of the reconstructed scene.
-  Returns:
-    - recon: dict, dictionary of reconstructed scenes with keys being numbered from 0.
-  """
-  keys = list(data_dictionary.keys())
-  if dims == 384: # Test scenes max out at 384x384
-    num_scenes = int(len(keys)/(11*11))
-  else: # Other data is usually 480x480
-    num_scenes = int(len(keys)/(14*14))
-  print('Total reconstructed scenes:', num_scenes)
-  recon = np.zeros((num_scenes, dims-32, dims-32)) 
-  idx = 0
-  for up_idx in range(num_scenes):
-    for i in range(0, dims-32, 32):
-      for j in range(0, dims-32, 32):
-        recon[up_idx, i:i+32, j:j+32] = data_dictionary[keys[idx]][:32, :32]
-        idx += 1
-  return recon
+def test_model(filepath, modelpath):
+    f = h5py.File(filepath, 'r')
+    rad = np.array(f['rad_3d'], dtype='float32')
+    cot_true = np.array(f['cot_true'], dtype='float32')
+    cot_1d = np.array(f['cot_1d'], dtype='float32')
 
+    input_data = np.reshape(rad, (1, 64, 64, 1)) # model expects 4D tensor
+    model = get_model(modelpath)
+    probs = model.predict(input_data) # probabilities predicted by CNN, of shape (1, 64, 64, 36)
+    cot_cnn = np.dot(probs, cot_class_mid).reshape((64, 64)) # predicted COT of shape (64, 64)
+    print('Prediction finished, plotting ...')
+    prediction_panel_viz(rad, cot_true, cot_1d, cot_cnn)
+    print('Finished!')
 
-def plot_heatmap_slopes(path_to_model, fdir, dims, reconstruct, figname):
-  """ Plot a figure with heatmap and metrics to evaluate model """
-  
-  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
-  model = get_model(path_to_model)
-  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) # use weighted means to get cot space predictions
-  if reconstruct:
-    cot_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
-    cot_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
-    prediction_cot_space = reconstruct_scenes(prediction_cot_space, dims)
-    rad_cot_space = reconstruct_scenes(rad_cot_space, dims)
-  
-  rad_means_cot, rad_stds_cot, slopes_cnn_cot_space, slopes_1d_cot_space = get_slopes(rad_cot_space,
-                                                                                      cot_true_cot_space,
-                                                                                      prediction_cot_space,
-                                                                                      cot_1d_cot_space, thresh=0.5)
-
-  plot_slopes(rad_means_cot, slopes_cnn_cot_space, slopes_1d_cot_space,
-              cot_true_cot_space, prediction_cot_space, cot_1d_cot_space, 
-              filename=figname, recon=reconstruct)
-  
-  plot_heatmap(rad_cot_space, cot_true_cot_space,
-               prediction_cot_space, cot_1d_cot_space, 
-               rows=6, filename=figname, random=False, dimensions='480x480', figsize=(44,42))
-
-
-def predict_with_metrics(path_to_model, fdir, reconstruct, dims, figname):
-  """ Predict on data and plot evaluation figures """
-
-  rad_cot_space, cot_true_cot_space, cot_1d_cot_space = get_cot_space_data(fdir)
-  model = get_model(path_to_model)
-  prediction_cot_space = predict_on_dataset(rad_cot_space, model, use_argmax=False) #use weighted means to get cot space predictions
-  
-  if reconstruct:
-    recon_true_cot_space = reconstruct_scenes(cot_true_cot_space, dims)
-    recon_pred_1d_cot_space = reconstruct_scenes(cot_1d_cot_space, dims)
-    recon_pred_cnn_cot_space = reconstruct_scenes(prediction_cot_space, dims)
-    recon_input_radiance = reconstruct_scenes(rad_cot_space, dims)
-
-    plot_all_metrics(recon_input_radiance, recon_true_cot_space,
-                     recon_pred_cnn_cot_space, recon_pred_1d_cot_space, 
-                     rows=len(recon_input_radiance), random=False, 
-                     filename=figname, dimensions='480x480', figsize=(42,38))
-  else:
-    plot_all_metrics(rad_cot_space, cot_true_cot_space,
-                     prediction_cot_space, cot_1d_cot_space, 
-                     filename=figname, rows=3, dimensions='64x64', random=True)
-  
+fname = 'data/test_data_sulu_sea/00010547_0.0058_0.0190_[00000547](192-256_288-352)_data_x48km_TB_nt230_undg_tau1h_nndg_tau1h_v03_shear_coa-fac-1_coa-fac-1_600nm.h5'
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--h5dir', default=None, type=str, help="Path to the directory containing h5 files")
-  parser.add_argument('--dims', default=480, type=int, help="Dimensions of the original scenes")
-  parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
-  parser.add_argument('--save_figure_as', default='figure.png', type=str, help="Filename for saving figure")
-  parser.add_argument('--metrics', dest='metrics', action='store_true',
-                      help="Pass --metrics to plot model evaluation with all metrics")
-  parser.add_argument('--heatmap', dest='heatmap', action='store_true',
-                      help="Pass --heatmap to plot heatmap for scene")
-  parser.add_argument('--reconstruct', dest='reconstruct', action='store_true',
-                      help="Pass --reconstruct to plot evaluation for reconstructed scenes")
-  args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_path', default=None, type=str, help="Path to the model")
+    args = parser.parse_args()
 
-  if args.metrics:
-    predict_with_metrics(args.model_path, args.h5dir, args.reconstruct, args.dims, args.save_figure_as)
-
-  if args.heatmap:
-    plot_heatmap_slopes(args.model_path, args.h5dir, args.dims, args.reconstruct, args.save_figure_as)
-
-
+    test_model(fname, args.model_path)
