@@ -168,9 +168,9 @@ if __name__ == '__main__':
     parser.add_argument('--input_dims', default=64, type=int,
                         help="Dimension (width or height) of the input image. Set to 64 by default")
     parser.add_argument('--num_channels', default=1, type=int,
-                        help="Number of channels in the input images, set to 1 by default to use a single wavelength")
+                        help="Number of channels/wavelengths in the radiance images. Set to 1 by default to use a single wavelength")
     parser.add_argument('--output_dims', default=64, type=int,
-                        help="Dimension (width or height) of the output/target COT, set to 64 by default to get 64x64 images")
+                        help="Dimension (width or height) of the output/target COT. Set to 64 by default to get 64x64 images")
     parser.add_argument('--num_classes', default=36, type=int,
                         help="Number of classes. Set to 36 by default")
     parser.add_argument('--batch_size', default=32, type=int,
