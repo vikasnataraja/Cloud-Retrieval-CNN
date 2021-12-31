@@ -95,6 +95,14 @@ def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate
 
 def train_model(model, model_dir, filename, train_generator, val_generator, batch_size, epochs):
 
+    """ callbacks to monitor and update the model during training:
+    - checkpoint - saves model every time the validation loss improves from the previous best
+    - decaying learning rate - the learning rate is decayed by 20% if validation loss
+                                does not improve even after 15 epochs
+    - early stopping - training will be stopped if the validation loss does not improve
+                        even after 60 epochs and the previous best epoch weights are restored
+    - logger - a csv file is continuously written after each epoch to monitor progress
+    """
     checkpoint = ModelCheckpoint(os.path.join(model_dir, filename),
                                  save_best_only=True, verbose=1)  # save checkpoints
 
@@ -118,7 +126,7 @@ def train_model(model, model_dir, filename, train_generator, val_generator, batc
                                   verbose=1,
                                   max_queue_size=10,
                                   workers=1)
-    plot_training(history)
+    plot_training(history, filename)
     print('Finished training model. Exiting function ...\n')
     return history
 

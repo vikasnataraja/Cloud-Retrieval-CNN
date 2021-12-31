@@ -7,8 +7,9 @@ from matplotlib.gridspec import GridSpec
 from datetime import datetime
 now = datetime.now().strftime('%b-%d-%Y_%I-%M-%p')
 
-def plot_training(history):
+def plot_training(history, modelname):
     """ plot training and validation losses over epochs """
+    modelname = os.path.splitext('.')[0]
     fig = plt.figure(figsize=(20,16))
 
     plt.plot(history.history['loss'], c='blue', label='Training')
@@ -19,8 +20,8 @@ def plot_training(history):
     plt.legend()
     if not os.path.isdir('results/'):
         os.makedirs('results/')
-    fig.savefig('results/losses.png', dpi=100)
-    print('Saved figure in "results/" as "losses.png"')
+    fig.savefig('results/{}_training_history_{}.png'.format(modelname, now), dpi=100)
+    print('Saved figure in results/{}_training_history_{}'.format(modelname, now))
     plt.close();
 
 
