@@ -1,6 +1,5 @@
 import numpy as np
-from keras.utils import Sequence
-from keras.utils import to_categorical
+from keras.utils import Sequence, to_categorical
 import os
 import h5py
 import cv2
@@ -60,8 +59,8 @@ class ImageGenerator(Sequence):
     """
     def __init__(self, image_list, image_dict, label_dict,
                 num_classes, batch_size, input_shape, output_shape,
-                num_channels, augment, normalize,
-                to_fit, shuffle, augmentation):
+                num_channels, normalize,
+                to_fit, shuffle):
 
         self.image_list = image_list
         self.image_dict = image_dict
@@ -72,8 +71,6 @@ class ImageGenerator(Sequence):
         self.output_shape = output_shape
         self.num_channels = num_channels
         self.to_fit = to_fit
-        self.augment = augment
-        self.augmentation = augmentation
         self.shuffle = shuffle
         self.normalize = normalize
         if self.to_fit:
@@ -97,10 +94,6 @@ class ImageGenerator(Sequence):
             label = self.label_dict[image_key]
             if self.normalize:
                 img = standard_normalize(img)
-            # if self.augment:
-            #     augmented = self.augmentation(image=img,mask=label)
-            #     img = augmented['image']
-            #     label = augmented['mask']
             img = np.reshape(img, (img.shape[0], img.shape[1], self.num_channels))
             X[i] = img
 
@@ -108,7 +101,7 @@ class ImageGenerator(Sequence):
             # (width x height) to (width x height x num_classes) with 1s and 0s
             label = np.uint8(to_categorical(label, num_classes=self.num_classes))
             y[i] = label
-            return X, y
+        return X, y
 
     def __len__(self):
         return int(np.floor(len(self.image_list)/self.batch_size))
