@@ -149,7 +149,7 @@ def bin_cot_to_class(cot_true):
     return classmap
 
 
-def get_data(fdir, rad_keyname='rad_3d', cot_true_keyname='cot_true', cot_1d_keyname='cot_1d'):
+def get_training_data(fdir, rad_keyname='rad_3d', cot_true_keyname='cot_true', cot_1d_keyname='cot_1d'):
     """ Uses HDF5 files to get radiance and COT data.
     True COT data is discretized into a mask.
     Args:
@@ -215,7 +215,7 @@ def extract_sub_patches(img_dict, crop_dims, fname_prefix, excl_borders=0):
     """
     imgs = np.array(list(img_dict.values()))
     img_names_length = len(img_dict)
-    width, height = imgs.shape[1:]
+    width, height = imgs.shape[1], imgs.shape[2]
     return_imgs = {}
     counter = 0
     for idx in range(img_names_length):
@@ -233,7 +233,7 @@ def extract_sub_patches(img_dict, crop_dims, fname_prefix, excl_borders=0):
     return return_imgs
 
 
-def get_cot_space_data(fdir, keyword=None, crop=False, rad_key='rad_3d', cot_true_key='cot_true', cot_1d_key='cot_1d'):
+def get_raw_data(fdir, keyword=None, crop=False, border_px=16, rad_key='rad_3d', cot_true_key='cot_true', cot_1d_key='cot_1d'):
     """ Gets the raw/unformatted radianace, ground truth COT and 1D COT stored in COT space """
     store_rads, store_cot_true, store_cot_1d = {}, {}, {}
     fnames = sorted([file for file in os.listdir(fdir) if file.endswith('.h5')]) # h5 file names
@@ -255,7 +255,7 @@ def get_cot_space_data(fdir, keyword=None, crop=False, rad_key='rad_3d', cot_tru
             store_cot_1d[fnames[i]] = np.array(f[cot_1d_key], dtype='float64')
 
     if crop:
-        return (extract_sub_patches(store_rads, 64, 'data'),
-                extract_sub_patches(store_cot_true, 64, 'data'),
-                extract_sub_patches(store_cot_1d, 64, 'data'))
+        return (extract_sub_patches(store_rads, 64, 'data', excl_borders=borders_px),
+                extract_sub_patches(store_cot_true, 64, 'data', excl_borders=borders_px),
+                extract_sub_patches(store_cot_1d, 64, 'data', excl_borders=borders_px))
     return store_rads, store_cot_true, store_cot_1d
