@@ -19,8 +19,8 @@ if __name__ =='__main__':
 		os.makedirs(args.dest)
 
 	# get training data from fdir, each dictionary will have 480x480 scenes	
-	# radiance, cot_true, cot_1d = get_training_data(args.fdir, rad_keyname='rad_mca_3d', cot_true_keyname='cot_inp_3d', cot_1d_keyname='cot_ret_3d')
-	radiance, cot_true, cot_1d = get_rgb_radiance_data(args.fdir)
+	radiance, cot_true, cot_1d = get_training_data(args.fdir, rad_keyname='rad_mca_3d', cot_true_keyname='cot_inp_3d', cot_1d_keyname='cot_ret_3d')
+	# radiance, cot_true, cot_1d = get_rgb_radiance_data(args.fdir)
 	
 	# extract 64x64 sub-patches and store in dictionary with key:value :: data_xxx: ndarray
 	rad_64 = extract_sub_patches(radiance, 64, 'data', excl_borders=16) # radiance
