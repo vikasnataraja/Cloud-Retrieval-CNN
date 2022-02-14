@@ -225,7 +225,7 @@ def get_rgb_radiance_data(fdir):
         red_channel = np.float32(rad[:, :, 0, 2])
         green_channel = np.float32(rad[:, :, 0, 1])
         blue_channel = np.float32(rad[:, :, 0, 0])
-        store_rads[fnames[i]] = np.stack([blue_channel, green_channel, red_channel], axis=-1)
+        store_rads[fnames[i]] = np.stack([red_channel, green_channel, blue_channel], axis=-1)
 
         cot_1d = f[cot_1d_keyname][...]
         store_cot_1d[fnames[i]] = np.float32(cot_1d[:, :, 0, 2])
