@@ -199,6 +199,40 @@ def get_training_data(fdir, rad_keyname='rad_3d', cot_true_keyname='cot_true', c
     return store_rads, store_cot_true, store_cot_1d
 
 
+def get_rgb_radiance_data(fdir):
+    """ Uses HDF5 files to get three-channel radiance and COT data.
+    True COT data is discretized into a mask.
+    Args:
+        - fdir: (str) directory containing HDF5 files.
+    Returns:
+        A tuple of 3 elements:
+        - store_rads: (dict) dictionary containing radiance data.
+        - store_cot_true: (dict) dictionary containing true COT data as a binned mask.
+        - store_cot_1d: (dict) dictionary containing IPA COT data.
+    """
+
+    fnames = sorted([file for file in os.listdir(fdir) if file.endswith('.h5')])
+    store_rads, store_cot_true, store_cot_1d = {}, {}, {}
+    rad_keyname = 'rad_mca_3d' # radiance key
+    cot_true_keyname = 'cot_inp_3d' # 3D COT ground truth
+    cot_1d_keyname = 'cot_ret_3d' # IPA COT retrieval
+    for i in range(len(fnames)):
+        f = h5py.File(os.path.join(fdir,fnames[i]), 'r')
+        cot_true = f[cot_true_keyname][...][:, :, 0, 2]
+        store_cot_true[fnames[i]] = bin_cot_to_class(cot_true)
+        
+        rad = f[rad_keyname][...]
+        red_channel = np.float32(rad[:, :, 0, 2])
+        green_channel = np.float32(rad[:, :, 0, 1])
+        blue_channel = np.float32(rad[:, :, 0, 0])
+        store_rads[fnames[i]] = np.stack([blue_channel, green_channel, red_channel], axis=-1)
+
+        cot_1d = f[cot_1d_keyname][...]
+        store_cot_1d[fnames[i]] = np.float32(cot_1d[:, :, 0, 2])
+
+    return store_rads, store_cot_true, store_cot_1d
+
+
 def extract_sub_patches(img_dict, crop_dims, fname_prefix, excl_borders=0):
     """ Extracts sub-patches from an LES scene (radiance or COT).
     Currently uses 50% overlap and discards right and bottom pixels.
