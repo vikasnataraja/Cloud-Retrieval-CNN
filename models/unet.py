@@ -21,7 +21,7 @@ def upsample_transpose(layer, filters, kernel_size, strides=(1, 1),  pad_type='s
 """
 def conv_block(layer, filters, kernel_size, strides=(1, 1), pad_type='same', decoder=False, dropout=False):
     
-    Convolutional Block consisting of Conv -> BN -> ReLU -> Conv -> BN -> ReLU
+    # Convolutional Block consisting of Conv -> BN -> ReLU -> Conv -> BN -> ReLU
     
     x = Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type, kernel_initializer=kernel_init)(layer)
     x = BatchNorm()(x)
@@ -37,7 +37,7 @@ def conv_block(layer, filters, kernel_size, strides=(1, 1), pad_type='same', dec
 
 """
 def conv_block(layer, filters, kernel_size, strides=(1, 1), pad_type='same'):
-    """ Convolutional Block consisting of Conv -> BN -> ReLU -> Conv -> BN -> ReLU """
+    # Convolutional Block consisting of Conv -> BN -> ReLU -> Conv -> BN -> ReLU
     x = Conv2D(filters=filters, kernel_size=kernel_size,
                strides=strides, padding=pad_type)(layer)
     x = BatchNorm()(x)
