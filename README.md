@@ -59,7 +59,7 @@ Run the file as follows:
 python3 create_npy_data.py --fdir path/to/dir/containing/hdf5/files --dest path/to/a/directory/for/writing/npy/files
 ```
 
-If the directory entered in `--dest` does not exist, one will be created. Use `python3 create_npy_data.py --help` for more details.
+If the directory entered in `--dest` does not exist, one will be created. Use `python3 create_npy_data.py --help` for more details. After running the python file, check the destination directory to ensure that the 3 `npy` files were created.
 
 ### Step 4 - Training a model
 
