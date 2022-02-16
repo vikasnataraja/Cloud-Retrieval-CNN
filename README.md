@@ -3,35 +3,44 @@ Repo to maintain codebase for the CNN model we're developing.
 
 
 ### UNet Model Architecture
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/updated_architecture.png" width="900" height="600" align="middle">
+<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/updated_architecture.png" width="400" height="200" align="middle">
 
-<!---
-
-### UNet Results
-
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/unet_output.png" width="900" height="900" align="middle">
-
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/iou.png" width="900" height="600" align="middle">
-
-#### Feature map visualization
-<img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/results/unet/layer_78.png" width="900" height="600" align="middle">
-
--->
 
 ### Setting up the environment
 
-There is a `requirements.txt` file in the root directory and all the packages and libraries necessary for running the model can be installed by using `pip install -r requirements.txt`. If you wish, you can create a virtual environment, our model has been tested with Python 3.6.8 but should work with higher versions as well.
+There are 2 ways to setup the packages required to run the model. We recommend using a `virtualenv` or an anaconda environment. 
+
+#### Option 1 - Using pip
+
+There is a `requirements.txt` file in the root directory and all the packages and libraries necessary for running the model can be installed as follows:
+
+```
+pip install -r requirements.txt
+```
+
+Our model has been tested with Python 3.6.8 but should work with higher versions as well.
+
+#### Option 2 - Using anaconda
+
+If using a conda environment, the `install_packages.sh` will install all the necessary packages. This has been tested on `py >= 3.6`. Use the following command in a bash environemnt:
+
+```
+sh install_packages.sh
+```
+
+Alternatively, you could use `bash install_packages.sh` as well.
+
 
 ### Training a model
 
 To train the CNN, you will need to run `train.py`. There are multiple command line instructions you can use. For example, the barebones way to run would be:
 ```
-python train.py
+python3 train.py
 ```
 
 To run the file and save a model with a name, set batch size and set the number of epochs, you can use:
 ```
-python train.py --model_name mymodelname.h5 --batch_size 16 --epochs 200
+python3 train.py --model_name mymodelname.h5 --batch_size 16 --epochs 200
 ```
 To view the CLI for this file, use `python train.py --help`, but they are also available below:
 ```
@@ -41,7 +50,7 @@ usage: train.py [-h] [--radiance_file RADIANCE_FILE] [--cot_file COT_FILE]
                 [--output_dims OUTPUT_DIMS] [--num_classes NUM_CLASSES]
                 [--batch_size BATCH_SIZE] [--lr LR] [--epochs EPOCHS]
                 [--normalize] [--fine_tune] [--weights_path WEIGHTS_PATH]
-                [--augment] [--test_size TEST_SIZE]
+                [--test_size TEST_SIZE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -76,8 +85,6 @@ optional arguments:
   --weights_path WEIGHTS_PATH
                         If fine tuning, pass a path to weights that will be
                         loaded and fine-tuned
-  --augment             Pass --augment to use data augmentation. By default,
-                        no augmentation is used
   --test_size TEST_SIZE
                         Fraction of training image to use for validation
                         during training. Defaults to using 20% of the data
