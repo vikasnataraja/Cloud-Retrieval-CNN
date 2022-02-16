@@ -6,7 +6,25 @@ Repo to maintain codebase for the CNN model we're developing.
 <img src="https://github.com/vikasnataraja/Cloud-Retrieval-CNN/blob/master/assets/updated_architecture.png" width="400" height="200" align="middle">
 
 
-### Setting up the environment
+### How do I use this repository?
+There are 4 steps to get you started with our CNN:
+
+```
+Step 1: Cloning the repository
+Step 2: Installing the packages that are pre-requisites for running the CNN
+Step 3: Creating your own training data from HDF5 files
+Step 4: Train the CNN with the training data you generated
+```
+
+### Step 1 - Clone the repo
+To clone the repo, use the following command line instructions (CLI) in a directory of your choice:
+```
+git clone git@github.com:vikasnataraja/Cloud-Retrieval-CNN.git
+```
+
+This will create a new folder called `Cloud-Retrieval-CNN`. Enter it using `cd Cloud-Retrieval-CNN`.
+
+### Step 2 - Setting up the environment to install packages
 
 There are 2 ways to setup the packages required to run the model. We recommend using a `virtualenv` or an anaconda environment. 
 
@@ -30,8 +48,20 @@ sh install_packages.sh
 
 Alternatively, you could use `bash install_packages.sh` as well.
 
+### Step 3 - Creating data
+Note: The HDF5 data files are not included in this repository. Ask the admin for more details.
 
-### Training a model
+To create the training data, `create_npy_data.py` must be used which will create a directory containing 3 files:
+`inp_radiance.npy`, `out_cot_3d.npy`, `out_cot_1d.npy`. They contain data of the radiance, true 3D COT and IPA COT respectively.
+
+Run the file as follows:
+```
+python3 create_npy_data.py --fdir path/to/dir/containing/hdf5/files --dest path/to/a/directory/for/writing/npy/files
+```
+
+If the directory entered in `--dest` does not exist, one will be created. Use `python3 create_npy_data.py --help` for more details.
+
+### Step 4 - Training a model
 
 To train the CNN, you will need to run `train.py`. There are multiple command line instructions you can use. For example, the barebones way to run would be:
 ```
