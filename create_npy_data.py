@@ -145,11 +145,11 @@ if __name__ =='__main__':
 	args = parser.parse_args()
 	
 	if not os.path.isdir(args.fdir):
-            raise OSError('\nDirectory {} does not exist, try again\n'.format(args.fdir))
+		raise OSError('\nDirectory {} does not exist, try again\n'.format(args.fdir))
 	
 	if not os.path.isdir(args.dest):
-            print('\nDestination directory {} does not exist, creating it now...'.format(args.dest))
-            os.makedirs(args.dest)
+		print('\nDestination directory {} does not exist, creating it now...'.format(args.dest))
+		os.makedirs(args.dest)
 
 	# get training data from fdir, each dictionary will have 480x480 scenes	
 	radiance, cot_true, cot_1d = get_training_data(args.fdir, rad_keyname='rad_mca_3d', cot_true_keyname='cot_inp_3d', cot_1d_keyname='cot_ret_3d')
