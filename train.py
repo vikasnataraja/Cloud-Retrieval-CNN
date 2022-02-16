@@ -4,9 +4,8 @@ import argparse
 from keras.optimizers import Adam
 from keras.regularizers import l1
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, CSVLogger
-from albumentations import Compose, HorizontalFlip, HueSaturationValue, RandomBrightness, RandomContrast, GaussNoise, ShiftScaleRotate
 from sklearn.model_selection import train_test_split
-from models.unet import UNet
+from models.unet import unet
 from utils.utils import ImageGenerator
 from utils.losses import focal_loss
 from utils.plot_utils import plot_training
@@ -21,12 +20,6 @@ def train_val_generator(args):
     # split to training and validation, set random state to 42 for reproducibility
     train_keys, val_keys = train_test_split(list(X_dict.keys()), shuffle=True, random_state=42, test_size=args.test_size)
 
-    # data augmentation via albumentations (currently not used in any of the models)
-    AUGMENTATIONS_TRAIN = Compose([HorizontalFlip(p=0.5),
-                                   RandomContrast(limit=0.2, p=0.5),
-                                   RandomBrightness(limit=0.2, p=0.5),
-                                   GaussNoise(p=0.25),
-                                   ShiftScaleRotate(p=0.5, rotate_limit=20)])
     # training data generator
     train_generator = ImageGenerator(image_list=train_keys,
                                      image_dict=X_dict,
@@ -37,9 +30,7 @@ def train_val_generator(args):
                                      num_classes=args.num_classes,
                                      batch_size=args.batch_size,
                                      normalize=args.normalize,
-                                     augmentation=AUGMENTATIONS_TRAIN,
                                      to_fit=True,
-                                     augment=args.augment,
                                      shuffle=True)
 
     # validation data generator
@@ -52,9 +43,7 @@ def train_val_generator(args):
                                    num_classes=args.num_classes,
                                    batch_size=args.batch_size,
                                    normalize=args.normalize,
-                                   augmentation=None,
                                    to_fit=True,
-                                   augment=False,
                                    shuffle=True)
 
     return (train_generator, val_generator)
@@ -63,7 +52,7 @@ def train_val_generator(args):
 def build_model(input_shape, num_channels, output_shape, num_classes, learn_rate, fine_tune, path_to_weights):
 
     # load the architecture
-    model = UNet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
+    model = unet(input_shape, num_channels, num_classes, final_activation_fn='softmax')
 
     if fine_tune:  # load pre-trained model and freeze layers for fine-tuning
         model.load_weights(path_to_weights)
@@ -148,11 +137,6 @@ def args_checks_reports(args):
     else:
         print('\nImages will not be normalized\n')
 
-    if args.augment:
-        print('Data augmentation will be used\n')
-    else:
-        print('Data augmentation will not be used\n')
-
     print('Input dimensions are ({},{},{})\n'.format(
         args.input_dims, args.input_dims, args.num_channels))
     print('Output dimensions are ({},{},{})\n'.format(
@@ -193,8 +177,6 @@ if __name__ == '__main__':
                         help="Pass --fine_tune to load a previous model and fine tune. By default, this is set to False")
     parser.add_argument('--weights_path', default='~/workspace/weights/unet.h5', type=str,
                         help="If fine tuning, pass a path to weights that will be loaded and fine-tuned")
-    parser.add_argument('--augment', dest='augment', action='store_true',
-                        help="Pass --augment to use data augmentation. By default, no augmentation is used")
     parser.add_argument('--test_size', default=0.20, type=float,
                         help="Fraction of training image to use for validation during training. Defaults to using 20%% of the data")
     args = parser.parse_args()

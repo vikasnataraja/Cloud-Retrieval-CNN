@@ -293,3 +293,4 @@ def get_raw_data(fdir, keyword=None, crop=False, border_px=16, rad_key='rad_3d',
                 extract_sub_patches(store_cot_true, 64, 'data', excl_borders=borders_px),
                 extract_sub_patches(store_cot_1d, 64, 'data', excl_borders=borders_px))
     return store_rads, store_cot_true, store_cot_1d
+
