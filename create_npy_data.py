@@ -39,6 +39,9 @@ def get_training_data(fdir, rad_keyname='rad_3d', cot_true_keyname='cot_true', c
     """
 
     fnames = sorted([file for file in os.listdir(fdir) if file.endswith('.h5')])
+    if not fnames:
+        raise OSError("No HDF5 files were found within {}. Try again\n".format(fdir))
+    print("Found {} HDF5 files in {}\n".format(len(fnames), fdir))
     store_rads, store_cot_true, store_cot_1d = {}, {}, {}
 
     for i in range(len(fnames)):
@@ -84,6 +87,9 @@ def get_rgb_radiance_data(fdir):
     """
 
     fnames = sorted([file for file in os.listdir(fdir) if file.endswith('.h5')])
+    if not fnames:
+        raise OSError("No HDF5 files were found within {}. Try again\n".format(fdir))
+    print("Found {} HDF5 files in {}\n".format(len(fnames), fdir))
     store_rads, store_cot_true, store_cot_1d = {}, {}, {}
     rad_keyname = 'rad_mca_3d' # radiance key
     cot_true_keyname = 'cot_inp_3d' # 3D COT ground truth
@@ -142,10 +148,12 @@ if __name__ =='__main__':
 						help="Path to directory containing HDF5 files")
 	parser.add_argument('--dest', default='data/npy', type=str, 
 						help="Path to directory where npy files will be saved")
+	parser.add_argument('--no_crop', action='store_true', 
+                        help="Pass --no_crop if the HDF5 files are already 64x64 sub-patches.")
 	args = parser.parse_args()
 	
 	if not os.path.isdir(args.fdir):
-	    raise OSError('\nDirectory {} does not exist, try again\n'.format(args.fdir))
+	    raise OSError('Directory {} does not exist, try again\n'.format(args.fdir))
 	
 	if not os.path.isdir(args.dest):
 		print('\nDestination directory {} does not exist, creating it now...'.format(args.dest))
@@ -155,14 +163,16 @@ if __name__ =='__main__':
 	radiance, cot_true, cot_1d = get_training_data(args.fdir, rad_keyname='rad_mca_3d', cot_true_keyname='cot_inp_3d', cot_1d_keyname='cot_ret_3d')
 	# radiance, cot_true, cot_1d = get_rgb_radiance_data(args.fdir)
 	
-	# extract 64x64 sub-patches and store in dictionary with key:value :: data_xxx: ndarray
-	rad_64 = extract_sub_patches(radiance, 64, 'data', excl_borders=16) # radiance
-	cot_true_64 = extract_sub_patches(cot_true, 64, 'data', excl_borders=16) # true COT
-	cot_1d_64 = extract_sub_patches(cot_1d, 64, 'data', excl_borders=16) # IPA COT
+	if not args.no_crop: # cropping is needed
+		print("Extracting 64x64 sub-patches\n")
+		# extract 64x64 sub-patches and store in dictionary with key:value :: data_xxx: ndarray
+		radiance = extract_sub_patches(radiance, 64, 'data', excl_borders=16) # radiance
+		cot_true = extract_sub_patches(cot_true, 64, 'data', excl_borders=16) # true COT
+		cot_1d = extract_sub_patches(cot_1d, 64, 'data', excl_borders=16) # IPA COT
 	
 	# save to file
-	np.save(os.path.join(args.dest, 'inp_radiance.npy'), rad_64)
-	np.save(os.path.join(args.dest, 'out_cot_3d.npy'), cot_true_64)
-	np.save(os.path.join(args.dest, 'out_cot_1d.npy'), cot_1d_64)
+	np.save(os.path.join(args.dest, 'inp_radiance.npy'), radiance)
+	np.save(os.path.join(args.dest, 'out_cot_3d.npy'), cot_true)
+	np.save(os.path.join(args.dest, 'out_cot_1d.npy'), cot_1d)
 	print('\nSaved files in ', args.dest)
 	print('Finished!\n')
