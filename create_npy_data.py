@@ -153,22 +153,22 @@ if __name__ =='__main__':
 	args = parser.parse_args()
 	
 	if not os.path.isdir(args.fdir):
-	    raise OSError('Directory {} does not exist, try again\n'.format(args.fdir))
+        raise OSError('Directory {} does not exist, try again\n'.format(args.fdir))
 	
 	if not os.path.isdir(args.dest):
-		print('\nDestination directory {} does not exist, creating it now...'.format(args.dest))
-		os.makedirs(args.dest)
+        print('\nDestination directory {} does not exist, creating it now...'.format(args.dest))
+        os.makedirs(args.dest)
 
 	# get training data from fdir, each dictionary will have 480x480 scenes	
 	radiance, cot_true, cot_1d = get_training_data(args.fdir, rad_keyname='rad_mca_3d', cot_true_keyname='cot_inp_3d', cot_1d_keyname='cot_ret_3d')
 	# radiance, cot_true, cot_1d = get_rgb_radiance_data(args.fdir)
 	
 	if not args.no_crop: # cropping is needed
-		print("Extracting 64x64 sub-patches\n")
-		# extract 64x64 sub-patches and store in dictionary with key:value :: data_xxx: ndarray
-		radiance = extract_sub_patches(radiance, 64, 'data', excl_borders=16) # radiance
-		cot_true = extract_sub_patches(cot_true, 64, 'data', excl_borders=16) # true COT
-		cot_1d = extract_sub_patches(cot_1d, 64, 'data', excl_borders=16) # IPA COT
+        print("Extracting 64x64 sub-patches\n")
+        # extract 64x64 sub-patches and store in dictionary with key:value :: data_xxx: ndarray
+        radiance = extract_sub_patches(radiance, 64, 'data', excl_borders=16) # radiance
+        cot_true = extract_sub_patches(cot_true, 64, 'data', excl_borders=16) # true COT
+        cot_1d = extract_sub_patches(cot_1d, 64, 'data', excl_borders=16) # IPA COT
 	
 	# save to file
 	np.save(os.path.join(args.dest, 'inp_radiance.npy'), radiance)
