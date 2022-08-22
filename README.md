@@ -1,5 +1,9 @@
 # Cloud-Retrieval-CNN
-Repo to maintain codebase for the CNN model we're developing.
+This repository contains the code that was developed for the paper: "Segmentation-Based Multi-Pixel Cloud Optical Thickness Retrieval Using a Convolutional Neural Network". 
+
+Please cite the paper as follows:
+
+Nataraja, V., Schmidt, S., Chen, H., Yamaguchi, T., Kazil, J., Feingold, G., Wolf, K., and Iwabuchi, H.: Segmentation-Based Multi-Pixel Cloud Optical Thickness Retrieval Using a Convolutional Neural Network, Atmos. Meas. Tech. Discuss. [preprint], https://doi.org/10.5194/amt-2022-45, in review, 2022.
 
 
 ### UNet Model Architecture
@@ -36,7 +40,7 @@ There is a `requirements.txt` file in the root directory and all the packages an
 pip install -r requirements.txt
 ```
 
-Our model has been tested with Python 3.6.8 but should work with higher versions as well.
+Our model has been tested with Python 3.6.8 but should work with higher versions as well. One caveat is that Python 3.9 is currently unsupported with our repository as it is still new and incompatibile with some packages used in this repo. We recommend using Python 3.6.8 or 3.6.9.
 
 #### Option 2 - Using anaconda
 
@@ -49,7 +53,7 @@ sh install_packages.sh
 Alternatively, you could use `bash install_packages.sh` as well.
 
 ### Step 3 - Creating data
-Note: The HDF5 data files are not included in this repository. Ask the admin for more details.
+Note: The HDF5 data files are not included in this repository. The original 6 scenes containing the radiance and cloud optical thickness data from the Sulu Sea LES are available here: https://doi.org/10.5281/zenodo.7008103. The data can be downloaded to a directory of your choice within your system.
 
 To create the training data, `create_npy_data.py` must be used which will create a directory containing 3 files:
 `inp_radiance.npy`, `out_cot_3d.npy`, `out_cot_1d.npy`. They contain data of the radiance, true 3D COT and IPA COT respectively.
@@ -119,3 +123,5 @@ optional arguments:
                         Fraction of training image to use for validation
                         during training. Defaults to using 20% of the data
 ```
+
+The best trained model is available here: https://doi.org/10.5281/zenodo.7013100
