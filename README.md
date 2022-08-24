@@ -1,5 +1,5 @@
 # Cloud-Retrieval-CNN
-This repository contains the code that was developed for the paper: [https://amt.copernicus.org/preprints/amt-2022-45/]("Segmentation-Based Multi-Pixel Cloud Optical Thickness Retrieval Using a Convolutional Neural Network"). Due to file size limits on Github, the data and the best trained model are available separately at the following links:
+This repository contains the code that was developed for the paper: ["Segmentation-Based Multi-Pixel Cloud Optical Thickness Retrieval Using a Convolutional Neural Network"](https://amt.copernicus.org/preprints/amt-2022-45/). Due to file size limits on Github, the data and the best trained model are available separately at the following links:
 
 HDF5 Data Files: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7008103.svg)](https://doi.org/10.5281/zenodo.7008103)
 
