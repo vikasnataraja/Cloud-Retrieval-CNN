@@ -37,12 +37,12 @@ def conv_block(layer, filters, kernel_size, strides=(2, 1), pad_type='same', lea
     return x
 
 def upsample_conv(layer, filters, kernel_size, strides=(1,1), pad_type='same', method='bilinear'):
-  """ Upsampling Block with interpolation and convolution """
-  x = UpSampling2D(size=(2, 2), interpolation=method)(layer)
-  x = Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(x)
-  x = BatchNorm()(x)
-  x = Activation('relu')(x)
-  return x
+    """ Upsampling Block with interpolation and convolution """
+    x = UpSampling2D(size=(2, 2), interpolation=method)(layer)
+    x = Conv2D(filters=filters, kernel_size=kernel_size, strides=strides, padding=pad_type)(x)
+    x = BatchNorm()(x)
+    x = Activation('relu')(x)
+    return x
 
 def unet(input_shape, num_channels, num_classes, final_activation_fn):
     """ Build UNet """
